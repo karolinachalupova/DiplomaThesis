@@ -1,0 +1,83 @@
+This is pdfTeX, Version 3.141592-1.40.7 (MiKTeX 2.7) (preloaded format=pdflatex 2008.4.6)  13 APR 2008 13:06
+entering extended mode
+**C:/Škola/Master_thesis/IES_thesis_template/Styles/Stylebib.dbj
+(C:/Škola/Master_thesis/IES_thesis_template/Styles/Stylebib.dbj
+LaTeX2e <2005/12/01>
+Loading CZ hyphenation patterns: Pavel Sevecek, v3, 1995
+Loading SK hyphenation patterns: Jana Chlebikova, 1992
+Babel <v3.8j> and hyphenation patterns for english, usenglishmax, dumylang, noh
+yphenation, czech, slovak, german, french, latin, loaded.
+("C:\Program Files\MiKTeX 2.7\tex\latex\base\docstrip.tex"
+\blockLevel=\count79
+\emptyLines=\count80
+\processedLines=\count81
+\commentsRemoved=\count82
+\commentsPassed=\count83
+\codeLinesPassed=\count84
+\TotalprocessedLines=\count85
+\TotalcommentsRemoved=\count86
+\TotalcommentsPassed=\count87
+\TotalcodeLinesPassed=\count88
+\NumberOfFiles=\count89
+\inFile=\read1
+\inputcheck=\read2
+\off@0=\count90
+\off@1=\count91
+\off@2=\count92
+\off@3=\count93
+\off@4=\count94
+\off@5=\count95
+\off@6=\count96
+\off@7=\count97
+\off@8=\count98
+\off@9=\count99
+\off@10=\count100
+\off@11=\count101
+\off@12=\count102
+\off@13=\count103
+\off@14=\count104
+\off@15=\count105
+\@maxfiles=\count106
+\@maxoutfiles=\count107
+
+Utility: `docstrip' 2.5d <2005/07/29>
+English documentation    <1999/03/31>
+
+**********************************************************
+* This program converts documented macro-files into fast *
+* loadable files by stripping off (nearly) all comments! *
+**********************************************************
+
+********************************************************
+* No Configuration file found, using default settings. *
+********************************************************
+
+)
+
+Generating file(s) ./Stylebib.bst 
+
+Processing file merlin.mbs (ay,nat,vonx,nm-rev1,nmft,nmft-sc,fnm-rm,nmfted,nman
+d-rm,keyxyr,dt-beg,yr-par,yrp-col,note-yr,tit-qq,bt-qq,trnum-it,vol-2bf,volp-sp
+,jwdpg,num-xser,jnm-x,add-pub,edpar,pp,xedn,amper,etal-xc,etal-it,nfss,) -> Sty
+lebib.bst
+Lines  processed: 9293
+Comments removed: 3787
+Comments  passed: 1
+Codelines passed: 3686
+
+ ) 
+Here is how much of TeX's memory you used:
+ 629 strings out of 95281
+ 5479 string characters out of 1183227
+ 59420 words of memory out of 1500000
+ 3926 multiletter control sequences out of 110000
+ 4403 words of font info for 15 fonts, out of 1200000 for 2000
+ 33 hyphenation exceptions out of 8191
+ 13i,0n,15p,368b,434s stack positions out of 5000i,500n,10000p,200000b,5000s
+
+No pages of output.
+PDF statistics:
+ 0 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 131072)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

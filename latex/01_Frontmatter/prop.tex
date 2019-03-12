@@ -1,0 +1,98 @@
+\chapter*{Master's Thesis Proposal}
+
+\begin{tabular}{lp{10.1cm}}
+		\hline
+		\textbf{Author} &\href{mailto:\Email}{\AutorDP}\\
+		\textbf{Supervisor} &\href{mailto:\EmailSup}{\Supervisor}\\
+		\textbf{Proposed topic} &\Bookname\\
+		\hline
+\end{tabular}
+
+\bigskip
+
+\small
+\paragraph{Motivation}
+
+For the purposes of government policy concerning energy security, optimal taxation, and climate change, precise estimates of the price elasticity of gasoline demand are of principal importance. For example, if gasoline demand is highly price-inelastic, taxes will be ineffective in reducing gasoline consumption and the corresponding emissions of greenhouse gases. During the last 30 years the topic has attracted a lot of attention of economists who produced a plethora of empirical estimates of both short- and long-run price elasticities. Yet the estimates vary broadly.
+
+A systematic method how to make use of all this work is to collect these numerous estimates and summarize them quantitatively. The method is called meta-analysis (Stanley, 2001) and has long been used in economics following the seminal contribution by Stanley and Jarrell (1989). Recent applications of meta-analysis in economics include, among others, Card et al. (2010) on the evaluation of active labor market policy, Havranek (2010) on the trade effect of currency unions, and Horvathova (2010) on the impact of environmental performance on corporate financial performance.
+
+Two international meta-analyses of the elasticity of gasoline demand have been conducted (Brons et al., 2008; Espey, 1998). These meta-analyses study carefully the causes of heterogeneity observed in the literature. The average short- and long-run elasticities found by these meta-analyses were -0.26 and -0.58 (Espey, 1998) and
+-0.34 and -0.84 (Brons et al., 2008). None of the meta-analyses, however, corrected the estimates for publication bias. It is well-known that publication selection can seriously bias the estimates of price elasticities because positive estimates are usually inconsistent with theory: for instance, Stanley (2005) documents how the price elasticity of water demand is exaggerated fourfold because of publication bias.
+
+\paragraph{Hypotheses}
+\begin{enumerate}
+		\item[] Hypothesis \#1: The literature estimating gasoline demand elasticities is affected by publication bias.
+		\item[] Hypothesis \#2: The publication bias exaggerates the mean reported elasticity.
+		\item[] Hypothesis \#3: The extent of publication bias decreases in time.
+\end{enumerate}
+
+\paragraph{Methodology}
+
+The first step of meta-analysis is the collection of primary studies. I will examine all studies used by the most recent meta-analysis (Brons et al., 2008), but because the sample used by Brons et al. (2008) ends in 1999, I will additionally search the EconLit and Scopus databases for new studies published. To be able to use modern meta-analysis methods and correct for publication bias, I need the standard error of each estimate of elasticity; therefore I will have to exclude studies that do not report standard errors (or any other statistics from which standard errors could be computed). Concerning the definition of short- and long-term elasticity estimates, I will follow the approach described in the first meta-analysis on this topic, Espey (1998).
+
+In the absence of publication bias the estimates of elasticities are randomly distributed  around  the  true  mean  elasticity. Nevertheless, if some estimates end in the ``file drawer'' (Rosenthal, 1979) because they are insignificant or have a positive sign, the reported estimates will be correlated with their standard errors (Ashenfelter et al., 1999; Card and Krueger, 1995). For example, if a statistically significant effect is required, an author who has few observations may run a specification search until the estimate becomes large enough to offset the high standard errors. In this specification the regression coefficient corresponding to the standard error measures the magnitude of publication bias and the intercept measures the magnitude of the elasticity corrected for publication bias (thus, the specification directly addresses hypotheses 1 and 2). Because such a regression is likely heteroscedastic (the explanatory variable is a sample estimate of the standard deviation of the response variable), in practice it is usually estimated by weighted least squares with the inverse of standard errors (precision) taken as weights.
+
+In meta-analysis I have to take into consideration that estimates coming from one study are likely to be dependent. A common way how to cope with this problem is to employ the mixed-effects multilevel model (Doucouliagos and Stanley, 2009), which allows for unobserved between-study heterogeneity. Between-study heterogeneity is likely to be substantial since in our case the primary studies use data from different countries. I will specify the model following Havranek and Irsova (2011): the overall error term now breaks down into study-level random effects and estimate-level disturbances. To address hypothesis 3 I will add an interaction term between the year of publication of the study and the reported standard error. I expect that the magnitude of publication bias to decrease in time, which would be in line with the economics-research-cycle hypothesis (Goldfarb, 1995; Stanley et al., 2008).
+
+\paragraph{Expected Contribution}
+
+I will conduct a quantitative survey of journal articles estimating the price elasticity of gasoline demand. In contrast to previous meta-analyses on this topic, I will take into account publication selection bias using the mixed-effects multilevel meta-regression. Publication bias in this area is expected to be strong; when I correct for the bias, I expect to obtain estimates of short- and long-run elasticities that are much smaller than the results of the previously published meta-analyses and also to the simple mean of all estimates in my sample of literature. The estimates can be directly used in fiscal modeling (calculating the optimal tax on gasoline) and climate change policy (for example, the computation of the social cost of carbon emissions).
+
+\paragraph{Outline}
+\begin{enumerate}
+	\item Motivation: there are meta-analyses on the price elasticity of gasoline demand, but they do not correct their estimates for publication bias. Publication bias has been shown to distort most areas of empirical economics, so there is a good chance it will be important here as well.
+	\item Studies on gasoline demand: I will briefly describe how people estimate the price elasticity of gasoline demand.
+	\item Data: I will explain how I will collect estimates from studies estimating the elasticity.
+	\item Methods: I will explain modern meta-analysis methods, including the funnel asymmetry test, precision effect test, and multilevel variants of these regressions.
+	\item Results: I will discuss my baseline regressions and robustness checks.
+	\item Concluding remarks: I will summarize my findings and their implications for policy and future research.
+\end{enumerate}
+
+
+\paragraph{Core bibliography}
+
+
+\begin{enumerate}
+\item[]Ashenfelter, O., Harmon, C., Oosterbeek, H., 1999. A review of estimates of the schooling/earnings relationship, with tests for publication bias. Labour Econ. 6 (4), 453-470.
+\item[]Brons, M., Nijkamp, P., Pels, E., Rietveld, P., 2008. A meta-analysis of the price elasticity of gasoline demand. A SUR approach. Energy Econ. 30 (5), 2105-2122.
+\item[]Card, D., Kluve, J., Weber, A., 2010. Active labour market policy evaluations: a meta-analysis. Econ. J. 120 (548), F452-F477.
+\item[]Card, D., Krueger, A.B., 1995. Time-series minimum-wage studies: a meta-analysis. Am. Econ. Rev. 85 (2), 238-243.
+\item[]Doucouliagos, H., Stanley, T.D., 2009. Publication selection bias in minimum-wage research? A meta-regression analysis. Br. J. Ind. Relat. 47 (2), 406-428.
+\item[]Espey, M., 1998. Gasoline demand revisited: an international meta-analysis of elasticities. Energy Econ. 20 (3), 273-295.
+\item[]Goldfarb, R.S., 1995. The economist-as-audience needs a methodology of plausible inference. J. Econ. Methodol. 2 (2), 201-222.
+\item[]Havranek, T., 2010. Rose effect and the Euro: is the magic gone? Rev. World Econ. 146 (2), 241-261.
+\item[]Havranek, T., Irsova, Z., 2011. Estimating Vertical Spillovers from FDI: Why Results Vary and What the True Effect Is. J. Int. Econ. 85 (2), 234-244.
+\item[]Horvathova, E., 2010. Does environmental performance affect financial performance? A meta-analysis. Ecol. Econ. 70 (1), 52-59.
+\item[]Rosenthal, R., 1979. The ``file drawer'' problem and tolerance for null results. Psychol. Bull. 86, 638-641.
+\item[]Stanley, T.D., 2001. Wheat from Chaff: meta-analysis as quantitative literature review. J. Econ. Perspect. 15 (3), 131-150.
+\item[]Stanley, T.D., 2005. Beyond publication bias. J. Econ. Surv. 19 (3), 309-345.
+\item[]Stanley, T.D., Doucouliagos, H., Jarrell, S.B., 2008. Meta-regression analysis as the socioeconomics of economics research. J. Socio-Econ. 37 (1), 276-292.
+\item[]Stanley, T.D., Jarrell, S.B., 1989. Meta-regression analysis: a quantitative method of literature surveys. J. Econ. Surv. 3 (2), 161-170.
+\end{enumerate}
+
+
+\vfill
+\begin{table}[!hbp]
+\begin{tabular}{lr}
+
+ \begin{tabular}{p{3.5cm}}
+     \hline \hspace{1cm} Author
+ \end{tabular}
+ 
+ \hspace{5.5cm}
+ 
+ \begin{tabular}{p{3.5cm}}
+     \hline \hspace{0.8cm} Supervisor
+ \end{tabular}
+
+ 
+ \end{tabular}
+ \end{table}
+
+\normalsize
+
+
+
+
+

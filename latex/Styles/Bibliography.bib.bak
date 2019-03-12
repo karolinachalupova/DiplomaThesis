@@ -1,0 +1,96 @@
+% This file was created with JabRef 2.3.1.
+% Encoding: Cp1250
+
+@ARTICLE{Bjorvatn2006,
+  author = {Bjorvatn, Kjetil and Eckel, Carsten},
+  title = {{Policy Competition for Foreign Direct Investment Between Asymmetric
+	Countries}},
+  journal = {European Economic Review},
+  year = {2006},
+  volume = {50},
+  pages = {1891-1907},
+  number = {7},
+  month = {October}
+}
+
+@TECHREPORT{Blomstrom2003,
+  author = {Magnus Blomstrom and Ari Kokko},
+  title = {{The Economics of Foreign Direct Investment Incentives}},
+  institution = {National Bureau of Economic Research, Inc},
+  year = {2003},
+  type = {NBER Working Papers},
+  number = {9489},
+  month = Feb
+}
+
+@ARTICLE{Djankov2002,
+  author = {Simeon Djankov and Peter Murrell},
+  title = {{Enterprise Restructuring in Transition: A Quantitative Survey}},
+  journal = {Journal of Economic Literature},
+  year = {2002},
+  volume = {40},
+  pages = {739-792},
+  number = {3},
+  month = {September},
+  owner = {Administrator},
+  timestamp = {2008.07.05}
+}
+
+@ARTICLE{Haaparanta1996,
+  author = {Pertti Haaparanta},
+  title = {{Competition for Foreign Direct Investment}},
+  journal = {Journal of Public Economics},
+  year = {1996},
+  volume = {63},
+  pages = {141-53},
+  number = {1},
+  owner = {Administrator},
+  timestamp = {2007.09.04}
+}
+
+@ARTICLE{Haufler2006,
+  author = {Haufler, Andreas and Wooton, Ian},
+  title = {{The Effects of Regional Tax and Subsidy Coordination on Foreign
+	Direct Investment}},
+  journal = {European Economic Review},
+  year = {2006},
+  volume = {50},
+  pages = {285-305},
+  number = {2},
+  month = {February}
+}
+
+@ARTICLE{Stanley2001,
+  author = {T. D. Stanley},
+  title = {{Wheat from Chaff: Meta-analysis as Quantitative Literature Review}},
+  journal = {Journal of Economic Perspectives},
+  year = {2001},
+  volume = {15},
+  pages = {131-150},
+  number = {3},
+  month = {Summer},
+  owner = {Administrator},
+  timestamp = {2008.07.05},
+  url = {http://ideas.repec.org/a/aea/jecper/v15y2001i3p131-150.html}
+}
+
+@BOOK{Wells2001,
+  title = {{Using Tax Incentives to Compete for Foreign Investment: Are They
+	Worth the Cost}?},
+  publisher = {{FIAS}},
+  year = {2001},
+  author = {Wells, Louis T. and Allen, Nancy and Morisset, Jacques and Pirnia,
+	Neda},
+  address = {Washington, DC},
+  owner = {Administrator},
+  timestamp = {2008.01.01}
+}
+
+@comment{jabref-meta: selector_publisher:}
+
+@comment{jabref-meta: selector_author:}
+
+@comment{jabref-meta: selector_journal:}
+
+@comment{jabref-meta: selector_keywords:}
+

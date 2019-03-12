@@ -1,0 +1,38 @@
+\contentsline {chapter}{List of Tables}{vii}{section*.10}
+\contentsline {chapter}{List of Figures}{viii}{section*.12}
+\contentsline {chapter}{Acronyms}{ix}{section*.14}
+\contentsline {chapter}{Thesis Proposal}{x}{section*.16}
+\contentsline {paragraph}{Motivation}{x}{section*.18}
+\contentsline {paragraph}{Hypotheses}{xi}{section*.19}
+\contentsline {paragraph}{Methodology}{xi}{section*.20}
+\contentsline {paragraph}{Expected Contribution}{xii}{section*.21}
+\contentsline {paragraph}{Outline}{xii}{section*.22}
+\contentsline {paragraph}{Core bibliography}{xii}{section*.23}
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}
+\contentsline {chapter}{\numberline {2}Title of Chapter Two}{2}{chapter.2}
+\contentsline {section}{\numberline {2.1}Formal requirements of master's thesis at the Faculty of Social Sciences}{2}{section.2.1}
+\contentsline {chapter}{\numberline {3}Title of Chapter Three}{3}{chapter.3}
+\contentsline {section}{\numberline {3.1}Citations}{3}{section.3.1}
+\contentsline {section}{\numberline {3.2}Acronyms}{3}{section.3.2}
+\contentsline {section}{\numberline {3.3}Figures}{3}{section.3.3}
+\contentsline {section}{\numberline {3.4}Tables}{5}{section.3.4}
+\contentsline {section}{\numberline {3.5}Boxes}{6}{section.3.5}
+\contentsline {section}{\numberline {3.6}Theorems, Definitions, \ldots }{6}{section.3.6}
+\contentsline {section}{\numberline {3.7}Equations}{7}{section.3.7}
+\contentsline {subsection}{\numberline {3.7.1}Nonumbered Equations}{7}{subsection.3.7.1}
+\contentsline {subsection}{\numberline {3.7.2}Numbered Equations}{7}{subsection.3.7.2}
+\contentsline {subsection}{\numberline {3.7.3}Matrix Equations}{7}{subsection.3.7.3}
+\contentsline {section}{\numberline {3.8}Cross-references}{7}{section.3.8}
+\contentsline {section}{\numberline {3.9}Source codes}{8}{section.3.9}
+\contentsline {section}{\numberline {3.10}Paragraphs}{8}{section.3.10}
+\contentsline {paragraph}{Proin}{8}{section*.32}
+\contentsline {subparagraph}{Velit}{8}{section*.33}
+\contentsline {chapter}{\numberline {4}Title of Chapter Four}{9}{chapter.4}
+\contentsline {section}{\numberline {4.1}Title of Section One}{9}{section.4.1}
+\contentsline {chapter}{\numberline {5}Title of Chapter Five}{11}{chapter.5}
+\contentsline {section}{\numberline {5.1}Title of Section One}{11}{section.5.1}
+\contentsline {chapter}{\numberline {6}Useful Hints}{13}{chapter.6}
+\contentsline {chapter}{\numberline {7}Conclusion}{16}{chapter.7}
+\contentsline {chapter}{Bibliography}{17}{chapter*.34}
+\contentsline {chapter}{\numberline {A}Title of Appendix A}{I}{appendix.A}
+\contentsline {chapter}{\numberline {B}Content of Enclosed DVD}{II}{appendix.B}

@@ -1,0 +1,33 @@
+\begin{thebibliography}{5}
+\newcommand{\enquote}[1]{``#1''}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Bjorvatn \& Eckel(2006)}]{Bjorvatn2006}
+\textsc{Bjorvatn}, K. \& C.~\textsc{Eckel} (2006): \enquote{{Policy Competition
+  for Foreign Direct Investment Between Asymmetric Countries}.}
+\newblock \emph{European Economic Review} \textbf{50(7)}: pp. 1891--1907.
+
+\bibitem[{Blomstrom \& Kokko(2003)}]{Blomstrom2003}
+\textsc{Blomstrom}, M. \& A.~\textsc{Kokko} (2003): \enquote{{The Economics of
+  Foreign Direct Investment Incentives}.}
+\newblock \emph{NBER Working Papers 9489}, National Bureau of Economic
+  Research, Inc.
+
+\bibitem[{Haaparanta(1996)}]{Haaparanta1996}
+\textsc{Haaparanta}, P. (1996): \enquote{{Competition for Foreign Direct
+  Investment}.}
+\newblock \emph{Journal of Public Economics} \textbf{63(1)}: pp. 141--53.
+
+\bibitem[{Haufler \& Wooton(2006)}]{Haufler2006}
+\textsc{Haufler}, A. \& I.~\textsc{Wooton} (2006): \enquote{{The Effects of
+  Regional Tax and Subsidy Coordination on Foreign Direct Investment}.}
+\newblock \emph{European Economic Review} \textbf{50(2)}: pp. 285--305.
+
+\bibitem[{Wells \emph{et~al.}(2001)Wells, Allen, Morisset, \&
+  Pirnia}]{Wells2001}
+\textsc{Wells}, L.~T., N.~\textsc{Allen}, J.~\textsc{Morisset}, \&
+  N.~\textsc{Pirnia} (2001): \emph{{Using Tax Incentives to Compete for Foreign
+  Investment: Are They Worth the Cost}?}
+\newblock Washington, DC: {FIAS}.
+
+\end{thebibliography}

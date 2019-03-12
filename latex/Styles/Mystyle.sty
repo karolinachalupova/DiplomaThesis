@@ -1,0 +1,152 @@
+%-----<<< PACKAGES >>>-----
+\usepackage{fancyhdr}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{textcomp}										%provides \texteuro, \textcelsius etc.
+\usepackage[smaller]{acronym}
+\usepackage{float}
+\usepackage{picins}                     %text beside figure
+\usepackage[width=.90\textwidth,hang,sf]{caption}		% captions in sans serif
+\usepackage{subfigure}                  %text beside figure
+\usepackage{natbib}											%style of literature (citations in hyperlinks)
+\bibpunct{(}{)}{;}{a}{}{;}							%see http://merkel.zoneo.net/Latex/natbib.php
+\usepackage{sectsty}
+\usepackage{boxedminipage}
+\usepackage{booktabs}
+\usepackage{enumerate}
+\usepackage{sidecap}
+\usepackage{wrapfig}
+\usepackage{relsize}
+\usepackage{setspace}
+\usepackage{lscape}											%enables landscape environment (for big tables)
+\usepackage{totpages}
+%\usepackage[colorlinks=false, unicode, pdftex, pdfauthor={\AuthorDP},
+%            pdftitle={\Bookname},
+%            pdfsubject={\Subject},
+%            pdfkeywords={\Keywords}, unicode]{hyperref}        
+\hypersetup{colorlinks=false,breaklinks=false,unicode,
+            linkcolor=black,urlcolor=black,pdfborder={0 0 0},
+            anchorcolor=black,citecolor=black,pdfstartview={},bookmarksnumbered} 	%alternatively add ``bookmarksopen'' 
+						
+%-----<<< ----------- >>>-----
+
+%-----<<< LAYOUT & BASICS >>>-----
+\usepackage[left=3.7cm,top=3.2cm,bottom=3.2cm,right=3.2cm]{geometry} 
+\onehalfspacing												%line spacing 1.5
+\setlength{\headheight}{20pt}         %header
+\allsectionsfont{\sffamily}						%headings in sans serif
+\hyphenation{E-con-o-mies Spill-o-ver-s}						%specifies hyphenation
+%-----<<< ----------- >>>-----
+
+%-----<<< HEADERS >>>-----
+\pagestyle{fancy} 																	
+\renewcommand{\chaptermark}[1]{  										
+\markboth{#1}{}}
+\renewcommand{\sectionmark}[1]{%
+\markright{\thesection\ #1}}
+\fancyhf{} 																					%delete current header and footer
+\fancyhead[RO]{\sffamily\thepage}
+\fancyhead[LO]{\sffamily\leftmark}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+\addtolength{\headheight}{0.5pt} 										%space for the rule
+\fancypagestyle{plain}{%
+\fancyhead{} 																				%get rid of headers on plain pages
+\renewcommand{\headrulewidth}{0pt} 									%and the line
+}
+%-----<<< ------ >>>-----
+
+%-----<<< THEOREMS >>>-----
+\newtheoremstyle{plainsf}% name
+  {9pt}%      Space above, empty = `usual value'
+  {9pt}%      Space below
+  {\itshape}% Body font
+  {}%         Indent amount (empty = no indent, \parindent = para indent)
+  {\sffamily}% Thm head font
+  {.}%        Punctuation after thm head
+  {.5em}% 		Space after thm head: \newline = linebreak
+  {}%         Thm head spec
+\newtheoremstyle{definitionsf}% name
+  {9pt}%      Space above, empty = `usual value'
+  {9pt}%      Space below
+  {}% 				Body font
+  {}%         Indent amount (empty = no indent, \parindent = para indent)
+  {\sffamily}% Thm head font
+  {.}%        Punctuation after thm head
+  {.5em}% 		Space after thm head: \newline = linebreak
+  {}%         Thm head spec
+  \newtheoremstyle{remarksf}% name
+  {9pt}%      Space above, empty = `usual value'
+  {9pt}%      Space below
+  {}% 				Body font
+  {}%         Indent amount (empty = no indent, \parindent = para indent)
+  {\slshape\sffamily}% Thm head font
+  {.}%        Punctuation after thm head
+  {.5em}% 		Space after thm head: \newline = linebreak
+  {}%         Thm head spec
+\theoremstyle{definitionsf} 
+\newtheorem{defin}{Definition}[chapter]  
+\newtheorem{ass}{Assumption}[chapter]
+\theoremstyle{plainsf} 
+\newtheorem{prop}{Proposition}[chapter]
+\newtheorem{con}[prop]{Conjecture}
+\newtheorem{lemma}{Lemma}[chapter]
+\theoremstyle{remarksf}
+\newtheorem{exam}{Example}[chapter]
+%-----<<< ---------------------------------- >>>-----
+
+%-----<<< ENVIRONMENTS AND COMMANDS >>>-----
+\newenvironment{quotesmall}{\begin{quote}\footnotesize{}}{\end{quote}\normalsize} %quote in footnotesize
+\let\oldquote\quote
+\let\oldendquote\endquote
+\newenvironment{quoteitalic}{\oldquote\em}{\oldendquote} 													%quote in italics
+\newenvironment{source}{\footnotesize \emph{Source:} }{\normalsize}
+\newenvironment{boxeditemize}{\begin{boxedminipage}{.65\textwidth}%								%boxed itemize (2/3 of textwidth) with white margins 
+\begin{minipage}{.93\textwidth}\vspace{.3cm}\begin{itemize}}%											
+{\end{itemize}\vspace{.01cm}\end{minipage}\end{boxedminipage}}
+\renewcommand{\descriptionlabel}[1]{\hspace{\labelsep}\textsf{#1}}								%description labels in sans serif
+\newcommand{\latinfont}{\emph}																										%latin phrases emphasized
+\renewcommand{\proofname}{\normalfont \textbf{\sffamily{Proof}}}									%proof's head in bold sans serif
+\newcounter{Listi}
+\newenvironment{listi}{\begin{list}{\emph{(\roman{Listi})}}												%list (i), (ii)
+{\usecounter{Listi}}}{\end{list}}
+\newcounter{Lista}
+\newenvironment{lista}{\begin{list}{\textbf{(\alph{Lista})}}											%list (a), (b)
+{\usecounter{Lista} \setlength{\listparindent}{50pt}}}{\end{list}}
+\newcommand{\ud}{\,\mathrm{d}}
+\newcommand{\frontmatter}{\pagenumbering{roman}}																	%shortcuts
+\newcommand{\mainmatter}{\pagenumbering{arabic}}
+\newcommand{\backmatter}{\pagenumbering{Roman}\appendix}
+\newcommand{\autohdr}{\fancyhead[LO]{\sffamily\thechapter.\hspace{0.15cm}\leftmark}}
+\renewcommand{\sectionautorefname}{Section} %capital S at the beginning
+\renewcommand{\chapterautorefname}{Chapter} %capital C at the beginning
+\renewcommand{\subsectionautorefname}{Subsection} %capital S at the beginning
+\renewcommand{\appendixautorefname}{Appendix} %capital A at the beginning
+%-----<<< ------ >>>-----
+
+%-----<<< REFERENCES >>>-----
+\newcommand{\assref}[1]{\hyperref[#1]{Assumption}~\mbox{\ref{#1}}} %Use \autoref for tables and figures
+\newcommand{\defref}[1]{\hyperref[#1]{Definition}~\mbox{\ref{#1}}}
+\newcommand{\proref}[1]{\hyperref[#1]{Proposition}~\mbox{\ref{#1}}}
+\newcommand{\lemref}[1]{\hyperref[#1]{Lemma}~\mbox{\ref{#1}}}
+\newcommand{\exaref}[1]{\hyperref[#1]{Example}~\mbox{\ref{#1}}}
+%-----<<< ------ >>>-----
+
+%-----<<< MATRIXES >>>-----
+\newcommand{\mat}[1]{\mbox{\boldmath $#1$}} %bold italic matrix
+\newcommand{\matt}[1]{\pmb{\mathit #1}}     %bold italic matrix for Greek
+\newcommand{\matit}[1]{\mathit #1}          %italic for Greek
+\newcommand{\pruh}[1]{\overline{#1}}        %overline to matrix
+%-----<<< ------ >>>-----
+
+%-----<<< MATLAB >>>-----
+\usepackage{fancybox}
+\usepackage{verbatim} 
+\newenvironment{matlab}[1]
+    {\VerbatimEnvironment
+    \bigskip\par\begin{minipage}{#1}\scriptsize\begin{Verbatim}}
+    {\end{Verbatim}\end{minipage}\par\bigskip\noindent}
+%-----<<< ------ >>>-----
+
+
