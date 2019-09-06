@@ -5,6 +5,7 @@
 *.xmpi
 *.toc
 *.gz
+*.pdf
 
 /literature/
 /latex_template/
