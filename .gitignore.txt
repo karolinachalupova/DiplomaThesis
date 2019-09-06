@@ -5,3 +5,5 @@
 *.xmpi
 *.toc
 *.gz
+
+/literature/
