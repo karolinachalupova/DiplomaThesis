@@ -1,49 +1,47 @@
 %% --------------------------------------------------------------------
-%% thesis.tex -- MAIN FILE (the one that you compile with LaTeX)
+%% thesis.tex -- MAIN FILE 
 %% --------------------------------------------------------------------
-%% version 1.8.09.02.16 (beta)
 
 %-----<<<<<<<<<<<< START >>>>>>>>>>>>-----
 \documentclass [a4paper,12pt]{report}  
 \usepackage[a-2u]{pdfx}      		
-\usepackage[cp1250]{inputenc}																	%cp1250 for Czechoslovak characters, utf8
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 
-%-----<<< --------------------------------- >>>-----
-
-%-----<<<<<<<<<<<< DEFINITIONS >>>>>>>>>>>>----- % for special characters of Czech/Slovak lang. use LaTeX commands only such as accute accent \'{o}, caron over the letter \v{s}, etc..
+%-----<<<<<<<<<<<< DEFINITIONS >>>>>>>>>>>>----- 
 \def \BookName {Master's thesis}
-\def \Bookname {The Price Elasticity of Gasoline Demand: A Meta-Analysis}
-\def \BooknameCZ {Cenov\'{a} Elasticita Popt\'{a}vky po Benz\'{i}nu: Meta-Anal\'{y}za} 
-\def \AutorDP {Bc.\ Firstname Lastname}													
-\def \AuthorDP {Firstname Lastname} 			%here use just English characters!
-\def \FirstNameDP {Firstname} 				
-\def \LastNameDP {Lastname} 							
-\def \Email {firstname.surname@gmail.com}
-\def \Year {2019}
+\def \Bookname {Can Machines Explain Stock Returns?}
+\def \BooknameCZ {Mohou stroje vysv\v{e}tlit akciov\'{e} v\'{y}nosy?} 
+\def \AutorDP {Bc.\ Karol\'{i}na Chalupov\'{a}}													
+\def \AuthorDP {Karolina Chalupova} 						%English characters
+\def \FirstNameDP {Karolina} 				
+\def \LastNameDP {Chalupova} 							
+\def \Email {chalupova.karolina@gmail.com}
+\def \Year {2020}
 \def \Place {Prague}
-\def \Subject {Price Elasticity of Gasoline Demand}
-\def \Keywords {keywordone, keywordtwo, keywordthree, keywordfour}
-\def \Klic {klicjedna, klicdva, klictri, klicctyri} 					
-\def \JEL {\href{http://ideas.repec.org/j/F12.html}{F12},			%http://www.aeaweb.org/journal/elclasjn_hold.html
- \href{http://ideas.repec.org/j/F21.html}{F21},								%change the codes in the argument and also in the URL
- \href{http://ideas.repec.org/j/F23.html}{F23},
- \href{http://ideas.repec.org/j/H25.html}{H25}, 	
- \href{http://ideas.repec.org/j/H71.html}{H71},
- \href{http://ideas.repec.org/j/H87.html}{H87}}	
-\def \Thesisweb {\href{https://is.cuni.cz/studium/eng/dipl_st/index.php?KEY=Az1}}		%thesis webpage (leave empty if you use none)
-\def \AcademicYear {2018/2019}
-\def \Supervisor {prof.\ Ing.\ Willing Reader, Ph.D.}
+\def \Subject {Can Machines Explain Stock Returns?}
+\def \Keywords {(interpretable) machine learning, neural networks, stock returns}
+\def \Klic {
+	(interpretovateln\'{e}) strojov\'{e} u\v{c}en\'{i}, 
+	neuronov\'{e} s\'{i}t\v{e}, 
+	akciov\'{e} v\'{y}nosy
+} 					
+\def \JEL {
+	\href{http://ideas.repec.org/j/C45.html}{C45},			%http://www.aeaweb.org/journal/elclasjn_hold.html
+ 	\href{http://ideas.repec.org/j/G12.html}{G12}
+}	
+\def \Thesisweb {\href{}}									%thesis webpage (leave empty if you use none)
+\def \AcademicYear {2019/2020}
+\def \Supervisor {doc.\ PhDr.\ Jozef Barun\'{i}k, Ph.D.}
 \def \StudyProgram {Economics and Finance}
-\def \EmailSup {reader@fsv.cuni.cz}
+\def \EmailSup {barunik@fsv.cuni.cz}
 \def \CUNI {Charles University}
 \def \FSS {Faculty of Social Sciences}
 \def \IES {Institute of Economic Studies}
-%-----<<< --------------------------------- >>>-----
 
-%-----<<< METADATA >>>-----%filecontents must be in form of text, do not put definition reference like ``\AuthorDP'' inside
+%-----<<< METADATA >>>-----
+%filecontents must be in form of text, do not put definition reference like ``\AuthorDP'' inside
 %\usepackage{filecontents}
 %\begin{filecontents*}{Thesis.xmpdata}
 %		\Author{Firstname Lastname} 
@@ -56,108 +54,105 @@
 %-----<<<<<<<<<<<< STYLES >>>>>>>>>>>>-----      														
 \usepackage{Styles/Head}
 \usepackage{Styles/Mystyle}	
-%-----<<< --------------------------------- >>>-----
 
 %-----<<<<<<<<<<<< DOCUMENT >>>>>>>>>>>>-----
 \begin{document}
-\frontmatter                   									%lowercase roman pagination for front matter
-\clubpenalty 9999 															%not so many orphants
-\widowpenalty 9999 															%not so many widows
-
-%-----<<< HEAD >>>-----
-\pagestyle{empty}                       				%no visible pagination here                    
-\BookHead
-%-----<<< ---- >>>-----
-
-%-----<<< DECLARATION >>>-----
-\input{01_Frontmatter/decl.tex}        					%input file
-\clearpage
-%-----<<< ----------- >>>-----
-
-
-%-----<<< ABSTRACT >>>-----
-\phantomsection													 				%bookmark anchor
-\pdfbookmark[0]{Abstract}{abst}        	 				%add bookmark
-\input{01_Frontmatter/abst.tex}       					%input file
-\clearpage
-%-----<<< -------- >>>-----
-
-%-----<<< ACKNOWLEDGMENTS >>>-----
-\input{01_Frontmatter/ackn.tex}      						%input file
-\clearpage
-%-----<<< --------------- >>>-----
-
-%-----<<< TABLE OF CONTENTS >>>-----
-\pagestyle{fancy} 											 				%headers style
-\fancyhead[LO]{\sffamily Contents}			 				%headers in sans serif and not in uppercase
-\phantomsection													 				%bookmark anchor
-\pdfbookmark[0]{Contents}{toc}        	 				%add bookmark
-\tableofcontents
-\label{toc}
-\clearpage
-%-----<<< ----------------- >>>-----
-
-%-----<<< LIST OF TABLES >>>-----
-\fancyhead[LO]{\sffamily List of Tables}				%headers in sans serif and not in uppercase
-\phantomsection																	%bookmark anchor
-\addcontentsline{toc}{chapter}{List of Tables}	%add LofT to the Table of Contents
-\listoftables
-\clearpage
-%-----<<< --------------- >>>-----
-
-%-----<<< LIST OF FIGURES >>>-----  
-\fancyhead[LO]{\sffamily List of Figures}
-\phantomsection																	%bookmark anchor
-\addcontentsline{toc}{chapter}{List of Figures}	%add LofF to the Table of Contents
-\listoffigures
-\clearpage
-%-----<<< ---------------- >>>-----
-
-%-----<<< ACRONYMS >>>-----   
-\fancyhead[LO]{\sffamily Acronyms}
-\phantomsection																	%bookmark anchor
-\addcontentsline{toc}{chapter}{Acronyms}				%add Acronyms to the Table of Contents
-\input{01_Frontmatter/acro.tex}									%List of Acronyms
-\clearpage
-%-----<<< ---------------- >>>-----
-
-%-----<<< THESIS PROPOSAL >>>----- 
-\fancyhead[LO]{\sffamily Master's Thesis Proposal}
-\phantomsection																	%bookmark anchor
-\addcontentsline{toc}{chapter}{Thesis Proposal}	%add Proposal to the Table of Contents
-\input{01_Frontmatter/prop.tex}									%Thesis proposal
-\clearpage
-%-----<<< ---------------- >>>-----
-
-%-----<<< MAIN MATTER >>>-----
-\mainmatter                   									%start arabic pagination from 1
-\autohdr																				%automatic headers for main matter
-\input{02_Mainmatter/01_Intro.tex}              %input field
-\input{02_Mainmatter/02.tex}
-\input{02_Mainmatter/03.tex}
-\input{02_Mainmatter/04.tex}
-\input{02_Mainmatter/05.tex}
-\input{02_Mainmatter/06.tex}
-\input{02_Mainmatter/99_Concl.tex}
-\clearpage
-%-----<<< -------- >>>-----
-
-%-----<<< REFERENCES >>>-----
-\fancyhead[LO]{\sffamily Bibliography}					%headers in sans serif and not in uppercase
-\bibliographystyle{Styles/Stylebib}							%style of literature, you can use e.g. newapa	instead of Styles/Stylebib
-\bibliography{Styles/Bibliography}							%bibliography database
-\addcontentsline{toc}{chapter}{Bibliography} 		%Add bibliography to the table of contents
-\clearpage
-%-----<<< ---------- >>>-----
-
-%-----<<< APPENDIXES >>>-----
-\backmatter																			%uppercase roman pagination for back matter; appendices start
-\autohdr																				%automatic headers     				
-\input{03_Backmatter/01_App.tex}           			%input file
-\input{03_Backmatter/02_App.tex}           			%input file
-\clearpage
-%-----<<< --------- >>>-----
-
-
+	\frontmatter                   							%lowercase roman pagination for front matter
+	\clubpenalty 9999 										%not so many orphants
+	\widowpenalty 9999 										%not so many widows
+	
+	%-----<<< HEAD >>>-----
+	\pagestyle{empty}                       				%no visible pagination here                    
+	\BookHead
+	%-----<<< ---- >>>-----
+	
+	%-----<<< DECLARATION >>>-----
+	\input{01_Frontmatter/decl.tex}        					%input file
+	\clearpage
+	%-----<<< ----------- >>>-----
+	
+	
+	%-----<<< ABSTRACT >>>-----
+	\phantomsection											%bookmark anchor
+	\pdfbookmark[0]{Abstract}{abst}        	 				%add bookmark
+	\input{01_Frontmatter/abst.tex}       					%input file
+	\clearpage
+	%-----<<< -------- >>>-----
+	
+	%-----<<< ACKNOWLEDGMENTS >>>-----
+	\input{01_Frontmatter/ackn.tex}      					%input file
+	\clearpage
+	%-----<<< --------------- >>>-----
+	
+	%-----<<< TABLE OF CONTENTS >>>-----
+	\pagestyle{fancy} 										%headers style
+	\fancyhead[LO]{\sffamily Contents}			 			%headers in sans serif and not in uppercase
+	\phantomsection											%bookmark anchor
+	\pdfbookmark[0]{Contents}{toc}        	 				%add bookmark
+	\tableofcontents
+	\label{toc}
+	\clearpage
+	%-----<<< ----------------- >>>-----
+	
+	%-----<<< LIST OF TABLES >>>-----
+	\fancyhead[LO]{\sffamily List of Tables}				%headers in sans serif and not in uppercase
+	\phantomsection											%bookmark anchor
+	\addcontentsline{toc}{chapter}{List of Tables}			%add LofT to the Table of Contents
+	\listoftables
+	\clearpage
+	%-----<<< --------------- >>>-----
+	
+	%-----<<< LIST OF FIGURES >>>-----  
+	\fancyhead[LO]{\sffamily List of Figures}
+	\phantomsection											%bookmark anchor
+	\addcontentsline{toc}{chapter}{List of Figures}			%add LofF to the Table of Contents
+	\listoffigures
+	\clearpage
+	%-----<<< ---------------- >>>-----
+	
+	%-----<<< ACRONYMS >>>-----   
+	\fancyhead[LO]{\sffamily Acronyms}
+	\phantomsection											%bookmark anchor
+	\addcontentsline{toc}{chapter}{Acronyms}				%add Acronyms to the Table of Contents
+	\input{01_Frontmatter/acro.tex}							%List of Acronyms
+	\clearpage
+	%-----<<< ---------------- >>>-----
+	
+	%-----<<< THESIS PROPOSAL >>>----- 
+	\fancyhead[LO]{\sffamily Master's Thesis Proposal}
+	\phantomsection											%bookmark anchor
+	\addcontentsline{toc}{chapter}{Thesis Proposal}			%add Proposal to the Table of Contents
+	\input{01_Frontmatter/prop.tex}							%Thesis proposal
+	\clearpage
+	%-----<<< ---------------- >>>-----
+	
+	%-----<<< MAIN MATTER >>>-----
+	\mainmatter                   							%start arabic pagination from 1
+	\autohdr												%automatic headers for main matter
+	\input{02_Mainmatter/01_Intro.tex}              		%input field
+	\input{02_Mainmatter/02.tex}
+	\input{02_Mainmatter/03.tex}
+	\input{02_Mainmatter/04.tex}
+	\input{02_Mainmatter/05.tex}
+	\input{02_Mainmatter/06.tex}
+	\input{02_Mainmatter/99_Concl.tex}
+	\clearpage
+	%-----<<< -------- >>>-----
+	
+	%-----<<< REFERENCES >>>-----
+	\fancyhead[LO]{\sffamily Bibliography}					%headers in sans serif and not in uppercase
+	\bibliographystyle{Styles/Stylebib}						%style of literature, you can use e.g. newapa	instead of Styles/Stylebib
+	\bibliography{Styles/Bibliography}						%bibliography database
+	\addcontentsline{toc}{chapter}{Bibliography} 			%Add bibliography to the table of contents
+	\clearpage
+	%-----<<< ---------- >>>-----
+	
+	%-----<<< APPENDIXES >>>-----
+	\backmatter												%uppercase roman pagination for back matter; appendices start
+	\autohdr												%automatic headers     				
+	\input{03_Backmatter/01_App.tex}           				%input file
+	\input{03_Backmatter/02_App.tex}           				%input file
+	\clearpage
+	%-----<<< --------- >>>-----
 \end{document}
 %-----<<<<<<<<< END OF DOCUMENT >>>>>>>>>-----
