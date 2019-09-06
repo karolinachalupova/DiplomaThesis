@@ -7,3 +7,4 @@
 *.gz
 
 /literature/
+/latex_template/
