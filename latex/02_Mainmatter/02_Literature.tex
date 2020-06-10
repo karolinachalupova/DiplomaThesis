@@ -1,24 +1,44 @@
 \chapter{Literature Review}
-\label{chap:lit}
+\label{chap:lit} 
+	
+ 	The largest pursuit in the asset pricing field is the search for an explanation of why different assets earn different average returns. The canonical answer to this question is that expected return of an asset at time $t$ is a linear function of systematic sources of risk, so-called factors ($F_t$). $\beta_{t-1}$, also called factor loadings, sensitivity to factors, or just betas, denote the amount of exposure to the underlying sources of risk: 
+		
+		\begin{equation}
+			E[r_t] = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
+		\end{equation}
+	
+	
+	$\beta_{t-1}$ is a $N \times K$ matrix, where $N$ denotes the number of assets and $K$ the amount of risk factors. $F_t$ is a $K \times1 $ vector.
+	
+	An important implication of \ref{eq:asset_pricing} is that the factor loadings, in turn, are a possibly non-linear function of firm-level characteristics ($C_{t-1}$). 
+		
+		\begin{equation}
+			\beta_{t-1}= g(C_{t-1})\label{eq:characteristics_as_proxies}
+		\end{equation}
+	
+	In the words of \cite{fama1993common}: "(...) if assets are priced rationally, variables that are
+	related to average returns, such as size and book-to-market equity, must proxy for
+	sensitivity to common (shared and thus undiversiable) risk factors in returns." 	
+	
+	The theoretical answer is therefore clear: the differences in average returns are explained by different exposure to risk factors. 
+	Take the simplest example, the CAPM model, where $K=1$ and $F_t$ is a (scalar) return of market portfolio at time $t$ \citep{cochrane2009asset}: on average, a high return on a stock is just a compensation for the stock's high correlation $\beta_{t-1}$ with the market. 
+	
+	The empirical answer, however, is complicated. One empirical issue with estimating equation \ref{eq:asset_pricing} is that both $F_t$ and $\beta_{t-1}$ are unobservable \citep{kelly2019characteristics}. The question reduces to: how to obtain the factors? 
+	
+	The first approach is to use prior knowledge of empirical behavior of average returns to pre-specify factors $F_t$, treat them as known and observable and then estimate $\beta_{t-1}$. In the portfolio-sorting method, a characteristic is chosen (somehow). Stocks are then sorted into portfolios based on their value of this characteristic \citep{fama1993common}. It is then studied whether different returns of these portfolios can be explained by a simpler factor model, such as CAPM. Using this mehod, academia has generated about 300 factors \citep{harvey2016and}, considering the top journals only.
+	
+	\cite{bryzgalova2019forest} generalize the portfolio-sorts using random trees.     
+	
+	The second strand of literature treats both $F_t$ and $\beta_{t-1}$ as unobservable, and estimates them both from the data, using the  relationship that firm-level characteristics are proxies of factor loadings (\ref{eq:characteristics_as_proxies}). For example, \cite{kelly2019characteristics} use characteristics as instrumental variables for factor loadings. Once loadings are instrumented, they use them to estimate the corresponding factors. 
+	
+    
+	
+	
 
-	The question of what drives the stock returns is one of the most widely-studied problems in finance. TODO some more intro or overview.
 	
-	\section{Asset Pricing: Overview of the Developments}
-	\label{sec:asset_pricing_lit}
-		
-		\subsection{Capital Asset Pricing Model}
-		
-		\subsection{Multifactor Models}
-		
-		\subsection{Arbitrage Pricing Theory}
-		
-		\subsection{The Multidimensional Challenge}
-		
-		\subsection{Current Attempts at Answering the Multidimensional Challenge}
+	   
 	
-	\section{Machine Learning in Asset Pricing} 
-	\label{{sec:ml_lit}}
-	
+	   
 	
 
 
