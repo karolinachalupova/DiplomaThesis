@@ -1,11 +1,29 @@
 \chapter{Literature Review}
 \label{chap:lit} 
 	
- 	The largest pursuit in the asset pricing field is the search for an explanation of why different assets earn different average returns. The canonical answer to this question is that expected return of an asset at time $t$ is a linear function of systematic sources of risk, so-called factors ($F_t$). $\beta_{t-1}$, also called factor loadings, sensitivity to factors, or just betas, denote the amount of exposure to the underlying sources of risk: 
+ 	
+ 	The field of asset pricing strives to put a value, or a price tag, on uncertain future payoffs. 
+ 	
+ 	One of the most studied problems in finance is explaining why different assets earn different returns. The problem is so central that an entire field evolved to solve it – the asset pricing. 
+ 	
+ 	
+ 	Answering this question is vital, as by doing so, one also explains many crucial phenomena. Why do some stock prices rise, while other stocks become worthless? What drives the returns - is it exposure to risk, market imperfections, mispricing or random chance? Is it all of them? Are some of the drivers more important than others? Is a given stock priced fairly, or is it too expensive or too cheap? How does the stock market go up and down? Why does it go mostly up? Why do some stocks go up in bad times? Are returns predictable? To what degree? Why do stock market bubbles occur? The answer to the over-arching problem of why different assets earn different returns would also explain all of these questions.  
+ 	
+ 	The question is so important that the in
+ 	
+ 	Asset pricing theory gives the following theoretical answer. Return of stock 
+ 	
+ 	\begin{equation}
+ 	r_t = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
+ 	\end{equation}
+ 	
+ 	The canonical answer to this question is that expected return of an asset at time $t$ is a linear function of systematic sources of risk, so-called factors ($F_t$). $\beta_{t-1}$, also called factor loadings, sensitivity to factors, or just betas, denote the amount of exposure to the underlying sources of risk: 
 		
 		\begin{equation}
-			E[r_t] = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
+			r_t = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
 		\end{equation}
+		
+	
 	
 	
 	$\beta_{t-1}$ is a $N \times K$ matrix, where $N$ denotes the number of assets and $K$ the amount of risk factors. $F_t$ is a $K \times1 $ vector.

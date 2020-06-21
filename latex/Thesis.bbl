@@ -1,4 +1,4 @@
-\begin{thebibliography}{4}
+\begin{thebibliography}{5}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -16,6 +16,11 @@
 \textsc{Fama}, E.~F. \& K.~R. \textsc{French} (1993): \enquote{Common risk
   factors in the returns on stocks and bonds.}
 \newblock \emph{Journal of} .
+
+\bibitem[{Harvey \emph{et~al.}(2016)Harvey, Liu, \& Zhu}]{harvey2016and}
+\textsc{Harvey}, C.~R., Y.~\textsc{Liu}, \& H.~\textsc{Zhu} (2016):
+  \enquote{… and the cross-section of expected returns.}
+\newblock \emph{The Review of Financial Studies} \textbf{29(1)}: pp. 5--68.
 
 \bibitem[{Kelly \emph{et~al.}(2019)Kelly, Pruitt, \&
   Su}]{kelly2019characteristics}
