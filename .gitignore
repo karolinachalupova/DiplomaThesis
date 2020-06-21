@@ -7,6 +7,9 @@
 *.synctex*
 *.pdf
 
+__pycache__/
+.ipynb_checkpoints/
+
 /literature/
 /latex_template/
 /progress_reports/
