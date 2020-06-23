@@ -1,4 +1,4 @@
-\begin{thebibliography}{5}
+\begin{thebibliography}{8}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -8,14 +8,30 @@
   \enquote{Forest through the trees: Building cross-sections of stock returns.}
 \newblock \emph{Available at SSRN 3493458} .
 
+\bibitem[{Cochrane(1996)}]{cochrane1996cross}
+\textsc{Cochrane}, J.~H. (1996): \enquote{A cross-sectional test of an
+  investment-based asset pricing model.}
+\newblock \emph{Journal of Political Economy} \textbf{104(3)}: pp. 572--621.
+
 \bibitem[{Cochrane(2009)}]{cochrane2009asset}
 \textsc{Cochrane}, J.~H. (2009): \emph{Asset pricing: Revised edition}.
 \newblock Princeton university press.
+
+\bibitem[{Cochrane(2011)}]{cochrane2011presidential}
+\textsc{Cochrane}, J.~H. (2011): \enquote{Presidential address: Discount
+  rates.}
+\newblock \emph{The Journal of finance} \textbf{66(4)}: pp. 1047--1108.
 
 \bibitem[{Fama \& French(1993)}]{fama1993common}
 \textsc{Fama}, E.~F. \& K.~R. \textsc{French} (1993): \enquote{Common risk
   factors in the returns on stocks and bonds.}
 \newblock \emph{Journal of} .
+
+\bibitem[{Gu \emph{et~al.}(2020)Gu, Kelly, \& Xiu}]{gu2020empirical}
+\textsc{Gu}, S., B.~\textsc{Kelly}, \& D.~\textsc{Xiu} (2020):
+  \enquote{Empirical asset pricing via machine learning.}
+\newblock \emph{The Review of Financial Studies} \textbf{33(5)}: pp.
+  2223--2273.
 
 \bibitem[{Harvey \emph{et~al.}(2016)Harvey, Liu, \& Zhu}]{harvey2016and}
 \textsc{Harvey}, C.~R., Y.~\textsc{Liu}, \& H.~\textsc{Zhu} (2016):

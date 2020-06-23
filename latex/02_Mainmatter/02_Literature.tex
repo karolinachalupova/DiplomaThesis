@@ -1,56 +1,149 @@
 \chapter{Literature Review}
 \label{chap:lit} 
 	
+ 	What determines average stock returns? In other words, what is the cause that one stock earns 1\% yearly return on average, while another one earns 15\%? [TODO add chart]
+ 	Understanding the basis of stock prices is important for a number of reasons. First, fair stock valuation is vital for proper functioning of the stock market. The stock market, in turn, needs to function so as to maintain its roles: it enables firms to obtain financing for their investments, it allows investors to store their present wealth for the future and to share risk. [TODO elaborate] Moreover, as history has shown, incorrect stock price valuations can have severe ramifications. [TODO explain this more and give examples.]
  	
- 	The field of asset pricing strives to put a value, or a price tag, on uncertain future payoffs. 
+ 	The question of what drives the stock returns is also a thrilling one to answer from several perspectives: that of an economist, of a statistician, of a machine learning engineer, and that of a finance practitioner.
+ 	An economist sees that stock returns reflect human decisions: putting a price tag on uncertain future payoffs reflects the trade-off between current and future consumption, human impatience and attitudes to risk \citep{cochrane2009asset} as well as human behavioral biases [TODO add reference]. She also sees that they speak of the complex web of relations between firms: as companies form relationships, they become exposed to similar risks, and their returns correlate. In the pattern of correlation and the structure of the net, one can see the determinants of macroeconomic stability and laws of shock transmission. [TODO add reference]. For the economist, studying the determinants of stock returns therefore is an opportunity to understand human behavior as well as the macroeconomic phenomena that emerge in the net of firms' relationships. 
+ 	The statistician is intrigued as well – she sees that the determinants of stock returns are notoriously over-studied and many of the published papers are just false positives \citep{harvey2016and}. She needs to control for all the gamut of published variables to separate the wheat from the chaff.
+ 	The machine learning engineer sees the problem as a prediction task: there is an infinite amount of data, the variables likely interact in complex ways, and are highly correlated. Machines have proven to excel in the task of predicting stock returns. They learn from financial data, model the interactions, and produce unparalleled returns predictions \citep{gu2020empirical}.
+ 	Finally, for the finance practitioner, understanding stock returns is closely related to the ability to predict them: to identify the future winners and losers, and sell and purchase them to make profit. As the machine-learning approaches are becoming the norm in the applied field, a need arises to understand the models on a deeper level – to interpret them, which brings us back to the economic underpinnings of stock returns.
  	
- 	One of the most studied problems in finance is explaining why different assets earn different returns. The problem is so central that an entire field evolved to solve it – the asset pricing. 
+ 	This thesis attempts to bring the economist, the statistician, the machine learning engineer and the finance practitioner together. I use machine learning models to predict stock returns and then interpret them to answer the economists' questions of what forces drive the stock returns. At the same time, the modeling approach naturally appeases the statistician's dissatisfaction with the false positive discoveries of prior research. Finally, the finance practitioner can use my model to select which stocks to trade, and then use the economic interpretation to learn what risks she is exposed to, and if she trades on this exposure, human biases, or market imperfections, and what are model's blinds spots and sources of performance. 
  	
+ 	The literature review proceeds as follows. First, I review the economic theory behind asset prices and common attitudes to modeling them. Second, I present the statistician's view: the multidimensional challenge faced in modeling stock returns \citep{cochrane2011presidential} and show what different approaches have been used to answer the challenge. Third, I present the machine learning approaches to asset pricing and how they are used to interpret the drivers of stock returns. Finally, I show how economics, statistics and machine learning, come together to answer the question of what drives the stock returns. 
  	
- 	Answering this question is vital, as by doing so, one also explains many crucial phenomena. Why do some stock prices rise, while other stocks become worthless? What drives the returns - is it exposure to risk, market imperfections, mispricing or random chance? Is it all of them? Are some of the drivers more important than others? Is a given stock priced fairly, or is it too expensive or too cheap? How does the stock market go up and down? Why does it go mostly up? Why do some stocks go up in bad times? Are returns predictable? To what degree? Why do stock market bubbles occur? The answer to the over-arching problem of why different assets earn different returns would also explain all of these questions.  
+ 	\section{Economist's Perspective}
  	
- 	The question is so important that the in
+	 	Valuing a stock amounts to putting a price tag on a stream of future payoffs. The field concerned with doing just that is called asset pricing. Consider the following basic asset-pricing equation \citep{cochrane2009asset}:
+	 	
+	 	\begin{equation}
+	 		p_t^i = E_t(m_{t+1} x_{t+1}^i ) \label{eq:pEmx}
+	 	\end{equation}
+	 	
+	 	In words, the price of an asset $i$ at time $t$ ($p_t^i$) is proportional to the expected asset's payoff at time $t+1$ ($x_{t+1}^i$). However, since the payoff does not come now ($t$), but in future ($t+1$), we discount it to present by the factor $m_{t+1}$, called the \textit{stochastic discount factor}. The term stochastic stands to express the idea that $m_{t+1}$ is not known with certainty at time $t$. There is only one assumption made in order to write the equation: it can be shown that $m_{t+1}$ exists if and only if the \textit{law of one price} holds, that is, if two assets generate the exact same payoff in all possible states of nature have the same price. If this is the case, there is a discount factor such that the equation holds for all assets $i$ \citep{cochrane2009asset}.
+	 	
+	 	In the stock market, equation \ref{eq:pEmx} translates to:
+	 	
+	 	\begin{equation}
+	 		1 = E_t(m_{t+1} R_{t+1}^i ) \label{eq:1EmR}
+	 	\end{equation} 
+	 	
+	 	In words, an investor pays 1 dollar now to collect $R_{t+1}^i$ dollars in the future. The payoff is called gross return and is the sum of future price and dividend $R_{t+1}^i = p_{t+1}^i+ d_{t+1}^i$. 
+	 	Using the definition of covariance, we can rearrange \ref{eq:1EmR} \citep{cochrane2009asset}:
+	 	
+	 	\begin{equation}
+	 		1 = E_t(m_{t+1}) E(R_{t+1}^i) + Cov(m_{t+1},R_{t+1}^i) 
+	 	\end{equation} 
  	
- 	Asset pricing theory gives the following theoretical answer. Return of stock 
- 	
- 	\begin{equation}
- 	r_t = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
- 	\end{equation}
- 	
- 	The canonical answer to this question is that expected return of an asset at time $t$ is a linear function of systematic sources of risk, so-called factors ($F_t$). $\beta_{t-1}$, also called factor loadings, sensitivity to factors, or just betas, denote the amount of exposure to the underlying sources of risk: 
-		
+ 		Defining the \textit{risk-free gross return} as $R_{t+1}^f=\frac{1}{E_t(m_{t+1})}$ and using it to further rearrange \citep{cochrane2009asset}:
+ 		
+ 		\begin{equation}
+ 			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
+ 		\end{equation} 
+ 		
+ 		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
+ 		
+ 		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var(m_{t+1})/Var(m_{t+1})$ to obtain:
+ 		
+ 		\begin{align}
+	 		E_t(R_{t+1}^i) 
+	 		& = {R_{t+1}^f} + 
+	 		\underbrace{
+	 			\frac{Cov(m_{t+1},R_{t+1}^i)}{Var(m_{t+1})}
+	 			}_\text{denote $\beta_{i,m}$} 
+ 			\cdot 
+ 			\underbrace{
+ 				\left(-\frac{Var(m_{t+1})}{E(m_{t+1})}\right)
+ 				}_\text{denote $\lambda_m$} \label{eq:factor_model} \\
+ 			& = {R_{t+1}^f} + \beta_{i,m} \cdot \lambda_m  \label{eq:beta_reprezentation}
+ 		\end{align} 
+ 		
+ 		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,m}$ and $\lambda_m$. $\lambda_m$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,m}$ can be interpreted as the amount of the risk inherent in asset $i$ and can be obtained as the coefficient from regressing asset $i$'s returns on the discount factor: 
+ 		
+ 		\begin{equation}
+ 		R_{t+1}^i = a_i + \beta_{i,m}m_{t+1} + \epsilon_{i,t+1}
+ 		\end{equation} 
+ 		
+ 		Equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation} show that the discount factor is the key to explaining expected returns: specifying the discount factor is the only content of any asset-pricing model \cite{cochrane2009asset}. I review the consumption-based model, the CAPM, and multiple-factor models as special cases of these equations providing more intuition about what drives the discount factor. 
+ 			 	
+	 	\subsection{Consumption-Based Model}
+	 	
+		 	The consumption-based model takes the additional assumption that the investor's preferences can be captured by her utility from consumption. The investor needs to decide how much to consume today and how much to save for tomorrow. First order conditions for this problem lead to the following specification of the discount factor \cite{cochrane2009asset}: 
+		 	
+		 	\begin{equation}
+		 		m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \label{consumtion_based_model}
+		 	\end{equation}
+		 	
+		 	where $u'(c_{t+1})$ denotes marginal utility from consumption. That is, the discount factor is the consumer's  marginal rate of substitution between consumption at time $t$ and $t+1$ and captures the willingness to trade consumption today for consumption tomorrow, where parameter $\kappa$ controls the impatience. This means that such an investor would demand a high return for stock that perform badly at times when she is unwilling to give up today's consumption, and a low return for stock that performs badly at times she is willing to give up today's consumption. 
+		 	
+		 	For simplification, one can assume constant relative risk aversion:
+		 	
+		 	\begin{equation}
+		 		u(c_t) = \frac{c^{1-\gamma}-1}{1-\gamma}
+		 	\end{equation}
+		 	
+		 	where $\gamma$ is a parameter positive for risk-averse individuals, and plug in to \ref{consumtion_based_model}: 
+		 	
+		 	\begin{equation}
+		 		m_{t+1} = \kappa \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma}
+		 	\end{equation}
+		 	
+		 	Plugging this to the key equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation}, one can see that according to this model, a stock should earn the higher average return the more it is correlated to consumption growth - and no more. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks. However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the consumption data is imperfect, or the assumption that the investor maximizes the utility from consumption is off. 
+	 	
+	 	\subsection{Capital Asset Pricing Model}
+	 	
+	 	\subsection{Mutliple-Factor Models}
+	 	
+	 		
+	 	
+	 	
+	 	\begin{equation}
+	 		r_t = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
+	 	\end{equation}
+	 	
+	 	The canonical answer to this question is that expected return of an asset at time $t$ is a linear function of systematic sources of risk, so-called factors ($F_t$). $\beta_{t-1}$, also called factor loadings, sensitivity to factors, or just betas, denote the amount of exposure to the underlying sources of risk: 
+			
 		\begin{equation}
 			r_t = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
 		\end{equation}
+	
 		
-	
-	
-	
-	$\beta_{t-1}$ is a $N \times K$ matrix, where $N$ denotes the number of assets and $K$ the amount of risk factors. $F_t$ is a $K \times1 $ vector.
-	
-	An important implication of \ref{eq:asset_pricing} is that the factor loadings, in turn, are a possibly non-linear function of firm-level characteristics ($C_{t-1}$). 
+		$\beta_{t-1}$ is a $N \times K$ matrix, where $N$ denotes the number of assets and $K$ the amount of risk factors. $F_t$ is a $K \times1 $ vector.
 		
+		An important implication of \ref{eq:asset_pricing} is that the factor loadings, in turn, are a possibly non-linear function of firm-level characteristics ($C_{t-1}$). 
+			
 		\begin{equation}
 			\beta_{t-1}= g(C_{t-1})\label{eq:characteristics_as_proxies}
 		\end{equation}
+		
+		In the words of \cite{fama1993common}: "(...) if assets are priced rationally, variables that are
+		related to average returns, such as size and book-to-market equity, must proxy for
+		sensitivity to common (shared and thus undiversiable) risk factors in returns." 	
+		
+		The theoretical answer is therefore clear: the differences in average returns are explained by different exposure to risk factors. 
+		Take the simplest example, the CAPM model, where $K=1$ and $F_t$ is a (scalar) return of market portfolio at time $t$ \citep{cochrane2009asset}: on average, a high return on a stock is just a compensation for the stock's high correlation $\beta_{t-1}$ with the market. 
+		
+		The empirical answer, however, is complicated. One empirical issue with estimating equation \ref{eq:asset_pricing} is that both $F_t$ and $\beta_{t-1}$ are unobservable \citep{kelly2019characteristics}. The question reduces to: how to obtain the factors? 
+		
+		The first approach is to use prior knowledge of empirical behavior of average returns to pre-specify factors $F_t$, treat them as known and observable and then estimate $\beta_{t-1}$. In the portfolio-sorting method, a characteristic is chosen (somehow). Stocks are then sorted into portfolios based on their value of this characteristic \citep{fama1993common}. It is then studied whether different returns of these portfolios can be explained by a simpler factor model, such as CAPM. Using this mehod, academia has generated about 300 factors \citep{harvey2016and}, considering the top journals only.
+		
+		\cite{bryzgalova2019forest} generalize the portfolio-sorts using random trees.     
+		
+		The second strand of literature treats both $F_t$ and $\beta_{t-1}$ as unobservable, and estimates them both from the data, using the  relationship that firm-level characteristics are proxies of factor loadings (\ref{eq:characteristics_as_proxies}). For example, \cite{kelly2019characteristics} use characteristics as instrumental variables for factor loadings. Once loadings are instrumented, they use them to estimate the corresponding factors.
 	
-	In the words of \cite{fama1993common}: "(...) if assets are priced rationally, variables that are
-	related to average returns, such as size and book-to-market equity, must proxy for
-	sensitivity to common (shared and thus undiversiable) risk factors in returns." 	
+	\section{Statistician's Perspective} 
+		
+		\epigraph{We argue that most claimed research findings in financial economics are likely false. }{\cite{harvey2016and}}
 	
-	The theoretical answer is therefore clear: the differences in average returns are explained by different exposure to risk factors. 
-	Take the simplest example, the CAPM model, where $K=1$ and $F_t$ is a (scalar) return of market portfolio at time $t$ \citep{cochrane2009asset}: on average, a high return on a stock is just a compensation for the stock's high correlation $\beta_{t-1}$ with the market. 
+	\section{Machine Learning Perspective}
 	
-	The empirical answer, however, is complicated. One empirical issue with estimating equation \ref{eq:asset_pricing} is that both $F_t$ and $\beta_{t-1}$ are unobservable \citep{kelly2019characteristics}. The question reduces to: how to obtain the factors? 
+		\epigraph{To adress [the multidimensional challenge] in the zoo of new variables, I suspect we will have to use different \textit{methods}.}{\cite{cochrane2011presidential}}
 	
-	The first approach is to use prior knowledge of empirical behavior of average returns to pre-specify factors $F_t$, treat them as known and observable and then estimate $\beta_{t-1}$. In the portfolio-sorting method, a characteristic is chosen (somehow). Stocks are then sorted into portfolios based on their value of this characteristic \citep{fama1993common}. It is then studied whether different returns of these portfolios can be explained by a simpler factor model, such as CAPM. Using this mehod, academia has generated about 300 factors \citep{harvey2016and}, considering the top journals only.
-	
-	\cite{bryzgalova2019forest} generalize the portfolio-sorts using random trees.     
-	
-	The second strand of literature treats both $F_t$ and $\beta_{t-1}$ as unobservable, and estimates them both from the data, using the  relationship that firm-level characteristics are proxies of factor loadings (\ref{eq:characteristics_as_proxies}). For example, \cite{kelly2019characteristics} use characteristics as instrumental variables for factor loadings. Once loadings are instrumented, they use them to estimate the corresponding factors. 
-	
+		\cite{gu2020empirical} 
     
-	
+	\section{Putting It All Together}
 	
 
 	
