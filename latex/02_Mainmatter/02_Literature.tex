@@ -43,7 +43,7 @@
  			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
  		\end{equation} 
  		
- 		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
+ 		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. Returns positively correlated to the discount factor should be low, and vice versa. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
  		
  		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var(m_{t+1})/Var(m_{t+1})$ to obtain:
  		
@@ -57,7 +57,11 @@
  			\underbrace{
  				\left(-\frac{Var(m_{t+1})}{E(m_{t+1})}\right)
  				}_\text{denote $\lambda_m$} \label{eq:factor_model} \\
- 			& = {R_{t+1}^f} + \beta_{i,m} \cdot \lambda_m  \label{eq:beta_reprezentation}
+ 			& = \underbrace{{R_{t+1}^f}
+ 				}_\text{risk-free return} 
+ 				+ 
+ 				\underbrace{\beta_{i,m} \cdot \lambda_m
+ 				}_\text{risk adjustment} \label{eq:beta_reprezentation}
  		\end{align} 
  		
  		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,m}$ and $\lambda_m$. $\lambda_m$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,m}$ can be interpreted as the amount of the risk inherent in asset $i$ and can be obtained as the coefficient from regressing asset $i$'s returns on the discount factor: 
@@ -66,7 +70,7 @@
  		R_{t+1}^i = a_i + \beta_{i,m}m_{t+1} + \epsilon_{i,t+1}
  		\end{equation} 
  		
- 		Equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation} show that the discount factor is the key to explaining expected returns: specifying the discount factor is the only content of any asset-pricing model \cite{cochrane2009asset}. I review the consumption-based model, the CAPM, and multiple-factor models as special cases of these equations providing more intuition about what drives the discount factor. 
+ 		Equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation} show that the discount factor is the key to explaining stock returns, as the latter is nothing but compensation for correlation with the former. Thus, specifying the discount factor is the only content of any asset-pricing model \cite{cochrane2009asset}. I review the consumption-based model, the CAPM, and multiple-factor models as special cases of these equations providing more intuition about what drives the discount factor. 
  			 	
 	 	\subsection{Consumption-Based Model}
 	 	
@@ -90,12 +94,41 @@
 		 		m_{t+1} = \kappa \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma}
 		 	\end{equation}
 		 	
-		 	Plugging this to the key equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation}, one can see that according to this model, a stock should earn the higher average return the more it is correlated to consumption growth - and no more. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks. However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the consumption data is imperfect, or the assumption that the investor maximizes the utility from consumption is off. 
+		 	 That is, according to the consumption-based model, the discount factor is inversely proportionate to consumption growth. \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should have lower returns, so it follows that assets highly correlated with consumption growth should earn high returns. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks that perform well during bad times. However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the aggregate consumption data are imperfectly measured, or the assumption that the investor maximizes the utility from consumption is off. This motivates tying the discount factor to other variables.
 	 	
 	 	\subsection{Capital Asset Pricing Model}
 	 	
+	 		The Capital Asset Pricing Model (CAPM) is the possibly most widely-known asset pricing model. It is the special case of the consumption-based model and it makes the additional assumption that the utility from consumption is logarithmic \citep{rubinstein1976valuation}:
+	 		
+	 		\begin{equation}
+	 			u(c_t) = ln(c_t)
+	 		\end{equation}
+	 		
+	 		Plugging this to \ref{consumtion_based_model}, one obtains 
+	 		
+	 		\begin{equation}
+	 			m_{t+1} = \kappa \frac{c_t}{c_{t+j}}
+	 		\end{equation}
+	 		
+	 		The CAPM operates with the concept of wealth portfolio, which comprises all world's wealth, inclusing real estate, metals, machinery or art. The price of this portfolio is (by \ref{eq:pEmx} and plugging in for the discount factor):  
+	 		
+	 		\begin{equation}
+	 		p_t^W  = E_t \sum_{j=1}^{\infty} m_{t+j}c_{t+1} = \frac{\kappa}{1-\kappa}c_t
+	 		\end{equation}
+	 		
+	 		and the return on wealth portfolio is therefore 
+	 		
+	 		\begin{equation}
+	 		R_{t+1}^W  = \frac{p_{t+1}^W + c_{t+1}}{p_t^W} = \frac{1}{\kappa} \frac{c_{t+1}}{c_t} = \frac{1}{m_{t+1}}
+	 		\end{equation}
+	 		
+	 		Thus, according to CAPM, the discount factor is the inverse of the return on the wealth portfolio. As \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should earn low returns, if follows that assets positively correlated with the wealth portfolio should earn higher returns. Again, this makes sense: an investor who only cares about consumption demands a higher return for stocks that perform badly when other sources of wealth perform badly, and vice versa, she is willing to forgo some average return in exchange for good performance at times when all else fails.   
+	 		
+	 		CAPM accomplishes the task of removing consumption data from empirical estimation of discount factor \citep{cochrane2009asset}, replacing them by return on wealth portfolio. However, this return is unobservable, so it is empirically often replaced by return on market portfolio of stocks. This may be problematic, as wealth comprises many more assets than just stocks, so the approximation is likely too crude \citep{roll1977critique}.  
+	 		
+	 		
 	 	\subsection{Mutliple-Factor Models}
-	 	
+	 		
 	 		
 	 	
 	 	

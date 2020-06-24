@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{10}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -44,5 +44,15 @@
   \enquote{Characteristics are covariances: A unified model of risk and
   return.}
 \newblock \emph{Journal of Financial Economics} \textbf{134(3)}: pp. 501--524.
+
+\bibitem[{Roll(1977)}]{roll1977critique}
+\textsc{Roll}, R. (1977): \enquote{A critique of the asset pricing theory's
+  tests part i: On past and potential testability of the theory.}
+\newblock \emph{Journal of financial economics} \textbf{4(2)}: pp. 129--176.
+
+\bibitem[{Rubinstein(1976)}]{rubinstein1976valuation}
+\textsc{Rubinstein}, M. (1976): \enquote{The valuation of uncertain income
+  streams and the pricing of options.}
+\newblock \emph{The Bell Journal of Economics} pp. 407--425.
 
 \end{thebibliography}
