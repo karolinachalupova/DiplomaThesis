@@ -34,40 +34,40 @@
 	 	Using the definition of covariance, we can rearrange \ref{eq:1EmR} \citep{cochrane2009asset}:
 	 	
 	 	\begin{equation}
-	 		1 = E_t(m_{t+1}) E(R_{t+1}^i) + Cov(m_{t+1},R_{t+1}^i) 
+	 		1 = E_t(m_{t+1}) E_t(R_{t+1}^i) + Cov_t(m_{t+1},R_{t+1}^i) 
 	 	\end{equation} 
  	
  		Defining the \textit{risk-free gross return} as $R_{t+1}^f=\frac{1}{E_t(m_{t+1})}$ and using it to further rearrange \citep{cochrane2009asset}:
  		
  		\begin{equation}
- 			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
+ 			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov_t(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
  		\end{equation} 
  		
  		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. Returns positively correlated to the discount factor should be low, and vice versa. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
  		
- 		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var(m_{t+1})/Var(m_{t+1})$ to obtain:
+ 		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var_t(m_{t+1})/Var_t(m_{t+1})$ to obtain:
  		
  		\begin{align}
 	 		E_t(R_{t+1}^i) 
 	 		& = {R_{t+1}^f} + 
 	 		\underbrace{
-	 			\frac{Cov(m_{t+1},R_{t+1}^i)}{Var(m_{t+1})}
-	 			}_\text{denote $\beta_{i,m}$} 
+	 			\frac{Cov_t(m_{t+1},R_{t+1}^i)}{Var_t(m_{t+1})}
+	 			}_\text{denote $\beta_{i,t}$} 
  			\cdot 
  			\underbrace{
- 				\left(-\frac{Var(m_{t+1})}{E(m_{t+1})}\right)
- 				}_\text{denote $\lambda_m$} \label{eq:factor_model} \\
+ 				\left(-\frac{Var_t(m_{t+1})}{E_t(m_{t+1})}\right)
+ 				}_\text{denote $\lambda_{t}$} \label{eq:factor_model} \\
  			& = \underbrace{{R_{t+1}^f}
  				}_\text{risk-free return} 
  				+ 
- 				\underbrace{\beta_{i,m} \cdot \lambda_m
+ 				\underbrace{\beta_{i,t} \cdot \lambda_{t}
  				}_\text{risk adjustment} \label{eq:beta_reprezentation}
  		\end{align} 
  		
- 		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,m}$ and $\lambda_m$. $\lambda_m$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,m}$ can be interpreted as the amount of the risk inherent in asset $i$ and can be obtained as the coefficient from regressing asset $i$'s returns on the discount factor: 
+ 		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,t}$ and $\lambda_t$. $\lambda_t$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,t}$ can be interpreted as the amount of the risk inherent in asset $i$. Empirically, it can be obtained as the coefficient from regressing asset $i$'s returns on the discount factor [TODO does this estimation introduce the assumption that beta is time-invariant?]: 
  		
  		\begin{equation}
- 		R_{t+1}^i = a_i + \beta_{i,m}m_{t+1} + \epsilon_{i,t+1}
+ 		R_{t+1}^i = a_i + \beta_{i}m_{t+1} + \epsilon_{i,t+1}
  		\end{equation} 
  		
  		Equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation} show that the discount factor is the key to explaining stock returns, as the latter is nothing but compensation for correlation with the former. Thus, specifying the discount factor is the only content of any asset-pricing model \cite{cochrane2009asset}. I review the consumption-based model, the CAPM, and multiple-factor models as special cases of these equations providing more intuition about what drives the discount factor. 
@@ -80,7 +80,7 @@
 		 		m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \label{consumtion_based_model}
 		 	\end{equation}
 		 	
-		 	where $u'(c_{t+1})$ denotes marginal utility from consumption. That is, the discount factor is the consumer's  marginal rate of substitution between consumption at time $t$ and $t+1$ and captures the willingness to trade consumption today for consumption tomorrow, where parameter $\kappa$ controls the impatience. This means that such an investor would demand a high return for stock that perform badly at times when she is unwilling to give up today's consumption, and a low return for stock that performs badly at times she is willing to give up today's consumption. 
+		 	where $u'(c_{t+1})$ denotes marginal utility from consumption. That is, the discount factor is the consumer's  marginal rate of substitution between consumption at time $t$ and $t+1$ and captures the willingness to trade consumption today for consumption tomorrow, where parameter $\kappa$ is the weight placed on future utility. This means that such an investor would demand a high return for stock that perform badly at times when she is unwilling to give up today's consumption, and a low return for stock that performs badly at times she is willing to give up today's consumption. 
 		 	
 		 	For simplification, one can assume constant relative risk aversion:
 		 	
@@ -91,14 +91,24 @@
 		 	where $\gamma$ is a parameter positive for risk-averse individuals, and plug in to \ref{consumtion_based_model}: 
 		 	
 		 	\begin{equation}
-		 		m_{t+1} = \kappa \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma}
+		 	m_{t+1} = \kappa \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma} 
 		 	\end{equation}
 		 	
-		 	 That is, according to the consumption-based model, the discount factor is inversely proportionate to consumption growth. \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should have lower returns, so it follows that assets highly correlated with consumption growth should earn high returns. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks that perform well during bad times. However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the aggregate consumption data are imperfectly measured, or the assumption that the investor maximizes the utility from consumption is off. This motivates tying the discount factor to other variables.
+		 	 That is, the discount factor is inversely proportionate to consumption growth. \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should have lower returns, so it follows that assets highly correlated with consumption growth should earn high returns. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks that perform well during bad times.
+		 	 
+		 	 For the sake of completeness, we can rewrite this to the equivalent beta-representation using \ref{eq:beta_reprezentation} [TODO odvodit, overit, zpresnit notaci]: 
+		 	 
+		 	 \begin{align}
+		 	 & E_t(R_{t+1}^i) = R_{t+1}^f + \beta_{i,t} \cdot \lambda_{t} \\
+		 	 & \lambda_{t} = \gamma Var_t(\Delta c_{t+1}) \\
+		 	 & R_{t+1}^i = \alpha_{i,t} + \beta_{i,t} \Delta c_{t+1} + \epsilon_{i,t+1}
+		 	 \end{align}
+		 	 
+		 	  However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the aggregate consumption data are imperfectly measured, or the assumption that the investor maximizes the utility from consumption is off. This motivates tying the discount factor to other variables.
 	 	
 	 	\subsection{Capital Asset Pricing Model}
 	 	
-	 		The Capital Asset Pricing Model (CAPM) is the possibly most widely-known asset pricing model. It is the special case of the consumption-based model and it makes the additional assumption that the utility from consumption is logarithmic \citep{rubinstein1976valuation}:
+	 		The Capital Asset Pricing Model (CAPM) is the possibly most widely-known asset pricing model. It is the special case of the consumption-based model, making the additional assumption that the utility from consumption is logarithmic \citep{rubinstein1976valuation}:
 	 		
 	 		\begin{equation}
 	 			u(c_t) = ln(c_t)
@@ -122,57 +132,105 @@
 	 		R_{t+1}^W  = \frac{p_{t+1}^W + c_{t+1}}{p_t^W} = \frac{1}{\kappa} \frac{c_{t+1}}{c_t} = \frac{1}{m_{t+1}}
 	 		\end{equation}
 	 		
-	 		Thus, according to CAPM, the discount factor is the inverse of the return on the wealth portfolio. As \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should earn low returns, if follows that assets positively correlated with the wealth portfolio should earn higher returns. Again, this makes sense: an investor who only cares about consumption demands a higher return for stocks that perform badly when other sources of wealth perform badly, and vice versa, she is willing to forgo some average return in exchange for good performance at times when all else fails.   
+	 		Thus, according to CAPM, the discount factor is the inverse of the return on the wealth portfolio. As \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should earn low returns, if follows that assets positively correlated with the wealth portfolio should earn higher returns. Again, this makes sense: an investor who only cares about consumption demands a higher return for stocks that perform badly when other sources of wealth perform badly, and vice versa, she is willing to forgo some average return in exchange for good performance at times when all else fails. 
+	 		
+	 		Again, for completeness, we can rewrite this to the equivalent beta-representation using \ref{eq:beta_reprezentation} [TODO odvodit, overit, zpresnit notaci]: 
+	 		
+	 		\begin{align}
+	 			& E(R_{t+1}^i) = \gamma + \beta_{i,t} \cdot \lambda_{t} \\
+	 			& \lambda_{t} = E_t(R^W_{t+1}) - \gamma \\
+	 			& R_{t+1}^i = \alpha_{i,t} + \beta_{i,t} R^W_{t+1} + \epsilon_{i,t+1}
+	 		\end{align}  
 	 		
 	 		CAPM accomplishes the task of removing consumption data from empirical estimation of discount factor \citep{cochrane2009asset}, replacing them by return on wealth portfolio. However, this return is unobservable, so it is empirically often replaced by return on market portfolio of stocks. This may be problematic, as wealth comprises many more assets than just stocks, so the approximation is likely too crude \citep{roll1977critique}.  
 	 		
 	 		
-	 	\subsection{Mutliple-Factor Models}
+	 	\subsection{Multi-factor Models}
 	 		
+	 		Multi-factor models are motivated by the notions that consumption growth and return on wealth portfolio do not proxy the discount factor empirically very well (in the consumption-based model and CAPM respectively), and they try to find other proxies for the discount factor $m_{t+1}$, factors $\vec{f}_{t+1}$. If we retain the idea that investor maximizes her utility from consumption, then the factors  should proxy the marginal utility growth \citep{cochrane2009asset}: 
 	 		
+	 		\begin{equation}
+	 		m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \approx a+\vec{b}'\vec{f}_{t+1}
+	 		\end{equation}
+	 		
+	 		The expression on the left-hand side can be interpreted as the rate at which the investor is willing to swap future for current consumption. [TODO verify that this understanding of mine is correct]. There are many variables that affect this rate. The current state of the economy, such as GDP growth, interest rate or investment, as well as new of the future states, forecasting either asset returns or macroeconomic variables. Many candidate factors can be defended on these grounds.   
+	 		
+	 		Multi-factor models explain returns as	 
 	 	
 	 	
-	 	\begin{equation}
-	 		r_t = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
-	 	\end{equation}
-	 	
-	 	The canonical answer to this question is that expected return of an asset at time $t$ is a linear function of systematic sources of risk, so-called factors ($F_t$). $\beta_{t-1}$, also called factor loadings, sensitivity to factors, or just betas, denote the amount of exposure to the underlying sources of risk: 
+			 	\begin{align}
+			 		& E_t(R^i_{t+1}) = R^f_{t+1} + \boldsymbol\beta'_{i,t} \boldsymbol\lambda_{t} \\
+			 		& R^i_{t+1} = \alpha_{i,t} + \boldsymbol\beta'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1}
+			 	\end{align}
+			 
+			 The \textit{factor loadings} $\boldsymbol\beta'_{i,t}$ of size $1\times K$ are exposures to risk factors $\vec{f}_{t+1}$ of size $K \times 1$, where $K$ is the number of risk factors. They represent the amount of risk inherent in asset $i$ due to its correlation to the corresponding risk factor. The $\boldsymbol\lambda_{t}$ of size $K \times 1$ are interpretable as the risk prices at time $t$ \citep{kelly2019characteristics}. (Note that the CAPM and consumption-based models are special cases of the multiple-factor models, where $K$, the number of factors, is 1.) 			
+			 
+			 First multi-factor model is \cite{fama1996multifactor} [TODO make sure the time indexation is right]:
+			 
+			 \begin{align}
+			 	& E(R^i) = R^f + \boldsymbol\beta'_{i} \boldsymbol\lambda \\
+			 	& R^i_{t+1} = \alpha_{i} + \boldsymbol\beta'_{i} \vec{f}_{t+1} + \epsilon_{i,t+1}
+			 \end{align}
+		 
+		 	with factors  
+			  		
+				\begin{equation}
+					\vec{f}_{t+1} = 
+						\begin{pmatrix}
+							R^M_{t+1}-R^f_{t+1} \\
+							SMB_{t+1} \\
+							HML_{t+1}				
+						\end{pmatrix}
+				\end{equation}
 			
-		\begin{equation}
-			r_t = \beta_{t-1}F_t + \epsilon_t  = g(C_{t-1})F_t + \epsilon_t \label{eq:asset_pricing}
-		\end{equation}
+			and with factor prices 
+			
+			\begin{equation}
+			  \boldsymbol \lambda =
+				\begin{pmatrix}
+					E(R^M})-R^f \\
+					E(SMB) \\
+					E(HML)				
+				\end{pmatrix} 
+			\end{equation}
+			 
+			The $R^M_{t+1}-R^f_{t+1}$ is the return on market portfolio above risk-free rate (as in CAPM), $SMB_{t+1}$ is the return on small-cap portfolio minus the return on big-cap portfolio, and $HML_{t+1}$ is the return on portfolio of stocks with small market values relative to book value, minus the return on portfolio of stocks with high market values relative to book value. Note that the risk prices $ \boldsymbol \lambda$ and $\boldsymbol\beta'_{i}$ are time-invariant. Explanations why $SMB$ and $HML$ should be correlated to the discount factor include that they proxy for financial distress \citep{fama1996multifactor}, \citep{heaton2000portfolio}} or that they forecast the future state of the economy \citep{liew2000can}. 		
+			\cite{fama2015five} augment this three-factor model to five factors, adding $RMW$ and $CMA$, which are, respectively, the difference in returns on portfolios of firms with robust and weak profitability, and difference in returns on portfolios of firms with conservative and aggressive investment. 
+			
 	
+	\section{Statistician's Perspective} 
 		
-		$\beta_{t-1}$ is a $N \times K$ matrix, where $N$ denotes the number of assets and $K$ the amount of risk factors. $F_t$ is a $K \times1 $ vector.
+		\epigraph{We argue that most claimed research findings in financial economics are likely false. }{\cite{harvey2016and}}
+		
+		Although theoretically the factor model is appealing, it is problematic to estimate it empirically. This is because the factors and betas are unobserved. 
+		
+		The first approach is to use prior knowledge of empirical behavior of average returns to pre-specify the factors, treat them as observable and then estimate $\beta_{t-1}$.
+		
+		A case in point is the standard \textit{portfolio-sorts procedure}. 
+		1. Choose firm characteristic 
+		2. Sort stocks into portfolios base on that characteristic \citep{fama1993common}
+		3. See if differences in returns between these portfolios can be explained by a simpler factor model, such as CAPM or Fama-French-3 or Fama-French-5. If not, you have discovered an anomaly. 
+		4. Publish.
+		
+		Using this method, academia has generated about 300 factors \citep{harvey2016and}, considering the top journals only. As the problem of average returns is so over-studied, 
+	
+	\section{Machine Learning Perspective}
+	
+		\epigraph{To adress [the multidimensional challenge] in the zoo of new variables, I suspect we will have to use different \textit{methods}.}{\cite{cochrane2011presidential}}
 		
 		An important implication of \ref{eq:asset_pricing} is that the factor loadings, in turn, are a possibly non-linear function of firm-level characteristics ($C_{t-1}$). 
-			
+		
 		\begin{equation}
-			\beta_{t-1}= g(C_{t-1})\label{eq:characteristics_as_proxies}
+		\beta_{t-1}= g(C_{t-1})\label{eq:characteristics_as_proxies}
 		\end{equation}
 		
 		In the words of \cite{fama1993common}: "(...) if assets are priced rationally, variables that are
 		related to average returns, such as size and book-to-market equity, must proxy for
 		sensitivity to common (shared and thus undiversiable) risk factors in returns." 	
 		
-		The theoretical answer is therefore clear: the differences in average returns are explained by different exposure to risk factors. 
-		Take the simplest example, the CAPM model, where $K=1$ and $F_t$ is a (scalar) return of market portfolio at time $t$ \citep{cochrane2009asset}: on average, a high return on a stock is just a compensation for the stock's high correlation $\beta_{t-1}$ with the market. 
-		
-		The empirical answer, however, is complicated. One empirical issue with estimating equation \ref{eq:asset_pricing} is that both $F_t$ and $\beta_{t-1}$ are unobservable \citep{kelly2019characteristics}. The question reduces to: how to obtain the factors? 
-		
-		The first approach is to use prior knowledge of empirical behavior of average returns to pre-specify factors $F_t$, treat them as known and observable and then estimate $\beta_{t-1}$. In the portfolio-sorting method, a characteristic is chosen (somehow). Stocks are then sorted into portfolios based on their value of this characteristic \citep{fama1993common}. It is then studied whether different returns of these portfolios can be explained by a simpler factor model, such as CAPM. Using this mehod, academia has generated about 300 factors \citep{harvey2016and}, considering the top journals only.
-		
 		\cite{bryzgalova2019forest} generalize the portfolio-sorts using random trees.     
 		
 		The second strand of literature treats both $F_t$ and $\beta_{t-1}$ as unobservable, and estimates them both from the data, using the  relationship that firm-level characteristics are proxies of factor loadings (\ref{eq:characteristics_as_proxies}). For example, \cite{kelly2019characteristics} use characteristics as instrumental variables for factor loadings. Once loadings are instrumented, they use them to estimate the corresponding factors.
-	
-	\section{Statistician's Perspective} 
-		
-		\epigraph{We argue that most claimed research findings in financial economics are likely false. }{\cite{harvey2016and}}
-	
-	\section{Machine Learning Perspective}
-	
-		\epigraph{To adress [the multidimensional challenge] in the zoo of new variables, I suspect we will have to use different \textit{methods}.}{\cite{cochrane2011presidential}}
 	
 		\cite{gu2020empirical} 
     
