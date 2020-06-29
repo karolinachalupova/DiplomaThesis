@@ -3,58 +3,86 @@
 
 \section{Raw Data}
 
-The data originates from two sources. The first and most important source is Thomson Reuters Datastream. It covers publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore) and contains the firms' yearly accounting figures and daily market information (e.g., price and volume).  The second data source is Institutional Brokers’ Estimate System (I/B/E/S) from Wharton Research Data Services, which provides analysts' forecasts. 
-
-The firms are filtered based on [TODO add source of filtering methods].  
-The final sample includes 8350 companies.
+	The data originates from two sources. The first and most important source is Thomson Reuters Datastream. It covers publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore) and contains the firms' yearly accounting figures and daily market information (e.g., price and volume).  The second data source is Institutional Brokers’ Estimate System (I/B/E/S) from Wharton Research Data Services, which provides analysts' forecasts. 
+	
+	The firms are filtered based on [TODO add source of filtering methods].  
+	The final sample includes 8350 companies.
 
 
 \section{Anomalies Data}
-The anomaly dataset consists of 153 anomalies published in leading financial and accounting journals. The data is monthly and spans from January 1990 to December 2018. It covers the same 8350 firms as the raw data, totaling 1,607,117 observations. 
-
-The anomalies can be classified into three groups: Fundamentals, Frictions, and I/B/E/S anomalies. Fundamental anomalies are primarily calculated from yearly accounting statements and are exemplified by Total Accruals, Asset Growth, or Leverage. Fundamental anomalies fall into 5 broad categories: Accruals (e.g., Total Accruals, Change in Common Equity, Inventory Growth), Investment (e.g., Asset Growth, Debt Issuance, Net Operating Assets), Intangibles (e.g., Asset Liquidity, Earnings Persistence, Herfindahl Index), Profitability (e.g., Profit Margin, Return-on-Equity, Capital Turnover) and Value (e.g., Enterprise Multiple, Assets-to-Market, or Net Payout Yield). Friction anomalies are primarily calculated from daily market data. For example, they include Bid-Ask Spread, 11-Month Residual Momentum, 52-Week-High, and Long-Term Reversal. I/B/E/S anomalies are calculated from the I/B/E/S dataset and cover analysts' forecasts and recommendations, such as Analyst Value, Change in Recommendation, or Forecast Dispersion. There are 93 Fundamentals, 48 Frictions and 12 I/B/E/S anomalies. Within the Fundamentals category, there are 21 Accruals, 15 Investment, 25 Intangibles, 18 Profitability, and 14 Value anomalies.  
-
-A complete list of the anomalies can be found in the Appendix. [TODO]. 
-
-Figures \ref{fig:corrplot_funds}, \ref{fig:corrplot_frictions}, and \ref{fig:corrplot_ibes} show plots of correlation matrices of Fundamental, Frictions, and I/B/E/S anomalies respectively. Correlations between variables from different categories are not shown, as they are all very low but for negligible exceptions. 
-
-
-\begin{center}
-	\begin{figure}
-		\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_funds.pdf}
-		\caption{Correlation Matrix of Fundamental Anomalies}
-		\label{fig:corrplot_funds}
-	\end{figure}
-\end{center}
-
-\begin{center}
-	\begin{figure}
-		\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_frictions.pdf}
-		\caption{Correlation Matrix of Frictions Anomalies}
-		\label{fig:corrplot_frictions}
-	\end{figure}
-\end{center}
-
-
-\begin{center}
-	\begin{figure}
-		\includegraphics{Figures/corrplot_ibes.pdf}
-		\caption{Correlation Matrix of I/B/E/S Anomalies}
-		\label{fig:corrplot_ibes}
-	\end{figure}
-\end{center}
+	The anomaly dataset consists of 153 anomalies published in leading financial and accounting journals. The data is monthly and spans from January 1990 to December 2018. It covers the same 8350 firms as the raw data, totaling 1,607,117 observations. 
 	
+	The anomalies can be classified into three groups: Fundamentals, Frictions, and I/B/E/S anomalies. Fundamental anomalies are primarily calculated from yearly accounting statements and are exemplified by Total Accruals, Asset Growth, or Leverage. Fundamental anomalies fall into 5 broad categories: Accruals (e.g., Total Accruals, Change in Common Equity, Inventory Growth), Investment (e.g., Asset Growth, Debt Issuance, Net Operating Assets), Intangibles (e.g., Asset Liquidity, Earnings Persistence, Herfindahl Index), Profitability (e.g., Profit Margin, Return-on-Equity, Capital Turnover) and Value (e.g., Enterprise Multiple, Assets-to-Market, or Net Payout Yield). Friction anomalies are primarily calculated from daily market data. For example, they include Bid-Ask Spread, 11-Month Residual Momentum, 52-Week-High, and Long-Term Reversal. I/B/E/S anomalies are calculated from the I/B/E/S dataset and cover analysts' forecasts and recommendations, such as Analyst Value, Change in Recommendation, or Forecast Dispersion. There are 93 Fundamentals, 48 Frictions and 12 I/B/E/S anomalies. Within the Fundamentals category, there are 21 Accruals, 15 Investment, 25 Intangibles, 18 Profitability, and 14 Value anomalies.  
+	
+	A complete list of the anomalies can be found in the Appendix. [TODO]. 
+	
+	Figures \ref{fig:corrplot_funds}, \ref{fig:corrplot_frictions}, and \ref{fig:corrplot_ibes} show plots of correlation matrices of Fundamental, Frictions, and I/B/E/S anomalies respectively. Correlations between variables from different categories are not shown, as they are all very low but for negligible exceptions. 
+		
+	Figure \ref{fig:hist_returns} shows histogram of monthly returns 
 
-Figure \ref{fig:hist_returns} shows histogram of monthly returns 
 
+	\begin{center}
+		\begin{figure}
+			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_funds.pdf}
+			\caption{Correlation Matrix of Fundamental Anomalies}
+			\label{fig:corrplot_funds}
+		\end{figure}
+	\end{center}
+	
+	\begin{center}
+		\begin{figure}
+			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_frictions.pdf}
+			\caption{Correlation Matrix of Frictions Anomalies}
+			\label{fig:corrplot_frictions}
+		\end{figure}
+	\end{center}
+	
+	
+	\begin{center}
+		\begin{figure}
+			\includegraphics{Figures/corrplot_ibes.pdf}
+			\caption{Correlation Matrix of I/B/E/S Anomalies}
+			\label{fig:corrplot_ibes}
+		\end{figure}
+	\end{center}
+	
+	
+	\begin{center}
+		\begin{figure}
+			\includegraphics{Figures/hist_returns.pdf}
+			\caption{Histogram of Monthly Returns}
+			\label{fig:hist_returns}
+		\end{figure}
+	\end{center}
 
-\begin{center}
-	\begin{figure}
-		\includegraphics{Figures/hist_returns.pdf}
-		\caption{Histogram of Monthly Returns}
-		\label{fig:hist_returns}
-	\end{figure}
-\end{center}
+\section{Random Trees}
 
+	\subsection{Random Trees in General} 
+		
+		[TODO describe random trees]
+
+	\subsection{Asset-Pricing Pruning}
+		
+		Asset-Pricing pruning is introduced in \cite{bryzgalova2019forest}. 
+		It is a global approach to pruning a tree. Global pruning is necessary as the task is to use the tree's nodes to span the stochastic discount factor, which cannot be done using local decision criteria. The pruning method proceeds in the following steps. [TODO write this also in algorithm notation.]
+		 
+		First, for each node of the tree (including the first and intermediate nodes, i.e., not just the leaves), calculate the sample estimates of mean and covariance matrix of the excess returns, denote them $\hat{\vec{\mu}}$ and $\hat{\vec{\Sigma}}$ respectively.
+		
+		Second, find weights $\vec{w}$ of the nodes such that the resulting portfolio will have minimum variance, at least a given mean return, and such that the weights are small (elastic net shrinkage). That is, for given $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$, find weights $\vec{w}$ that solve 
+		
+			\begin{equation}
+				\begin{aligned}
+					\min_{\vec{w}} \quad 
+						& \frac{1}{2}\vec{w}^{T} \hat{\vec{\Sigma}} \vec{w} + \lambda_1 \norm{\vec{w}}_1 +  			\frac{1}{2} \lambda_2 \norm{\vec{w}}_2 \\
+					\textrm{subject to} \quad 
+						& \vec{w}^{T} \mathds{1} = \mathds{1} \\
+						& \vec{w}^{T}\hat{\vec{\mu}} \geq \mu_0   \\
+				\end{aligned}
+			\end{equation}
+		
+		The parameters $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$ are selected on validation set such that the Sharpe ratio is maximized. 
+		
+		
+	
 
 

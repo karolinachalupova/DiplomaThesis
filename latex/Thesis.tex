@@ -10,8 +10,11 @@
 \usepackage{textcomp}
 \usepackage[USenglish]{babel}
 \usepackage{epigraph}
+\usepackage{bm}
+\usepackage{dsfont}
 
-\renewcommand{\vec}[1]{\mathbf{#1}}
+\renewcommand{\vec}[1]{\bm{#1}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 
 %-----<<<<<<<<<<<< DEFINITIONS >>>>>>>>>>>>----- 
 \def \BookName {Master's thesis}
@@ -143,7 +146,7 @@
 	
 	%-----<<< REFERENCES >>>-----
 	\fancyhead[LO]{\sffamily Bibliography}					%headers in sans serif and not in uppercase
-	\bibliographystyle{Styles/Stylebib}						%style of literature, you can use e.g. newapa	instead of Styles/Stylebib
+	\bibliographystyle{Styles/Stylebib}	
 	\bibliography{Styles/Bibliography}						%bibliography database
 	\addcontentsline{toc}{chapter}{Bibliography} 			%Add bibliography to the table of contents
 	\clearpage

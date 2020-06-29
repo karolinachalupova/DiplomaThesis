@@ -10,7 +10,7 @@
  	The machine learning engineer sees the problem as a prediction task: there is an infinite amount of data, the variables likely interact in complex ways, and are highly correlated. Machines have proven to excel in the task of predicting stock returns. They learn from financial data, model the interactions, and produce unparalleled returns predictions \citep{gu2020empirical}.
  	Finally, for the finance practitioner, understanding stock returns is closely related to the ability to predict them: to identify the future winners and losers, and sell and purchase them to make profit. As the machine-learning approaches are becoming the norm in the applied field, a need arises to understand the models on a deeper level – to interpret them, which brings us back to the economic underpinnings of stock returns.
  	
- 	This thesis attempts to bring the economist, the statistician, the machine learning engineer and the finance practitioner together. I use machine learning models to predict stock returns and then interpret them to answer the economists' questions of what forces drive the stock returns. At the same time, the modeling approach naturally appeases the statistician's dissatisfaction with the false positive discoveries of prior research. Finally, the finance practitioner can use my model to select which stocks to trade, and then use the economic interpretation to learn what risks she is exposed to, and if she trades on this exposure, human biases, or market imperfections, and what are model's blinds spots and sources of performance. 
+ 	This thesis attempts to bring the economist, the statistician, the machine learning engineer and the finance practitioner together. I use machine learning models to predict stock returns and then interpret them to answer the economists' questions of what forces drive the stock returns. At the same time, the modeling approach naturally appeases the statistician's dissatisfaction with the false positive discoveries of prior research. Finally, the finance practitioner can use my model to select which stocks to trade, and then use the economic interpretation to learn what risks she is exposed to and what are model's blinds spots and sources of performance. 
  	
  	The literature review proceeds as follows. First, I review the economic theory behind asset prices and common attitudes to modeling them. Second, I present the statistician's view: the multidimensional challenge faced in modeling stock returns \citep{cochrane2011presidential} and show what different approaches have been used to answer the challenge. Third, I present the machine learning approaches to asset pricing and how they are used to interpret the drivers of stock returns. Finally, I show how economics, statistics and machine learning, come together to answer the question of what drives the stock returns. 
  	
@@ -159,17 +159,17 @@
 	 	
 	 	
 			 	\begin{align}
-			 		& E_t(R^i_{t+1}) = R^f_{t+1} + \boldsymbol\beta'_{i,t} \boldsymbol\lambda_{t} \\
-			 		& R^i_{t+1} = \alpha_{i,t} + \boldsymbol\beta'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1}
+			 		& E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t} \\
+			 		& R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \label{multifactor model}
 			 	\end{align}
 			 
-			 The \textit{factor loadings} $\boldsymbol\beta'_{i,t}$ of size $1\times K$ are exposures to risk factors $\vec{f}_{t+1}$ of size $K \times 1$, where $K$ is the number of risk factors. They represent the amount of risk inherent in asset $i$ due to its correlation to the corresponding risk factor. The $\boldsymbol\lambda_{t}$ of size $K \times 1$ are interpretable as the risk prices at time $t$ \citep{kelly2019characteristics}. (Note that the CAPM and consumption-based models are special cases of the multiple-factor models, where $K$, the number of factors, is 1.) 			
+			 The \textit{factor loadings} $\vec{\beta}'_{i,t}$ of size $1\times K$ are exposures to risk factors $\vec{f}_{t+1}$ of size $K \times 1$, where $K$ is the number of risk factors. They represent the amount of risk inherent in asset $i$ due to its correlation to the corresponding risk factor. The $\vec{\lambda}_{t}$ of size $K \times 1$ are interpretable as the risk prices at time $t$ \citep{kelly2019characteristics}. (Note that the CAPM and consumption-based models are special cases of the multiple-factor models, where $K$, the number of factors, is 1.) 			
 			 
 			 First multi-factor model is \cite{fama1996multifactor} [TODO make sure the time indexation is right]:
 			 
 			 \begin{align}
-			 	& E(R^i) = R^f + \boldsymbol\beta'_{i} \boldsymbol\lambda \\
-			 	& R^i_{t+1} = \alpha_{i} + \boldsymbol\beta'_{i} \vec{f}_{t+1} + \epsilon_{i,t+1}
+			 	& E(R^i) = R^f + \vec{\beta}'_{i} \vec{\lambda} \\
+			 	& R^i_{t+1} = \alpha_{i} + \vec{\beta}'_{i} \vec{f}_{t+1} + \epsilon_{i,t+1}
 			 \end{align}
 		 
 		 	with factors  
@@ -186,61 +186,107 @@
 			and with factor prices 
 			
 			\begin{equation}
-			  \boldsymbol \lambda =
+			  \vec{\lambda} =
 				\begin{pmatrix}
-					E(R^M})-R^f \\
+					E(R^M)-R^f \\
 					E(SMB) \\
 					E(HML)				
 				\end{pmatrix} 
 			\end{equation}
 			 
-			The $R^M_{t+1}-R^f_{t+1}$ is the return on market portfolio above risk-free rate (as in CAPM), $SMB_{t+1}$ is the return on small-cap portfolio minus the return on big-cap portfolio, and $HML_{t+1}$ is the return on portfolio of stocks with small market values relative to book value, minus the return on portfolio of stocks with high market values relative to book value. Note that the risk prices $ \boldsymbol \lambda$ and $\boldsymbol\beta'_{i}$ are time-invariant. Explanations why $SMB$ and $HML$ should be correlated to the discount factor include that they proxy for financial distress \citep{fama1996multifactor}, \citep{heaton2000portfolio}} or that they forecast the future state of the economy \citep{liew2000can}. 		
+			The $R^M_{t+1}-R^f_{t+1}$ is the return on market portfolio above risk-free rate (as in CAPM), $SMB_{t+1}$ is the return on small-cap portfolio minus the return on big-cap portfolio, and $HML_{t+1}$ is the return on portfolio of stocks with small market values relative to book value, minus the return on portfolio of stocks with high market values relative to book value. Note that the risk prices $ \vec{\lambda}$ and $\vec{\beta}'_{i}$ are time-invariant. Explanations why $SMB$ and $HML$ should be correlated to the discount factor include that they proxy for financial distress \citep{fama1996multifactor}, \citep{heaton2000portfolio} or that they forecast the future state of the economy \citep{liew2000can}. 		
 			\cite{fama2015five} augment this three-factor model to five factors, adding $RMW$ and $CMA$, which are, respectively, the difference in returns on portfolios of firms with robust and weak profitability, and difference in returns on portfolios of firms with conservative and aggressive investment. 
 			
+			[TODO add a systematic overview of existing anomalies.]
+			
+			[TODO describe portfolio sorting metodology]
+			
+			It is difficult to empirically estimate a multifactor model. The main challenge is that both $\vec{f}_{t+1}$ and $\vec{\beta}'_{i,t}$ are unobserved, so we have no directly observed variables at the right hand side of the estimated equation. There are two different approaches to tackle this issue \citep{kelly2019characteristics}. The first is to use use prior knowledge of empirical behavior of average returns to pre-specify the factors, treat them as observable and then estimate $\beta_{t-1}$. An example of this approach is \citep{fama1993common} and most of the hundreds of published factors are too \cite{cochrane2009asset}. But as noted by \cite[p.~3]{kelly2019characteristics}, this prior specification relies on "a partial understanding at best, and at worst is exactly the object of empirical interest."  Even \cite{fama1993common} note that without a clear economic theory for factors, the choice of the right-hands side variables is arbitrary. But as we have seen, the economic theory justifies inclusion of almost anything as the right-hands side variable: "One can appeal to the APT or ICAPM to justify the inclusion of just about any desirable factor" \citep[p.~124]{cochrane2009asset}), so we do not have a clear economic theory.  
+			
+			The other way to uncover the factor structure is, therefore, to instrument the unobserved factor loadings using firm-level variables, commonly called \textit{characteristics}.  
+			
+			\begin{align}
+				E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t}  \label{ER_betalambda} \\
+				R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \\
+				\vec{\beta}'_{i,t} = g(\vec{z}'_{i,t}) \label{instrumented_betas}
+			\end{align}
+			
+			The first two equations are the same as in multiple-factor models, while the third shows instrumenting of the factor loadings with firm characteristics $\vec{z}'_{i,t}$. This approach is exemplified by \cite{kelly2019characteristics}. The key insight is that characteristics serve as proxies for \textit{exposure} to different sources of systematic risk. Once risk loadings are instrumented, the authors use them to estimate the corresponding factors.
+	
+		\subsection{Arbitrage Pricing Theory}
+		
+			[TODO add economic motivation for drivers of expected returns from APT.]
 	
 	\section{Statistician's Perspective} 
 		
 		\epigraph{We argue that most claimed research findings in financial economics are likely false. }{\cite{harvey2016and}}
 		
-		Although theoretically the factor model is appealing, it is problematic to estimate it empirically. This is because the factors and betas are unobserved. 
+		There are hundreds of published factors suggested as explanation of average stock returns. \cite{harvey2016and} count 313 variables, considering the top journals only and calling the count "surely too low". Indeed, \cite{cochrane2011presidential} refers to the state of asset pricing as a "zoo of factors". At the same time, 
+		the number of factors should be low in theory \citep{cochrane2011presidential} and empirically \citep{ahn2012determining} [TODO elaborate].
 		
-		The first approach is to use prior knowledge of empirical behavior of average returns to pre-specify the factors, treat them as observable and then estimate $\beta_{t-1}$.
+		\cite[p.~1060]{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in asset pricing in his "multidimensional challenge": "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns? Why are subsumed by others? Second, does each new anomaly variable also correspond to a new factor formed on those same anomalies? (\ldots) Third, how many of these new factors are really important?"
 		
-		A case in point is the standard \textit{portfolio-sorts procedure}. 
-		1. Choose firm characteristic 
-		2. Sort stocks into portfolios base on that characteristic \citep{fama1993common}
-		3. See if differences in returns between these portfolios can be explained by a simpler factor model, such as CAPM or Fama-French-3 or Fama-French-5. If not, you have discovered an anomaly. 
-		4. Publish.
+		The main issue with the hundrends of factor models is that they find the studied factor significant controlling only for the effects of market return or 3 or five other factors, typically factors from  \cite{fama1996multifactor} or \cite{fama2015five}. To establish the significance of the variables, it is necessary to consider them jointly in a single model, allowing the factors to crowd each other out. 
 		
-		Using this method, academia has generated about 300 factors \citep{harvey2016and}, considering the top journals only. As the problem of average returns is so over-studied, 
+		Moreover, there are numerous issues that severely diminish the reliability of these factors. First and most obviously, some results are bound to be just false positives due to the typical confidence levels \citep{harvey2016and}. Second, as it is difficult to publish a non-result, the insignificant results remain in the drawer and the significant ones get published, artificially driving up the significance in an instance of publication bias \citep{harvey2016and}. Third, the published studies are often biased in themselves: the specification search bias (selection of the model based on model's result), the sample selection bias (selection of the data based on model's results) and the multiple hypothesis testing bias (conducting multiple tests of the same hypothesis) all result in artificially high significance of returns predictors \citep{mclean2016does}. The situation is worsened by the fact that there is only a limited amount of data in finance: CRSP and Compustat are limited resources, and researches use the same data over and over, resulting in collective over-fitting \citep{harvey2016and}. Finally, unlike in other fields, it is difficult to publish a replication study in finance, which leaves the spurious factors unnoticed \citep{harvey2016and}. There are two ways to correct these biases ex post: out-of-sample tests  and using a framework that accounts for the multiple testing and rises the usual significance levels. \cite{mclean2016does} perform the out-of-sample tests, studying 82 variables. As much as 10 of them could not even be replicated in-sample. The rest are biased on average by 10\%. \cite{harvey2016and} take the multiple-testing approach. Out of 296 published significant factors, 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used \cite{harvey2016and}. 
+		
+		
 	
 	\section{Machine Learning Perspective}
 	
 		\epigraph{To adress [the multidimensional challenge] in the zoo of new variables, I suspect we will have to use different \textit{methods}.}{\cite{cochrane2011presidential}}
 		
-		An important implication of \ref{eq:asset_pricing} is that the factor loadings, in turn, are a possibly non-linear function of firm-level characteristics ($C_{t-1}$). 
+		A possible definition of ML is from  \cite[p.~2]{mitchell1997machine}: "A computer  program is  said to learn from experience E with respect to  some class of tasks T and performance  measure P, if  its performance at  tasks in T, as measured by P, improves with experience E." In the case of predicting stock returns, the task T is a regression, performance measure can be for example the mean-squared-error, and the experience E is the historical data. Using this definition, ML is a broad collection of methods, including the very simplest, like linear regression or principal components analysis, that are well-known to any economist.  
+		
+		ML offers many varied methods that are well-suited to the task of explaining stock returns and that have an advantage over the more traditional methods \citep{gu2020empirical}. First, ML methods can handle data with high dimensionality and correlation in predictors. If the hundreds of candidate factors are used in linear regression, $R^2$ becomes negative and no predictors are significant \citep{gu2020empirical} due to the high dimension and multicollinearity. Portfolio sorts, another traditional method in asset pricing, become unusable at around 5 predictors \cite{cochrane2011presidential, bryzgalova2019forest}. ML offers dimension reduction and variable selection methods to overcome this challenge. Second, it seems that the linear functional form for predictors is too restrictive: \cite{gu2020empirical} statistically reject the traditional linear models in favor of the non-linear ones. ML offers methods of choosing the right functional form systematically. Third, the model selection is ML is based on validation data, as opposed to in-sample (training) data. In traditional econometrics approach to stock returns, model is tuned by researcher based on in-sample fit, which results in spurious findings that are very often not replicable out-of-sample \citep{mclean2016does}. On the other hand, ML puts an emphasis on out-of-sample performance, which allows to select a robust model.   	
+	
+		\cite{gu2020empirical} apply a wide range of ML methods to the stock-returns prediction task. Their model is 
 		
 		\begin{equation}
-		\beta_{t-1}= g(C_{t-1})\label{eq:characteristics_as_proxies}
+		r_{i, t+1} = E_t(r_{i,t+1}) + \epsilon_{i,t+1}
 		\end{equation}
 		
-		In the words of \cite{fama1993common}: "(...) if assets are priced rationally, variables that are
-		related to average returns, such as size and book-to-market equity, must proxy for
-		sensitivity to common (shared and thus undiversiable) risk factors in returns." 	
+		where 
 		
-		\cite{bryzgalova2019forest} generalize the portfolio-sorts using random trees.     
+		\begin{equation}
+		E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = g(\vec{x}_t \otimes \vec{c}_{i,t})
+		\end{equation}
 		
-		The second strand of literature treats both $F_t$ and $\beta_{t-1}$ as unobservable, and estimates them both from the data, using the  relationship that firm-level characteristics are proxies of factor loadings (\ref{eq:characteristics_as_proxies}). For example, \cite{kelly2019characteristics} use characteristics as instrumental variables for factor loadings. Once loadings are instrumented, they use them to estimate the corresponding factors.
 	
-		\cite{gu2020empirical} 
+		The function $g$ stands for any ML model and the variables $\vec{z}_{i,t}$ are 94 characteristics of stocks $ \vec{c}_{i,t}$ interacted with 8 macroeconomic predictors $\vec{x}_t$. The multiple-factor model \ref{ER_betalambda} is a special case of this specification, with $g$ linear: 
+		
+		\begin{equation}
+			E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = \vec{c}'_{i,t}\Theta_1'\Theta_2 \vec{x}_t = \vec{{\beta}}'_{i,t} \vec{\lambda}_{t}
+		\end{equation}
+		
+		
+		The authors make a horse race of several ML and traditional methods. First, they include methods to estimate linear $g$, both without regularization (linear regression with all variables (OLS), linear regression only with size, book-to market, and mometum (OLS-3)) and with regularization (partial least squares (PLS), principal components regression (PCR), elastic net (ENet)). Second, they include methods to estimate nonlinear $g$: generalized linear models (GLM), random forest, gradient-boosted regression trees, and neural networks of depths 1 to 5. They find that OLS performs badly, regularized linear models are an improvement, and, and nonlinear models are the best-performing, namely neural networks followed by random trees. 
+		
+		Interestingly, the authors find that all methods (with the exception of OLS) agree in the variables that have an important first-order impact on returns. These are, ordered by importance: recent price trends (such as momentum and long- and short-term reversal), liquidity measures (such as turnover), risk measures (such as return volatility and market beta), valuation ratios (such as earnings-to-price), and fundamental signals (such as asset growth). On annual frequency, recent price trends become less important, and industry emerges as an important predictor, but otherwise the results are similar to the monthly frequency.
+		
+		
+		A disadvantage of \cite{gu2020empirical} is that it says very little about the discount factor. [TODO develop further] 
+		
+		
+		\cite{bryzgalova2019forest} use random trees to build the discount factor. They generalize portfolio-sorts to accommodate a large number of predictors. Similarly to \cite{kelly2019characteristics}, they consider factor loadings $\vec{\beta}_{i,t}$ as function of characteristics. Specifically, the characteristics include recent price trends (momentum and long- and short-term reversal), liquidity measures (such as turnover), investment, profitability, accruals and book-to-market ratio. The intermediate and final nodes of the tree then serve as basis assets to construct the discount factors. This is done by optimally weighting the basis assets. The weights are found by first finding the minimum variance weights for each expected return, solving the Markowitz problem with additional shrinkage of the weights using elastic net penalty, and second choosing the optimum expected return and shrinkage parameters to maximize the Sharpe ratio on validation data. This approach leads to a set of basis assets that is both very sparse and readily interpretable. 
+				
+		\cite{bryzgalova2019forest} and \cite{gu2020empirical} agree that the ability to uncover non-linearities and interactions is the crucial driving force of the superior ML performance.  If a variable has a non-linear relationship with returns, the linear models can conclude there is no association, while in reality there is an important non-linear relationship. For example, in \cite{gu2020empirical}, linear models deem size and volatility unimportant predictors, while non-linear models find the contrary. A similar problem may arise if predictors are have zero association with return themselves, but not in interaction with other predictors. [TODO include examples]. 
     
-	\section{Putting It All Together}
 	
 
+	\section{Unused text}
+		portfolio sorts
+				1. Choose a firm characteristic. 
+				2. Sort stocks into portfolios base on that characteristic \citep{fama1993common}
+				3. See if differences in returns between these portfolios can be explained by a simpler factor model, such as CAPM or Fama-French-3 or Fama-French-5. If not, you have discovered an anomaly. 
+				4. Publish.
+
 	
+	   		In the words of \cite{fama1993common}: "(...) if assets are priced rationally, variables that are
+	   related to average returns, such as size and book-to-market equity, must proxy for
+	   sensitivity to common (shared and thus undiversiable) risk factors in returns." 
 	   
-	
-	   
+	   		Of course, studying only the first-order impact of a characteristic provides only a very limited picture. For example, \cite{bryzgalova2019forest} find that the first-order impact of accruals on returns is flat (zero), but when controlling for size, the relationship turns out to be U-shaped. 
 	
 
 

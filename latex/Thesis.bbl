@@ -1,6 +1,13 @@
-\begin{thebibliography}{11}
+\begin{thebibliography}{17}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Ahn \emph{et~al.}(2012)Ahn, Horenstein, \& Wang}]{ahn2012determining}
+\textsc{Ahn}, S.~C., A.~R. \textsc{Horenstein}, \& N.~\textsc{Wang} (2012):
+  \enquote{Determining rank of the beta matrix of a linear asset pricing
+  model.}
+\newblock \emph{Technical report}, Working Paper, Arizona State University and
+  Sogang University.
 
 \bibitem[{Bryzgalova \emph{et~al.}(2019)Bryzgalova, Pelger, \&
   Zhu}]{bryzgalova2019forest}
@@ -32,6 +39,11 @@
   explanations of asset pricing anomalies.}
 \newblock \emph{The journal of finance} \textbf{51(1)}: pp. 55--84.
 
+\bibitem[{Fama \& French(2015)}]{fama2015five}
+\textsc{Fama}, E.~F. \& K.~R. \textsc{French} (2015): \enquote{A five-factor
+  asset pricing model.}
+\newblock \emph{Journal of financial economics} \textbf{116(1)}: pp. 1--22.
+
 \bibitem[{Gu \emph{et~al.}(2020)Gu, Kelly, \& Xiu}]{gu2020empirical}
 \textsc{Gu}, S., B.~\textsc{Kelly}, \& D.~\textsc{Xiu} (2020):
   \enquote{Empirical asset pricing via machine learning.}
@@ -43,12 +55,31 @@
   \enquote{… and the cross-section of expected returns.}
 \newblock \emph{The Review of Financial Studies} \textbf{29(1)}: pp. 5--68.
 
+\bibitem[{Heaton \& Lucas(2000)}]{heaton2000portfolio}
+\textsc{Heaton}, J. \& D.~\textsc{Lucas} (2000): \enquote{Portfolio choice and
+  asset prices: The importance of entrepreneurial risk.}
+\newblock \emph{The journal of finance} \textbf{55(3)}: pp. 1163--1198.
+
 \bibitem[{Kelly \emph{et~al.}(2019)Kelly, Pruitt, \&
   Su}]{kelly2019characteristics}
 \textsc{Kelly}, B.~T., S.~\textsc{Pruitt}, \& Y.~\textsc{Su} (2019):
   \enquote{Characteristics are covariances: A unified model of risk and
   return.}
 \newblock \emph{Journal of Financial Economics} \textbf{134(3)}: pp. 501--524.
+
+\bibitem[{Liew \& Vassalou(2000)}]{liew2000can}
+\textsc{Liew}, J. \& M.~\textsc{Vassalou} (2000): \enquote{Can book-to-market,
+  size and momentum be risk factors that predict economic growth?}
+\newblock \emph{Journal of Financial Economics} \textbf{57(2)}: pp. 221--245.
+
+\bibitem[{McLean \& Pontiff(2016)}]{mclean2016does}
+\textsc{McLean}, R.~D. \& J.~\textsc{Pontiff} (2016): \enquote{Does academic
+  research destroy stock return predictability?}
+\newblock \emph{The Journal of Finance} \textbf{71(1)}: pp. 5--32.
+
+\bibitem[{Mitchell(1997)}]{mitchell1997machine}
+\textsc{Mitchell}, T. (1997): \emph{Machine Learning}.
+\newblock McGraw Hill.
 
 \bibitem[{Roll(1977)}]{roll1977critique}
 \textsc{Roll}, R. (1977): \enquote{A critique of the asset pricing theory's

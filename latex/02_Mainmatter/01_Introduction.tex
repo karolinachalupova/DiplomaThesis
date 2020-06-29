@@ -1,9 +1,17 @@
 \chapter{Introduction}
 \label{chap:int}
 
-TODO general relevance of the topic. Something like: Stock returns are important in many economic areas. About 50\% (10\%)of U.S. (European) households own stock (TODO add citation). For firms, share issuance is a vital source of funding. Stock prices are seen as a general indicator of the macroeconomic condition. They are vital for efficient capital allocation. A serious departure from stocks' underlying values may cause a financial crisis, which can damage the overall economy. 
+Machine learning is on the rise in the asset pricing field, both in academia and industry. The academia is using machine learning (ML) methods to tackle the biggest challenges of the field, such as the problem of high dimensionality, which the more traditional methods fail to solve. Meanwhile, in the industry, finance practitioners use unparalleled predictive power of ML methods to forecast asset returns \citep{gu2020empirical}. [TODO develop further].    
 
-The question of what drives the stock returns is as crucial as it is widely-studied. TODO briefly review the Capital Asset Pricing Model, multifactor models, Cochrane's multidimensional challenge, how far we are in answering the challenge.  
+[TODO general relevance of the topic. Something like: Stock returns are important in many economic areas. About 50\% (10\%)of U.S. (European) households own stock (TODO add citation). For firms, share issuance is a vital source of funding. Stock prices are seen as a general indicator of the macroeconomic condition. They are vital for efficient capital allocation. A serious departure from stocks' underlying values may cause a financial crisis, which can damage the overall economy.] 
+
+Over the last 50 years, the academia has accumulated hundreds of variables that are proposed to explain stock returns. \cite{harvey2016and} and \cite{mclean2016does} have shown that most of these existing research findings are likely false and the field entered a deep crisis. The multidimensional challenge \citep{cochrane2011presidential} emerged: which of the published and unpublished determinants of stock returns are valid, and which are erroneous? The search for a reliable model is, essentially, same as in any other field. First, the explanatory variables should be based on theory. Second, rigorous statistical methods should be used to ensure robustness of the model. Specifically, if there are very many potential explanatory variables, it is necessary to consider all of them jointly, that is, to control for the rest of the variables. It is possible to include all the candidate variables in a single model, allowing the effects to crowd each other out. However, with hundreds of candidate variables the asset pricing field has accumulated over decades, traditional methods break down. $R^2$ goes very deep to the negative territory in unpenalized linear regressions \citep{gu2020empirical} and portfolio-sorts become unusable as early as with 4 variables. This is where ML methods come in. 
+
+ML is just a fancy name for a wide range of statistical methods used to tackle high-dimensional problems.  [TODO explain more how ML is used in finance.  ]
+
+ML is on the rise in the industry as well. [TODO add evidence]. 
+
+Therefore, in addition to the academic contribution, my thesis can have a practical impact. ML models are becoming the norm in the finance industry. To debug, improve, and sell an ML model, interpretability of the model is highly important. From a practitioner’s perspective, my thesis can serve as a case study of some of the methods, issues, and results that occur when interpreting return-predicting ML models.
 
 The objective of this thesis is \ldots. TODO
 
