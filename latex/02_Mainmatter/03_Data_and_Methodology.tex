@@ -16,10 +16,35 @@
 	
 	A complete list of the anomalies can be found in the Appendix. [TODO]. 
 	
-	Figures \ref{fig:corrplot_funds}, \ref{fig:corrplot_frictions}, and \ref{fig:corrplot_ibes} show plots of correlation matrices of Fundamental, Frictions, and I/B/E/S anomalies respectively. Correlations between variables from different categories are not shown, as they are all very low but for negligible exceptions. 
+	Tables \ref{tab:descr_fund}, \ref{tab:descr_frictions}, and \ref{tab:descr_ibes} show descriptive statistics of the anomalies data. [TODO fit too long fund table to page or split across multiple pages.]
 		
-	Figure \ref{fig:hist_returns} shows histogram of monthly returns 
+	Figures \ref{fig:corrplot_funds}, \ref{fig:corrplot_frictions}, and \ref{fig:corrplot_ibes} show plots of correlation matrices of Fundamental, Frictions, and I/B/E/S anomalies respectively. Correlations between variables from different categories are not shown, as they are all very low but for negligible exceptions. 
 
+	Figure \ref{fig:hist_returns} shows histogram of monthly returns. 
+	
+
+	%\input{Tables/descr.tex}
+	
+	\begin{table}
+		\resizebox{\textwidth}{!}{\input{Tables/descr_fund.tex}}
+		\caption{Descriptive Statistics of the Fundamental Anomalies}
+		\label{tab:descr_fund}
+	\end{table}
+
+	\begin{table}
+		\centering
+		\resizebox{\textwidth}{!}{\input{Tables/descr_frictions.tex}}
+		\caption{Descriptive Statistics of the Frictions Anomalies}
+		\label{tab:descr_frictions}
+	\end{table}
+
+	\begin{table}
+		\centering
+		\resizebox{\textwidth}{!}{\input{Tables/descr_ibes.tex}}
+		\caption{Descriptive Statistics of the I/B/E/S Anomalies}
+		\label{tab:descr_ibes}
+	\end{table}
+	
 
 	\begin{center}
 		\begin{figure}

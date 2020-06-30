@@ -13,6 +13,11 @@ class Anomalies():
             self.data = pd.read_pickle(path_data)
             self.data.reset_index(inplace=True)
             self.meta = pd.read_excel('data/00_anomalies_unfiltered/anomalies_meta.xlsx', sheet_name=1)
+
+            # Sort the columns based on meta
+            sorted_signals = self.meta.sort_values(['class','class2']).sc.tolist()
+            columns = ['DTID', 'FTID', 'date', 'r'] + sorted_signals
+            self.data = self.data[columns]
             
             # check that meta corresponds one to one with signals 
             assert set(self.meta.sc.tolist()).difference(set(self.data.columns.unique().tolist())) == set()
