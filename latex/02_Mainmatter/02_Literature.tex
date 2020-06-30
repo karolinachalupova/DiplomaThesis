@@ -1,18 +1,15 @@
 \chapter{Literature Review}
 \label{chap:lit} 
-	
- 	What determines average stock returns? In other words, what is the cause that one stock earns 1\% yearly return on average, while another one earns 15\%? [TODO add chart]
- 	Understanding the basis of stock prices is important for a number of reasons. First, fair stock valuation is vital for proper functioning of the stock market. The stock market, in turn, needs to function so as to maintain its roles: it enables firms to obtain financing for their investments, it allows investors to store their present wealth for the future and to share risk. [TODO elaborate] Moreover, as history has shown, incorrect stock price valuations can have severe ramifications. [TODO explain this more and give examples.]
+		
+ 	The question of what drives the stock returns is a thrilling one to answer from several perspectives: that of an economist, of a statistician, of a machine learning engineer, and that of a finance practitioner.
+ 	An economist sees that stock returns reflect human decisions: putting a price tag on uncertain future payoffs reflects the trade-off between current and future consumption, human impatience and attitudes to risk \citep{cochrane2009asset} as well as human behavioral biases [TODO add reference]. She also sees that they speak of the complex web of relations between firms: as companies form relationships, they become exposed to similar risks, and their returns correlate. For the economist, studying the determinants of stock returns therefore is an opportunity to understand human behavior as well as the macro-phenomena that emerge in the network of firms' relationships. 
+ 	The statistician sees that the determinants of stock returns are notoriously over-studied, which brings many issues of publication bias and multiple hypothesis testing, leading to many false discoveries \citep{harvey2016and}. From this perspective, the question stands: how to separate the wheat from the chaff? 
+ 	The machine learning engineer sees the problem as a prediction task: there is a large amount of data, the variables likely interact in complex ways, and are highly correlated. Machines have proven to excel in the task of predicting stock returns. They learn from financial data, model the interactions, and produce unparalleled returns predictions \citep{gu2020empirical}.
+ 	Finally, for the finance practitioner seeks to identify the future winners and losers, and sell and purchase them to make profit. As the machine-learning approaches are becoming the norm in the applied field, a need arises to understand the models on a deeper level – to interpret them, which brings us back to the economic underpinnings of stock returns.
  	
- 	The question of what drives the stock returns is also a thrilling one to answer from several perspectives: that of an economist, of a statistician, of a machine learning engineer, and that of a finance practitioner.
- 	An economist sees that stock returns reflect human decisions: putting a price tag on uncertain future payoffs reflects the trade-off between current and future consumption, human impatience and attitudes to risk \citep{cochrane2009asset} as well as human behavioral biases [TODO add reference]. She also sees that they speak of the complex web of relations between firms: as companies form relationships, they become exposed to similar risks, and their returns correlate. In the pattern of correlation and the structure of the net, one can see the determinants of macroeconomic stability and laws of shock transmission. [TODO add reference]. For the economist, studying the determinants of stock returns therefore is an opportunity to understand human behavior as well as the macroeconomic phenomena that emerge in the net of firms' relationships. 
- 	The statistician is intrigued as well – she sees that the determinants of stock returns are notoriously over-studied and many of the published papers are just false positives \citep{harvey2016and}. She needs to control for all the gamut of published variables to separate the wheat from the chaff.
- 	The machine learning engineer sees the problem as a prediction task: there is an infinite amount of data, the variables likely interact in complex ways, and are highly correlated. Machines have proven to excel in the task of predicting stock returns. They learn from financial data, model the interactions, and produce unparalleled returns predictions \citep{gu2020empirical}.
- 	Finally, for the finance practitioner, understanding stock returns is closely related to the ability to predict them: to identify the future winners and losers, and sell and purchase them to make profit. As the machine-learning approaches are becoming the norm in the applied field, a need arises to understand the models on a deeper level – to interpret them, which brings us back to the economic underpinnings of stock returns.
+ 	This thesis attempts to bring the four approaches together. I use machine learning models to predict stock returns and then interpret them to bring us closer to the answers to the economists' questions. This approach can also help to filter out false discoveries. Finally, the finance practitioner can employ ML interpretability methods to find an intelligible model, of which she understands the weaknesses and sources of performance. 
  	
- 	This thesis attempts to bring the economist, the statistician, the machine learning engineer and the finance practitioner together. I use machine learning models to predict stock returns and then interpret them to answer the economists' questions of what forces drive the stock returns. At the same time, the modeling approach naturally appeases the statistician's dissatisfaction with the false positive discoveries of prior research. Finally, the finance practitioner can use my model to select which stocks to trade, and then use the economic interpretation to learn what risks she is exposed to and what are model's blinds spots and sources of performance. 
- 	
- 	The literature review proceeds as follows. First, I review the economic theory behind asset prices and common attitudes to modeling them. Second, I present the statistician's view: the multidimensional challenge faced in modeling stock returns \citep{cochrane2011presidential} and show what different approaches have been used to answer the challenge. Third, I present the machine learning approaches to asset pricing and how they are used to interpret the drivers of stock returns. Finally, I show how economics, statistics and machine learning, come together to answer the question of what drives the stock returns. 
+ 	The literature review proceeds as follows. First, I review the economic theory behind asset prices and common attitudes to modeling them. Second, I present the statistician's view: the multidimensional challenge faced in modeling stock returns \citep{cochrane2011presidential} and show what different approaches have been used to answer the challenge. Third, I present the machine learning approaches to asset pricing. Fourth, I review ML interpretability methods. 
  	
  	\section{Economist's Perspective}
  	
@@ -264,28 +261,77 @@
 		
 		Interestingly, the authors find that all methods (with the exception of OLS) agree in the variables that have an important first-order impact on returns. These are, ordered by importance: recent price trends (such as momentum and long- and short-term reversal), liquidity measures (such as turnover), risk measures (such as return volatility and market beta), valuation ratios (such as earnings-to-price), and fundamental signals (such as asset growth). On annual frequency, recent price trends become less important, and industry emerges as an important predictor, but otherwise the results are similar to the monthly frequency.
 		
+		\cite{bryzgalova2019forest} use random trees to build the discount factor. They generalize portfolio-sorts to accommodate a large number of predictors. Similarly to \cite{kelly2019characteristics}, they consider factor loadings $\vec{\beta}_{i,t}$ as function of characteristics. Specifically, the characteristics include recent price trends (momentum and long- and short-term reversal), liquidity measures (such as turnover), investment, profitability, accruals and book-to-market ratio. Their approach leads to selection of a very sparse and readily interpretable set of basis assets that are used to construct the discount factor. This is done using a global approach to pruning a tree. Global pruning is necessary as the task is to use the tree's nodes to span the stochastic discount factor, which cannot be done using local decision criteria. The pruning method proceeds in the following steps. 	
 		
-		A disadvantage of \cite{gu2020empirical} is that it says very little about the discount factor. [TODO develop further] 
+		The intermediate and final nodes of the tree then serve as basis assets to construct the discount factors. This is done by optimally weighting the basis assets. The weights are found by finding the minimum variance weights for each expected return, solving the Markowitz problem with additional shrinkage of the weights using elastic net penalty, choosing the the optimum expected return and shrinkage parameters to maximize the Sharpe ratio on validation data. Specifically, the approach takes three steps: 
 		
+		First, for each node of the tree (including the first and intermediate nodes, i.e., not just the leaves), calculate the sample estimates of mean and covariance matrix of the excess returns, denote them $\hat{\vec{\mu}}$ and $\hat{\vec{\Sigma}}$ respectively.
 		
-		\cite{bryzgalova2019forest} use random trees to build the discount factor. They generalize portfolio-sorts to accommodate a large number of predictors. Similarly to \cite{kelly2019characteristics}, they consider factor loadings $\vec{\beta}_{i,t}$ as function of characteristics. Specifically, the characteristics include recent price trends (momentum and long- and short-term reversal), liquidity measures (such as turnover), investment, profitability, accruals and book-to-market ratio. The intermediate and final nodes of the tree then serve as basis assets to construct the discount factors. This is done by optimally weighting the basis assets. The weights are found by first finding the minimum variance weights for each expected return, solving the Markowitz problem with additional shrinkage of the weights using elastic net penalty, and second choosing the optimum expected return and shrinkage parameters to maximize the Sharpe ratio on validation data. This approach leads to a set of basis assets that is both very sparse and readily interpretable. 
+		Second, find weights $\vec{w}$ of the nodes such that the resulting portfolio will have minimum variance, at least a given mean return, and such that the weights are small (elastic net shrinkage). That is, for given $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$, find weights $\vec{w}$ that solve 
+		
+		\begin{equation}
+		\begin{aligned}
+		\min_{\vec{w}} \quad 
+		& \frac{1}{2}\vec{w}^{T} \hat{\vec{\Sigma}} \vec{w} + \lambda_1 \norm{\vec{w}}_1 +  			\frac{1}{2} \lambda_2 \norm{\vec{w}}_2 \\
+		\textrm{subject to} \quad 
+		& \vec{w}^{T} \mathds{1} = \mathds{1} \\
+		& \vec{w}^{T}\hat{\vec{\mu}} \geq \mu_0   \\
+		\end{aligned}
+		\end{equation}
+		
+		Third, the parameters $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$ are selected on validation set such that the Sharpe ratio is maximized. 		
 				
 		\cite{bryzgalova2019forest} and \cite{gu2020empirical} agree that the ability to uncover non-linearities and interactions is the crucial driving force of the superior ML performance.  If a variable has a non-linear relationship with returns, the linear models can conclude there is no association, while in reality there is an important non-linear relationship. For example, in \cite{gu2020empirical}, linear models deem size and volatility unimportant predictors, while non-linear models find the contrary. A similar problem may arise if predictors are have zero association with return themselves, but not in interaction with other predictors. [TODO include examples]. 
-    
 	
+	
+	\section{Interpretable Machine Learning}
+	
+		ML interpretability methods can be grouped into into several categories \citep{molnar2020interpretable}. A first dictinction can be made between  \textit{intrinsically} interpretable models, that are intrepretable per se (linear and logistic regression, random tree), and \textit{post-hoc methods}, that can be applied to extract interpretable knowledge from the model ex-post. A further distinction can be made as to the applicability of the interpretability methods: some methods are \textit{model-specific}, that is, can only be applied to some ML models others are \textit{model-agnostic}, applicable to all models from linear regressions to random trees and neural networks. Yet other distinction can be made between \textit{global} and \textit{local} ML interpretability methods: while the former assess sources of model performance across all observations, the latter can be used to interpret the drivers within a single observation. 
+		
+		\subsection{Global Feature Importance Measures}
+		
+			Feature importance focuses on how much the model relies on an input feature to produce a prediction. There are several different notions of what qualifies a feature as important: 
+		
+			\paragraph{Mean Decreased Performance} proposed by \citep{fisher2019all}, also known as \textbf{Permutation Feature Importance} is a model-agnostic measure of feature importance, which measures how much of model's performance is lost when permuting a given feature. It compares the performance of a model fit on a set of features with the performance of the same model after permuting a given feature (randomly shuffling its features across examples, without re-fitting the model). If the particular feature is important, permuting it will decrease model's performance. There are several special cases depending on the measure the model's performance, e.g., \textbf{Model Reliance} \citep{fisher2019all} (mean squared error), or \textbf{Mean Decreased Accuracy} [TODO add citation] (accuracy). Since the measure depends on random permutation, its variance can be decreased by computing it several times and averaging the result. [TODO add alogorhitmic description.]	
+			
+			\paragraph{Mean Decreased Explained Variance} is also a model-agnostic measure of feature importance, and measures how much of model's explained variance is lost when replacing the feature's values.  It is different to Mean Increased Loss in that rather than measuring changes in model's \textit{error}, it measures the decrease in explained variance of the target, or $R^2$. It is used for example by \cite{gu2020empirical} or \cite{kelly2019characteristics}. [TODO find original methodological paper introducting the measure].  \cite{gu2020empirical} use replacement of values by 0, as their features are scaled from -1 to 1, but generally a different replacement is needed [TODO could be permutation? I think so. In that case average needs to be taken.]
+			
+			\paragraph{Sum of Squared Derivatives} proposed by \cite{dimopoulos1995use} is the sum of squared partial derivatives of the model's prediction with respect to the given feature. The disadvantage of this measure that is its not model-agnostic, specifically it is unusable if derivatives cannot be taken such as in random trees. 
+			
+			\paragraph{Mean Decreased Impurity} proposed by [TODO find out] can be used for tree-based methods, unlike Sum of Squared Derivatives.   
+		
+		\subsection{Shapley Values}
+		
+		Shapley values are a local measure of feature importance. They are due to \cite{shapley1953value}, 
+		(originating in coalitional game theory) and in the ML context are well-described in \cite{molnar2020interpretable}. They can be used to decompose the prediction for given observation into effects of individual features. For given feature and observation, it is the contribution of the feature to the difference between the actual prediction and the mean.  
+		
+		In case of linear model
+		
+		\begin{equation}
+		\hat{f(x)} = \beta_1x_1 + \beta_2x_2 \ldots + \beta_K x_K
+		\end{equation}
+		
+		where $\vec{x}$ are the values for particular observation, the Shapley value of feature $j$ is exactly
+		
+		\begin{equation}
+		\psi_j(\hat{f}) = \beta_jx_j - \beta_jE(X_j)
+		\end{equation}
+		
+		Thanks to Shapley values, we can arrive at the same level of interpretability also for complex models. In case of linear models, the order in which the features "vote" for the prediction is irrelevant (addition is commutative). This is not so in nonlinear models, and this is why the Shapley value takes account for all possible orders in which features can participate in the prediction: in a model with $K$ features, there are $2^K$ possible coalitions between them. Intuitively, imagine that all feature values of a particular observation enter a room in random order. At each point, all feature values make a prediction. Shapley value for feature $j$ is the average change in prediction that happens when feature $j$ enters the room \citep{molnar2020interpretable}. 
+		
+		Exact Shaplay value for given observation and feature can be calculated as follows: [TODO add]
+		
+		Since the computation time of exact Shapley value grows exponentially with number of features, it may be infeasible to compute the exact value. Instead, the Shapley value can be estimated by only computing some of all the possible configurations \citep{vstrumbelj2014explaining}.  
+		
+		[TODO include algorithm]
+		 
+				
+		\subsection{Accumulated Local Effects} 
+			Accumulated Local Effects (ALE) are due to [TODO] described in \cite{molnar2020interpretable}. [TODO describe in detail.]
+
 
 	\section{Unused text}
-		portfolio sorts
-				1. Choose a firm characteristic. 
-				2. Sort stocks into portfolios base on that characteristic \citep{fama1993common}
-				3. See if differences in returns between these portfolios can be explained by a simpler factor model, such as CAPM or Fama-French-3 or Fama-French-5. If not, you have discovered an anomaly. 
-				4. Publish.
-
-	
-	   		In the words of \cite{fama1993common}: "(...) if assets are priced rationally, variables that are
-	   related to average returns, such as size and book-to-market equity, must proxy for
-	   sensitivity to common (shared and thus undiversiable) risk factors in returns." 
-	   
+		
 	   		Of course, studying only the first-order impact of a characteristic provides only a very limited picture. For example, \cite{bryzgalova2019forest} find that the first-order impact of accruals on returns is flat (zero), but when controlling for size, the relationship turns out to be U-shaped. 
 	
 

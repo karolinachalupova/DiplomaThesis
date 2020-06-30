@@ -55,33 +55,7 @@
 		\end{figure}
 	\end{center}
 
-\section{Random Trees}
 
-	\subsection{Random Trees in General} 
-		
-		[TODO describe random trees]
-
-	\subsection{Asset-Pricing Pruning}
-		
-		Asset-Pricing pruning is introduced in \cite{bryzgalova2019forest}. 
-		It is a global approach to pruning a tree. Global pruning is necessary as the task is to use the tree's nodes to span the stochastic discount factor, which cannot be done using local decision criteria. The pruning method proceeds in the following steps. [TODO write this also in algorithm notation.]
-		 
-		First, for each node of the tree (including the first and intermediate nodes, i.e., not just the leaves), calculate the sample estimates of mean and covariance matrix of the excess returns, denote them $\hat{\vec{\mu}}$ and $\hat{\vec{\Sigma}}$ respectively.
-		
-		Second, find weights $\vec{w}$ of the nodes such that the resulting portfolio will have minimum variance, at least a given mean return, and such that the weights are small (elastic net shrinkage). That is, for given $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$, find weights $\vec{w}$ that solve 
-		
-			\begin{equation}
-				\begin{aligned}
-					\min_{\vec{w}} \quad 
-						& \frac{1}{2}\vec{w}^{T} \hat{\vec{\Sigma}} \vec{w} + \lambda_1 \norm{\vec{w}}_1 +  			\frac{1}{2} \lambda_2 \norm{\vec{w}}_2 \\
-					\textrm{subject to} \quad 
-						& \vec{w}^{T} \mathds{1} = \mathds{1} \\
-						& \vec{w}^{T}\hat{\vec{\mu}} \geq \mu_0   \\
-				\end{aligned}
-			\end{equation}
-		
-		The parameters $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$ are selected on validation set such that the Sharpe ratio is maximized. 
-		
 		
 	
 
