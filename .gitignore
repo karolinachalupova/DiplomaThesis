@@ -5,7 +5,6 @@
 *.xmpi
 *.toc
 *.synctex*
-*.pdf
 
 __pycache__/
 .ipynb_checkpoints/
