@@ -2,6 +2,5 @@
 Explaining Equity Returns with Interpretable Machine Learning
 
 WIP.
-
-For newest version of the text, go to branch `develop` and see file `Thesis.pdf` in `latex` folder.
+The text of the thesis is in the `Thesis.pdf` file in `latex` folder.
 
