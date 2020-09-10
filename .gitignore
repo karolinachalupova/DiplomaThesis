@@ -1,0 +1,15 @@
+*.aux
+*.log
+*.lot
+*.lof
+*.xmpi
+*.toc
+*.synctex*
+
+__pycache__/
+.ipynb_checkpoints/
+
+/data/
+/literature/
+/latex_template/
+/progress_reports/

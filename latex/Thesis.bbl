@@ -1,33 +1,128 @@
-\begin{thebibliography}{5}
+\begin{thebibliography}{23}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
-\bibitem[{Bjorvatn \& Eckel(2006)}]{Bjorvatn2006}
-\textsc{Bjorvatn}, K. \& C.~\textsc{Eckel} (2006): \enquote{{Policy Competition
-  for Foreign Direct Investment Between Asymmetric Countries}.}
-\newblock \emph{European Economic Review} \textbf{50(7)}: pp. 1891--1907.
+\bibitem[{Ahn \emph{et~al.}(2012)Ahn, Horenstein, \& Wang}]{ahn2012determining}
+\textsc{Ahn}, S.~C., A.~R. \textsc{Horenstein}, \& N.~\textsc{Wang} (2012):
+  \enquote{Determining rank of the beta matrix of a linear asset pricing
+  model.}
+\newblock \emph{Technical report}, Working Paper, Arizona State University and
+  Sogang University.
 
-\bibitem[{Blomstrom \& Kokko(2003)}]{Blomstrom2003}
-\textsc{Blomstrom}, M. \& A.~\textsc{Kokko} (2003): \enquote{{The Economics of
-  Foreign Direct Investment Incentives}.}
-\newblock \emph{NBER Working Papers 9489}, National Bureau of Economic
-  Research, Inc.
+\bibitem[{Bryzgalova \emph{et~al.}(2019)Bryzgalova, Pelger, \&
+  Zhu}]{bryzgalova2019forest}
+\textsc{Bryzgalova}, S., M.~\textsc{Pelger}, \& J.~\textsc{Zhu} (2019):
+  \enquote{Forest through the trees: Building cross-sections of stock returns.}
+\newblock \emph{Available at SSRN 3493458} .
 
-\bibitem[{Haaparanta(1996)}]{Haaparanta1996}
-\textsc{Haaparanta}, P. (1996): \enquote{{Competition for Foreign Direct
-  Investment}.}
-\newblock \emph{Journal of Public Economics} \textbf{63(1)}: pp. 141--53.
+\bibitem[{Cochrane(1996)}]{cochrane1996cross}
+\textsc{Cochrane}, J.~H. (1996): \enquote{A cross-sectional test of an
+  investment-based asset pricing model.}
+\newblock \emph{Journal of Political Economy} \textbf{104(3)}: pp. 572--621.
 
-\bibitem[{Haufler \& Wooton(2006)}]{Haufler2006}
-\textsc{Haufler}, A. \& I.~\textsc{Wooton} (2006): \enquote{{The Effects of
-  Regional Tax and Subsidy Coordination on Foreign Direct Investment}.}
-\newblock \emph{European Economic Review} \textbf{50(2)}: pp. 285--305.
+\bibitem[{Cochrane(2009)}]{cochrane2009asset}
+\textsc{Cochrane}, J.~H. (2009): \emph{Asset pricing: Revised edition}.
+\newblock Princeton university press.
 
-\bibitem[{Wells \emph{et~al.}(2001)Wells, Allen, Morisset, \&
-  Pirnia}]{Wells2001}
-\textsc{Wells}, L.~T., N.~\textsc{Allen}, J.~\textsc{Morisset}, \&
-  N.~\textsc{Pirnia} (2001): \emph{{Using Tax Incentives to Compete for Foreign
-  Investment: Are They Worth the Cost}?}
-\newblock Washington, DC: {FIAS}.
+\bibitem[{Cochrane(2011)}]{cochrane2011presidential}
+\textsc{Cochrane}, J.~H. (2011): \enquote{Presidential address: Discount
+  rates.}
+\newblock \emph{The Journal of finance} \textbf{66(4)}: pp. 1047--1108.
+
+\bibitem[{De~Prado(2018)}]{de2018advances}
+\textsc{De~Prado}, M.~L. (2018): \emph{Advances in financial machine learning}.
+\newblock John Wiley \& Sons.
+
+\bibitem[{Dimopoulos \emph{et~al.}(1995)Dimopoulos, Bourret, \&
+  Lek}]{dimopoulos1995use}
+\textsc{Dimopoulos}, Y., P.~\textsc{Bourret}, \& S.~\textsc{Lek} (1995):
+  \enquote{Use of some sensitivity criteria for choosing networks with good
+  generalization ability.}
+\newblock \emph{Neural Processing Letters} \textbf{2(6)}: pp. 1--4.
+
+\bibitem[{Fama \& French(1993)}]{fama1993common}
+\textsc{Fama}, E.~F. \& K.~R. \textsc{French} (1993): \enquote{Common risk
+  factors in the returns on stocks and bonds.}
+\newblock \emph{Journal of} .
+
+\bibitem[{Fama \& French(1996)}]{fama1996multifactor}
+\textsc{Fama}, E.~F. \& K.~R. \textsc{French} (1996): \enquote{Multifactor
+  explanations of asset pricing anomalies.}
+\newblock \emph{The journal of finance} \textbf{51(1)}: pp. 55--84.
+
+\bibitem[{Fama \& French(2015)}]{fama2015five}
+\textsc{Fama}, E.~F. \& K.~R. \textsc{French} (2015): \enquote{A five-factor
+  asset pricing model.}
+\newblock \emph{Journal of financial economics} \textbf{116(1)}: pp. 1--22.
+
+\bibitem[{Fisher \emph{et~al.}(2019)Fisher, Rudin, \& Dominici}]{fisher2019all}
+\textsc{Fisher}, A., C.~\textsc{Rudin}, \& F.~\textsc{Dominici} (2019):
+  \enquote{All models are wrong, but many are useful: Learning a variable's
+  importance by studying an entire class of prediction models simultaneously.}
+\newblock \emph{Journal of Machine Learning Research} \textbf{20(177)}: pp.
+  1--81.
+
+\bibitem[{Gu \emph{et~al.}(2020)Gu, Kelly, \& Xiu}]{gu2020empirical}
+\textsc{Gu}, S., B.~\textsc{Kelly}, \& D.~\textsc{Xiu} (2020):
+  \enquote{Empirical asset pricing via machine learning.}
+\newblock \emph{The Review of Financial Studies} \textbf{33(5)}: pp.
+  2223--2273.
+
+\bibitem[{Harvey \emph{et~al.}(2016)Harvey, Liu, \& Zhu}]{harvey2016and}
+\textsc{Harvey}, C.~R., Y.~\textsc{Liu}, \& H.~\textsc{Zhu} (2016):
+  \enquote{… and the cross-section of expected returns.}
+\newblock \emph{The Review of Financial Studies} \textbf{29(1)}: pp. 5--68.
+
+\bibitem[{Heaton \& Lucas(2000)}]{heaton2000portfolio}
+\textsc{Heaton}, J. \& D.~\textsc{Lucas} (2000): \enquote{Portfolio choice and
+  asset prices: The importance of entrepreneurial risk.}
+\newblock \emph{The journal of finance} \textbf{55(3)}: pp. 1163--1198.
+
+\bibitem[{Kelly \emph{et~al.}(2019)Kelly, Pruitt, \&
+  Su}]{kelly2019characteristics}
+\textsc{Kelly}, B.~T., S.~\textsc{Pruitt}, \& Y.~\textsc{Su} (2019):
+  \enquote{Characteristics are covariances: A unified model of risk and
+  return.}
+\newblock \emph{Journal of Financial Economics} \textbf{134(3)}: pp. 501--524.
+
+\bibitem[{Liew \& Vassalou(2000)}]{liew2000can}
+\textsc{Liew}, J. \& M.~\textsc{Vassalou} (2000): \enquote{Can book-to-market,
+  size and momentum be risk factors that predict economic growth?}
+\newblock \emph{Journal of Financial Economics} \textbf{57(2)}: pp. 221--245.
+
+\bibitem[{McLean \& Pontiff(2016)}]{mclean2016does}
+\textsc{McLean}, R.~D. \& J.~\textsc{Pontiff} (2016): \enquote{Does academic
+  research destroy stock return predictability?}
+\newblock \emph{The Journal of Finance} \textbf{71(1)}: pp. 5--32.
+
+\bibitem[{Mitchell(1997)}]{mitchell1997machine}
+\textsc{Mitchell}, T. (1997): \emph{Machine Learning}.
+\newblock McGraw Hill.
+
+\bibitem[{Molnar(2020)}]{molnar2020interpretable}
+\textsc{Molnar}, C. (2020): \emph{Interpretable Machine Learning}.
+\newblock Lulu. com.
+
+\bibitem[{Roll(1977)}]{roll1977critique}
+\textsc{Roll}, R. (1977): \enquote{A critique of the asset pricing theory's
+  tests part i: On past and potential testability of the theory.}
+\newblock \emph{Journal of financial economics} \textbf{4(2)}: pp. 129--176.
+
+\bibitem[{Rubinstein(1976)}]{rubinstein1976valuation}
+\textsc{Rubinstein}, M. (1976): \enquote{The valuation of uncertain income
+  streams and the pricing of options.}
+\newblock \emph{The Bell Journal of Economics} pp. 407--425.
+
+\bibitem[{Shapley(1953)}]{shapley1953value}
+\textsc{Shapley}, L.~S. (1953): \enquote{A value for n-person games.}
+\newblock \emph{Contributions to the Theory of Games} \textbf{2(28)}: pp.
+  307--317.
+
+\bibitem[{{\v{S}}trumbelj \& Kononenko(2014)}]{vstrumbelj2014explaining}
+\textsc{{\v{S}}trumbelj}, E. \& I.~\textsc{Kononenko} (2014):
+  \enquote{Explaining prediction models and individual predictions with feature
+  contributions.}
+\newblock \emph{Knowledge and information systems} \textbf{41(3)}: pp.
+  647--665.
 
 \end{thebibliography}

@@ -1,0 +1,339 @@
+\chapter{Literature Review}
+\label{chap:lit} 
+		
+ 	The question of what drives the stock returns is a thrilling one to answer from several perspectives: that of an economist, of a statistician, of a machine learning engineer, and that of a finance practitioner.
+ 	An economist sees that stock returns reflect human decisions: putting a price tag on uncertain future payoffs reflects the trade-off between current and future consumption, human impatience and attitudes to risk \citep{cochrane2009asset} as well as human behavioral biases [TODO add reference]. She also sees that they speak of the complex web of relations between firms: as companies form relationships, they become exposed to similar risks, and their returns correlate. For the economist, studying the determinants of stock returns therefore is an opportunity to understand human behavior as well as the macro-phenomena that emerge in the network of firms' relationships. 
+ 	The statistician sees that the determinants of stock returns are notoriously over-studied, which brings many issues of publication bias and multiple hypothesis testing, leading to many false discoveries \citep{harvey2016and}. From this perspective, the question stands: how to separate the wheat from the chaff? 
+ 	The machine learning engineer sees the problem as a prediction task: there is a large amount of data, the variables likely interact in complex ways, and are highly correlated. Machines have proven to excel in the task of predicting stock returns. They learn from financial data, model the interactions, and produce unparalleled returns predictions \citep{gu2020empirical}.
+ 	Finally, for the finance practitioner seeks to identify the future winners and losers, and sell and purchase them to make profit. As the machine-learning approaches are becoming the norm in the applied field, a need arises to understand the models on a deeper level – to interpret them, which brings us back to the economic underpinnings of stock returns.
+ 	
+ 	This thesis attempts to bring the four approaches together. I use machine learning models to predict stock returns and then interpret them to bring us closer to the answers to the economists' questions. This approach can also help to filter out false discoveries. Finally, the finance practitioner can employ ML interpretability methods to find an intelligible model, of which she understands the weaknesses and sources of performance. 
+ 	
+ 	The literature review proceeds as follows. First, I review the economic theory behind asset prices and common attitudes to modeling them. Second, I present the statistician's view: the multidimensional challenge faced in modeling stock returns \citep{cochrane2011presidential} and show what different approaches have been used to answer the challenge. Third, I present the machine learning approaches to asset pricing. Fourth, I review ML interpretability methods. 
+ 	
+ 	\section{Economist's Perspective}
+ 	
+	 	Valuing a stock amounts to putting a price tag on a stream of future payoffs. The field concerned with doing just that is called asset pricing. Consider the following basic asset-pricing equation \citep{cochrane2009asset}:
+	 	
+	 	\begin{equation}
+	 		p_t^i = E_t(m_{t+1} x_{t+1}^i ) \label{eq:pEmx}
+	 	\end{equation}
+	 	
+	 	In words, the price of an asset $i$ at time $t$ ($p_t^i$) is proportional to the expected asset's payoff at time $t+1$ ($x_{t+1}^i$). However, since the payoff does not come now ($t$), but in future ($t+1$), we discount it to present by the factor $m_{t+1}$, called the \textit{stochastic discount factor}. The term stochastic stands to express the idea that $m_{t+1}$ is not known with certainty at time $t$. There is only one assumption made in order to write the equation: it can be shown that $m_{t+1}$ exists if and only if the \textit{law of one price} holds, that is, if two assets generate the exact same payoff in all possible states of nature have the same price. If this is the case, there is a discount factor such that the equation holds for all assets $i$ \citep{cochrane2009asset}.
+	 	
+	 	In the stock market, equation \ref{eq:pEmx} translates to:
+	 	
+	 	\begin{equation}
+	 		1 = E_t(m_{t+1} R_{t+1}^i ) \label{eq:1EmR}
+	 	\end{equation} 
+	 	
+	 	In words, an investor pays 1 dollar now to collect $R_{t+1}^i$ dollars in the future. The payoff is called gross return and is the sum of future price and dividend $R_{t+1}^i = p_{t+1}^i+ d_{t+1}^i$. 
+	 	Using the definition of covariance, we can rearrange \ref{eq:1EmR} \citep{cochrane2009asset}:
+	 	
+	 	\begin{equation}
+	 		1 = E_t(m_{t+1}) E_t(R_{t+1}^i) + Cov_t(m_{t+1},R_{t+1}^i) 
+	 	\end{equation} 
+ 	
+ 		Defining the \textit{risk-free gross return} as $R_{t+1}^f=\frac{1}{E_t(m_{t+1})}$ and using it to further rearrange \citep{cochrane2009asset}:
+ 		
+ 		\begin{equation}
+ 			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov_t(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
+ 		\end{equation} 
+ 		
+ 		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. Returns positively correlated to the discount factor should be low, and vice versa. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
+ 		
+ 		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var_t(m_{t+1})/Var_t(m_{t+1})$ to obtain:
+ 		
+ 		\begin{align}
+	 		E_t(R_{t+1}^i) 
+	 		& = {R_{t+1}^f} + 
+	 		\underbrace{
+	 			\frac{Cov_t(m_{t+1},R_{t+1}^i)}{Var_t(m_{t+1})}
+	 			}_\text{denote $\beta_{i,t}$} 
+ 			\cdot 
+ 			\underbrace{
+ 				\left(-\frac{Var_t(m_{t+1})}{E_t(m_{t+1})}\right)
+ 				}_\text{denote $\lambda_{t}$} \label{eq:factor_model} \\
+ 			& = \underbrace{{R_{t+1}^f}
+ 				}_\text{risk-free return} 
+ 				+ 
+ 				\underbrace{\beta_{i,t} \cdot \lambda_{t}
+ 				}_\text{risk adjustment} \label{eq:beta_reprezentation}
+ 		\end{align} 
+ 		
+ 		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,t}$ and $\lambda_t$. $\lambda_t$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,t}$ can be interpreted as the amount of the risk inherent in asset $i$. Empirically, it can be obtained as the coefficient from regressing asset $i$'s returns on the discount factor [TODO does this estimation introduce the assumption that beta is time-invariant?]: 
+ 		
+ 		\begin{equation}
+ 		R_{t+1}^i = a_i + \beta_{i}m_{t+1} + \epsilon_{i,t+1}
+ 		\end{equation} 
+ 		
+ 		Equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation} show that the discount factor is the key to explaining stock returns, as the latter is nothing but compensation for correlation with the former. Thus, specifying the discount factor is the only content of any asset-pricing model \cite{cochrane2009asset}. I review the consumption-based model, the CAPM, and multiple-factor models as special cases of these equations providing more intuition about what drives the discount factor. 
+ 			 	
+	 	\subsection{Consumption-Based Model}
+	 	
+		 	The consumption-based model takes the additional assumption that the investor's preferences can be captured by her utility from consumption. The investor needs to decide how much to consume today and how much to save for tomorrow. First order conditions for this problem lead to the following specification of the discount factor \cite{cochrane2009asset}: 
+		 	
+		 	\begin{equation}
+		 		m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \label{consumtion_based_model}
+		 	\end{equation}
+		 	
+		 	where $u'(c_{t+1})$ denotes marginal utility from consumption. That is, the discount factor is the consumer's  marginal rate of substitution between consumption at time $t$ and $t+1$ and captures the willingness to trade consumption today for consumption tomorrow, where parameter $\kappa$ is the weight placed on future utility. This means that such an investor would demand a high return for stock that perform badly at times when she is unwilling to give up today's consumption, and a low return for stock that performs badly at times she is willing to give up today's consumption. 
+		 	
+		 	For simplification, one can assume constant relative risk aversion:
+		 	
+		 	\begin{equation}
+		 		u(c_t) = \frac{c^{1-\gamma}-1}{1-\gamma}
+		 	\end{equation}
+		 	
+		 	where $\gamma$ is a parameter positive for risk-averse individuals, and plug in to \ref{consumtion_based_model}: 
+		 	
+		 	\begin{equation}
+		 	m_{t+1} = \kappa \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma} 
+		 	\end{equation}
+		 	
+		 	 That is, the discount factor is inversely proportionate to consumption growth. \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should have lower returns, so it follows that assets highly correlated with consumption growth should earn high returns. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks that perform well during bad times.
+		 	 
+		 	 For the sake of completeness, we can rewrite this to the equivalent beta-representation using \ref{eq:beta_reprezentation} [TODO odvodit, overit, zpresnit notaci]: 
+		 	 
+		 	 \begin{align}
+		 	 & E_t(R_{t+1}^i) = R_{t+1}^f + \beta_{i,t} \cdot \lambda_{t} \\
+		 	 & \lambda_{t} = \gamma Var_t(\Delta c_{t+1}) \\
+		 	 & R_{t+1}^i = \alpha_{i,t} + \beta_{i,t} \Delta c_{t+1} + \epsilon_{i,t+1}
+		 	 \end{align}
+		 	 
+		 	  However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the aggregate consumption data are imperfectly measured, or the assumption that the investor maximizes the utility from consumption is off. This motivates tying the discount factor to other variables.
+	 	
+	 	\subsection{Capital Asset Pricing Model}
+	 	
+	 		The Capital Asset Pricing Model (CAPM) is the possibly most widely-known asset pricing model. It is the special case of the consumption-based model, making the additional assumption that the utility from consumption is logarithmic \citep{rubinstein1976valuation}:
+	 		
+	 		\begin{equation}
+	 			u(c_t) = ln(c_t)
+	 		\end{equation}
+	 		
+	 		Plugging this to \ref{consumtion_based_model}, one obtains 
+	 		
+	 		\begin{equation}
+	 			m_{t+1} = \kappa \frac{c_t}{c_{t+j}}
+	 		\end{equation}
+	 		
+	 		The CAPM operates with the concept of wealth portfolio, which comprises all world's wealth, inclusing real estate, metals, machinery or art. The price of this portfolio is (by \ref{eq:pEmx} and plugging in for the discount factor):  
+	 		
+	 		\begin{equation}
+	 		p_t^W  = E_t \sum_{j=1}^{\infty} m_{t+j}c_{t+1} = \frac{\kappa}{1-\kappa}c_t
+	 		\end{equation}
+	 		
+	 		and the return on wealth portfolio is therefore 
+	 		
+	 		\begin{equation}
+	 		R_{t+1}^W  = \frac{p_{t+1}^W + c_{t+1}}{p_t^W} = \frac{1}{\kappa} \frac{c_{t+1}}{c_t} = \frac{1}{m_{t+1}}
+	 		\end{equation}
+	 		
+	 		Thus, according to CAPM, the discount factor is the inverse of the return on the wealth portfolio. As \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should earn low returns, if follows that assets positively correlated with the wealth portfolio should earn higher returns. Again, this makes sense: an investor who only cares about consumption demands a higher return for stocks that perform badly when other sources of wealth perform badly, and vice versa, she is willing to forgo some average return in exchange for good performance at times when all else fails. 
+	 		
+	 		Again, for completeness, we can rewrite this to the equivalent beta-representation using \ref{eq:beta_reprezentation} [TODO odvodit, overit, zpresnit notaci]: 
+	 		
+	 		\begin{align}
+	 			& E(R_{t+1}^i) = \gamma + \beta_{i,t} \cdot \lambda_{t} \\
+	 			& \lambda_{t} = E_t(R^W_{t+1}) - \gamma \\
+	 			& R_{t+1}^i = \alpha_{i,t} + \beta_{i,t} R^W_{t+1} + \epsilon_{i,t+1}
+	 		\end{align}  
+	 		
+	 		CAPM accomplishes the task of removing consumption data from empirical estimation of discount factor \citep{cochrane2009asset}, replacing them by return on wealth portfolio. However, this return is unobservable, so it is empirically often replaced by return on market portfolio of stocks. This may be problematic, as wealth comprises many more assets than just stocks, so the approximation is likely too crude \citep{roll1977critique}.  
+	 		
+	 		
+	 	\subsection{Multi-factor Models}
+	 		
+	 		Multi-factor models are motivated by the notions that consumption growth and return on wealth portfolio do not proxy the discount factor empirically very well (in the consumption-based model and CAPM respectively), and they try to find other proxies for the discount factor $m_{t+1}$, factors $\vec{f}_{t+1}$. If we retain the idea that investor maximizes her utility from consumption, then the factors  should proxy the marginal utility growth \citep{cochrane2009asset}: 
+	 		
+	 		\begin{equation}
+	 		m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \approx a+\vec{b}'\vec{f}_{t+1}
+	 		\end{equation}
+	 		
+	 		The expression on the left-hand side can be interpreted as the rate at which the investor is willing to swap future for current consumption. [TODO verify that this understanding of mine is correct]. There are many variables that affect this rate. The current state of the economy, such as GDP growth, interest rate or investment, as well as new of the future states, forecasting either asset returns or macroeconomic variables. Many candidate factors can be defended on these grounds.   
+	 		
+	 		Multi-factor models explain returns as	 
+	 	
+	 	
+			 	\begin{align}
+			 		& E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t} \\
+			 		& R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \label{multifactor model}
+			 	\end{align}
+			 
+			 The \textit{factor loadings} $\vec{\beta}'_{i,t}$ of size $1\times K$ are exposures to risk factors $\vec{f}_{t+1}$ of size $K \times 1$, where $K$ is the number of risk factors. They represent the amount of risk inherent in asset $i$ due to its correlation to the corresponding risk factor. The $\vec{\lambda}_{t}$ of size $K \times 1$ are interpretable as the risk prices at time $t$ \citep{kelly2019characteristics}. (Note that the CAPM and consumption-based models are special cases of the multiple-factor models, where $K$, the number of factors, is 1.) 			
+			 
+			 First multi-factor model is \cite{fama1996multifactor} [TODO make sure the time indexation is right]:
+			 
+			 \begin{align}
+			 	& E(R^i) = R^f + \vec{\beta}'_{i} \vec{\lambda} \\
+			 	& R^i_{t+1} = \alpha_{i} + \vec{\beta}'_{i} \vec{f}_{t+1} + \epsilon_{i,t+1}
+			 \end{align}
+		 
+		 	with factors  
+			  		
+				\begin{equation}
+					\vec{f}_{t+1} = 
+						\begin{pmatrix}
+							R^M_{t+1}-R^f_{t+1} \\
+							SMB_{t+1} \\
+							HML_{t+1}				
+						\end{pmatrix}
+				\end{equation}
+			
+			and with factor prices 
+			
+			\begin{equation}
+			  \vec{\lambda} =
+				\begin{pmatrix}
+					E(R^M)-R^f \\
+					E(SMB) \\
+					E(HML)				
+				\end{pmatrix} 
+			\end{equation}
+			 
+			The $R^M_{t+1}-R^f_{t+1}$ is the return on market portfolio above risk-free rate (as in CAPM), $SMB_{t+1}$ is the return on small-cap portfolio minus the return on big-cap portfolio, and $HML_{t+1}$ is the return on portfolio of stocks with small market values relative to book value, minus the return on portfolio of stocks with high market values relative to book value. Note that the risk prices $ \vec{\lambda}$ and $\vec{\beta}'_{i}$ are time-invariant. Explanations why $SMB$ and $HML$ should be correlated to the discount factor include that they proxy for financial distress \citep{fama1996multifactor}, \citep{heaton2000portfolio} or that they forecast the future state of the economy \citep{liew2000can}. 		
+			\cite{fama2015five} augment this three-factor model to five factors, adding $RMW$ and $CMA$, which are, respectively, the difference in returns on portfolios of firms with robust and weak profitability, and difference in returns on portfolios of firms with conservative and aggressive investment. 
+			
+			[TODO add a systematic overview of existing anomalies.]
+			
+			[TODO describe portfolio sorting metodology]
+			
+			It is difficult to empirically estimate a multifactor model. The main challenge is that both $\vec{f}_{t+1}$ and $\vec{\beta}'_{i,t}$ are unobserved, so we have no directly observed variables at the right hand side of the estimated equation. There are two different approaches to tackle this issue \citep{kelly2019characteristics}. The first is to use use prior knowledge of empirical behavior of average returns to pre-specify the factors, treat them as observable and then estimate $\beta_{t-1}$. An example of this approach is \citep{fama1993common} and most of the hundreds of published factors are too \cite{cochrane2009asset}. But as noted by \cite[p.~3]{kelly2019characteristics}, this prior specification relies on "a partial understanding at best, and at worst is exactly the object of empirical interest."  Even \cite{fama1993common} note that without a clear economic theory for factors, the choice of the right-hands side variables is arbitrary. But as we have seen, the economic theory justifies inclusion of almost anything as the right-hands side variable: "One can appeal to the APT or ICAPM to justify the inclusion of just about any desirable factor" \citep[p.~124]{cochrane2009asset}), so we do not have a clear economic theory.  
+			
+			The other way to uncover the factor structure is, therefore, to instrument the unobserved factor loadings using firm-level variables, commonly called \textit{characteristics}.  
+			
+			\begin{align}
+				E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t}  \label{ER_betalambda} \\
+				R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \\
+				\vec{\beta}'_{i,t} = g(\vec{z}'_{i,t}) \label{instrumented_betas}
+			\end{align}
+			
+			The first two equations are the same as in multiple-factor models, while the third shows instrumenting of the factor loadings with firm characteristics $\vec{z}'_{i,t}$. This approach is exemplified by \cite{kelly2019characteristics}. The key insight is that characteristics serve as proxies for \textit{exposure} to different sources of systematic risk. Once risk loadings are instrumented, the authors use them to estimate the corresponding factors.
+	
+		\subsection{Arbitrage Pricing Theory}
+		
+			[TODO add economic motivation for drivers of expected returns from APT.]
+	
+	\section{Statistician's Perspective} 
+		
+		\epigraph{We argue that most claimed research findings in financial economics are likely false. }{\cite{harvey2016and}}
+		
+		There are hundreds of published factors suggested as explanation of average stock returns. \cite{harvey2016and} count 313 variables, considering the top journals only and calling the count "surely too low". Indeed, \cite{cochrane2011presidential} refers to the state of asset pricing as a "zoo of factors". At the same time, 
+		the number of factors should be low in theory \citep{cochrane2011presidential} and empirically \citep{ahn2012determining} [TODO elaborate].
+		
+		\cite[p.~1060]{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in asset pricing in his "multidimensional challenge": "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns? Why are subsumed by others? Second, does each new anomaly variable also correspond to a new factor formed on those same anomalies? (\ldots) Third, how many of these new factors are really important?"
+		
+		The main issue with the hundrends of factor models is that they find the studied factor significant controlling only for the effects of market return or 3 or five other factors, typically factors from  \cite{fama1996multifactor} or \cite{fama2015five}. To establish the significance of the variables, it is necessary to consider them jointly in a single model, allowing the factors to crowd each other out. 
+		
+		Moreover, there are numerous issues that severely diminish the reliability of these factors. First and most obviously, some results are bound to be just false positives due to the typical confidence levels \citep{harvey2016and}. Second, as it is difficult to publish a non-result, the insignificant results remain in the drawer and the significant ones get published, artificially driving up the significance in an instance of publication bias \citep{harvey2016and}. Third, the published studies are often biased in themselves: the specification search bias (selection of the model based on model's result), the sample selection bias (selection of the data based on model's results) and the multiple hypothesis testing bias (conducting multiple tests of the same hypothesis) all result in artificially high significance of returns predictors \citep{mclean2016does}. The situation is worsened by the fact that there is only a limited amount of data in finance: CRSP and Compustat are limited resources, and researches use the same data over and over, resulting in collective over-fitting \citep{harvey2016and}. Finally, unlike in other fields, it is difficult to publish a replication study in finance, which leaves the spurious factors unnoticed \citep{harvey2016and}. There are two ways to correct these biases ex post: out-of-sample tests  and using a framework that accounts for the multiple testing and rises the usual significance levels. \cite{mclean2016does} perform the out-of-sample tests, studying 82 variables. As much as 10 of them could not even be replicated in-sample. The rest are biased on average by 10\%. \cite{harvey2016and} take the multiple-testing approach. Out of 296 published significant factors, 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used \cite{harvey2016and}. 
+		
+		
+	
+	\section{Machine Learning Perspective}
+	
+		\epigraph{To adress [the multidimensional challenge] in the zoo of new variables, I suspect we will have to use different \textit{methods}.}{\cite{cochrane2011presidential}}
+		
+		A possible definition of ML is from  \cite[p.~2]{mitchell1997machine}: "A computer  program is  said to learn from experience E with respect to  some class of tasks T and performance  measure P, if  its performance at  tasks in T, as measured by P, improves with experience E." In the case of predicting stock returns, the task T is a regression, performance measure can be for example the mean-squared-error, and the experience E is the historical data. Using this definition, ML is a broad collection of methods, including the very simplest, like linear regression or principal components analysis, that are well-known to any economist.  
+		
+		ML offers many varied methods that are well-suited to the task of explaining stock returns and that have an advantage over the more traditional methods \citep{gu2020empirical}. First, ML methods can handle data with high dimensionality and correlation in predictors. If the hundreds of candidate factors are used in linear regression, $R^2$ becomes negative and no predictors are significant \citep{gu2020empirical} due to the high dimension and multicollinearity. Portfolio sorts, another traditional method in asset pricing, become unusable at around 5 predictors \cite{cochrane2011presidential, bryzgalova2019forest}. ML offers dimension reduction and variable selection methods to overcome this challenge. Second, it seems that the linear functional form for predictors is too restrictive: \cite{gu2020empirical} statistically reject the traditional linear models in favor of the non-linear ones. ML offers methods of choosing the right functional form systematically. Third, the model selection is ML is based on validation data, as opposed to in-sample (training) data. In traditional econometrics approach to stock returns, model is tuned by researcher based on in-sample fit, which results in spurious findings that are very often not replicable out-of-sample \citep{mclean2016does}. On the other hand, ML puts an emphasis on out-of-sample performance, which allows to select a robust model.   	
+	
+		\cite{gu2020empirical} apply a wide range of ML methods to the stock-returns prediction task. Their model is 
+		
+		\begin{equation}
+		r_{i, t+1} = E_t(r_{i,t+1}) + \epsilon_{i,t+1}
+		\end{equation}
+		
+		where 
+		
+		\begin{equation}
+		E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = g(\vec{x}_t \otimes \vec{c}_{i,t})
+		\end{equation}
+		
+	
+		The function $g$ stands for any ML model and the variables $\vec{z}_{i,t}$ are 94 characteristics of stocks $ \vec{c}_{i,t}$ interacted with 8 macroeconomic predictors $\vec{x}_t$. The multiple-factor model \ref{ER_betalambda} is a special case of this specification, with $g$ linear: 
+		
+		\begin{equation}
+			E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = \vec{c}'_{i,t}\Theta_1'\Theta_2 \vec{x}_t = \vec{{\beta}}'_{i,t} \vec{\lambda}_{t}
+		\end{equation}
+		
+		
+		The authors make a horse race of several ML and traditional methods. First, they include methods to estimate linear $g$, both without regularization (linear regression with all variables (OLS), linear regression only with size, book-to market, and mometum (OLS-3)) and with regularization (partial least squares (PLS), principal components regression (PCR), elastic net (ENet)). Second, they include methods to estimate nonlinear $g$: generalized linear models (GLM), random forest, gradient-boosted regression trees, and neural networks of depths 1 to 5. They find that OLS performs badly, regularized linear models are an improvement, and, and nonlinear models are the best-performing, namely neural networks followed by random trees. 
+		
+		Interestingly, the authors find that all methods (with the exception of OLS) agree in the variables that have an important first-order impact on returns. These are, ordered by importance: recent price trends (such as momentum and long- and short-term reversal), liquidity measures (such as turnover), risk measures (such as return volatility and market beta), valuation ratios (such as earnings-to-price), and fundamental signals (such as asset growth). On annual frequency, recent price trends become less important, and industry emerges as an important predictor, but otherwise the results are similar to the monthly frequency.
+		
+		\cite{bryzgalova2019forest} use random trees to build the discount factor. They generalize portfolio-sorts to accommodate a large number of predictors. Similarly to \cite{kelly2019characteristics}, they consider factor loadings $\vec{\beta}_{i,t}$ as function of characteristics. Specifically, the characteristics include recent price trends (momentum and long- and short-term reversal), liquidity measures (such as turnover), investment, profitability, accruals and book-to-market ratio. Their approach leads to selection of a very sparse and readily interpretable set of basis assets that are used to construct the discount factor. This is done using a global approach to pruning a tree. Global pruning is necessary as the task is to use the tree's nodes to span the stochastic discount factor, which cannot be done using local decision criteria. The pruning method proceeds in the following steps. 	
+		
+		The intermediate and final nodes of the tree then serve as basis assets to construct the discount factors. This is done by optimally weighting the basis assets. The weights are found by finding the minimum variance weights for each expected return, solving the Markowitz problem with additional shrinkage of the weights using elastic net penalty, choosing the the optimum expected return and shrinkage parameters to maximize the Sharpe ratio on validation data. Specifically, the approach takes three steps: 
+		
+		First, for each node of the tree (including the first and intermediate nodes, i.e., not just the leaves), calculate the sample estimates of mean and covariance matrix of the excess returns, denote them $\hat{\vec{\mu}}$ and $\hat{\vec{\Sigma}}$ respectively.
+		
+		Second, find weights $\vec{w}$ of the nodes such that the resulting portfolio will have minimum variance, at least a given mean return, and such that the weights are small (elastic net shrinkage). That is, for given $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$, find weights $\vec{w}$ that solve 
+		
+		\begin{equation}
+		\begin{aligned}
+		\min_{\vec{w}} \quad 
+		& \frac{1}{2}\vec{w}^{T} \hat{\vec{\Sigma}} \vec{w} + \lambda_1 \norm{\vec{w}}_1 +  			\frac{1}{2} \lambda_2 \norm{\vec{w}}_2 \\
+		\textrm{subject to} \quad 
+		& \vec{w}^{T} \mathds{1} = \mathds{1} \\
+		& \vec{w}^{T}\hat{\vec{\mu}} \geq \mu_0   \\
+		\end{aligned}
+		\end{equation}
+		
+		Third, the parameters $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$ are selected on validation set such that the Sharpe ratio is maximized. 		
+				
+		\cite{bryzgalova2019forest} and \cite{gu2020empirical} agree that the ability to uncover non-linearities and interactions is the crucial driving force of the superior ML performance.  If a variable has a non-linear relationship with returns, the linear models can conclude there is no association, while in reality there is an important non-linear relationship. For example, in \cite{gu2020empirical}, linear models deem size and volatility unimportant predictors, while non-linear models find the contrary. A similar problem may arise if predictors are have zero association with return themselves, but not in interaction with other predictors. [TODO include examples]. 
+	
+	
+	\section{Interpretable Machine Learning}
+	
+		ML interpretability methods can be grouped into into several categories \citep{molnar2020interpretable}. A first dictinction can be made between  \textit{intrinsically} interpretable models, that are intrepretable per se (linear and logistic regression, random tree), and \textit{post-hoc methods}, that can be applied to extract interpretable knowledge from the model ex-post. A further distinction can be made as to the applicability of the interpretability methods: some methods are \textit{model-specific}, that is, can only be applied to some ML models others are \textit{model-agnostic}, applicable to all models from linear regressions to random trees and neural networks. Yet other distinction can be made between \textit{global} and \textit{local} ML interpretability methods: while the former assess sources of model performance across all observations, the latter can be used to interpret the drivers within a single observation. 
+		
+		\subsection{Global Feature Importance Measures}
+		
+			Feature importance focuses on how much the model relies on an input feature to produce a prediction. There are several different notions of what qualifies a feature as important: 
+		
+			\paragraph{Mean Decreased Performance} proposed by \citep{fisher2019all}, also known as \textbf{Permutation Feature Importance} is a model-agnostic measure of feature importance, which measures how much of model's performance is lost when permuting a given feature. It compares the performance of a model fit on a set of features with the performance of the same model after permuting a given feature (randomly shuffling its features across examples, without re-fitting the model). If the particular feature is important, permuting it will decrease model's performance. There are several special cases depending on the measure the model's performance, e.g., \textbf{Model Reliance} \citep{fisher2019all} (mean squared error), or \textbf{Mean Decreased Accuracy} [TODO add citation] (accuracy). Since the measure depends on random permutation, its variance can be decreased by computing it several times and averaging the result. [TODO add alogorhitmic description.]	
+			
+			\paragraph{Mean Decreased Explained Variance} is also a model-agnostic measure of feature importance, and measures how much of model's explained variance is lost when replacing the feature's values.  It is different to Mean Increased Loss in that rather than measuring changes in model's \textit{error}, it measures the decrease in explained variance of the target, or $R^2$. It is used for example by \cite{gu2020empirical} or \cite{kelly2019characteristics}. [TODO find original methodological paper introducting the measure].  \cite{gu2020empirical} use replacement of values by 0, as their features are scaled from -1 to 1, but generally a different replacement is needed [TODO could be permutation? I think so. In that case average needs to be taken.]
+			
+			\paragraph{Sum of Squared Derivatives} proposed by \cite{dimopoulos1995use} is the sum of squared partial derivatives of the model's prediction with respect to the given feature. The disadvantage of this measure that is its not model-agnostic, specifically it is unusable if derivatives cannot be taken such as in random trees. 
+			
+			\paragraph{Mean Decreased Impurity} proposed by [TODO find out] can be used for tree-based methods, unlike Sum of Squared Derivatives.   
+		
+		\subsection{Shapley Values}
+		
+		Shapley values are a local measure of feature importance. They are due to \cite{shapley1953value}, 
+		(originating in coalitional game theory) and in the ML context are well-described in \cite{molnar2020interpretable}. They can be used to decompose the prediction for given observation into effects of individual features. For given feature and observation, it is the contribution of the feature to the difference between the actual prediction and the mean.  
+		
+		In case of linear model
+		
+		\begin{equation}
+		\hat{f(x)} = \beta_1x_1 + \beta_2x_2 \ldots + \beta_K x_K
+		\end{equation}
+		
+		where $\vec{x}$ are the values for particular observation, the Shapley value of feature $j$ is exactly
+		
+		\begin{equation}
+		\psi_j(\hat{f}) = \beta_jx_j - \beta_jE(X_j)
+		\end{equation}
+		
+		Thanks to Shapley values, we can arrive at the same level of interpretability also for complex models. In case of linear models, the order in which the features "vote" for the prediction is irrelevant (addition is commutative). This is not so in nonlinear models, and this is why the Shapley value takes account for all possible orders in which features can participate in the prediction: in a model with $K$ features, there are $2^K$ possible coalitions between them. Intuitively, imagine that all feature values of a particular observation enter a room in random order. At each point, all feature values make a prediction. Shapley value for feature $j$ is the average change in prediction that happens when feature $j$ enters the room \citep{molnar2020interpretable}. 
+		
+		Exact Shaplay value for given observation and feature can be calculated as follows: [TODO add]
+		
+		Since the computation time of exact Shapley value grows exponentially with number of features, it may be infeasible to compute the exact value. Instead, the Shapley value can be estimated by only computing some of all the possible configurations \citep{vstrumbelj2014explaining}.  
+		
+		[TODO include algorithm]
+		 
+				
+		\subsection{Accumulated Local Effects} 
+			Accumulated Local Effects (ALE) are due to [TODO] described in \cite{molnar2020interpretable}. [TODO describe in detail.]
+
+
+	\section{Unused text}
+		
+	   		Of course, studying only the first-order impact of a characteristic provides only a very limited picture. For example, \cite{bryzgalova2019forest} find that the first-order impact of accruals on returns is flat (zero), but when controlling for size, the relationship turns out to be U-shaped. 
+	
+
+
+
