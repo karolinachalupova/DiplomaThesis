@@ -1,59 +1,179 @@
 """
-Loads data to memory
+Processing and loading of the data.
+
+TODO: I'm not happy with replacing infty by np.nan in Clean.replace_inf, should be winsorization-like
 """
 
 import pandas as pd
+import pickle
+from sklearn import preprocessing, impute
+import numpy as np
+import scipy
 
 
-class Anomalies():
+def run_pipeline(nrow=None):
+    filtered = Filtered()
+    filtered.calculate()
+    subset = Subset()
+    subset.calculate(nrow=nrow)
+    cleaned = Cleaned()
+    cleaned.calculate()
+    return cleaned
 
-    def __init__(self, 
-            path_data='pipeline/data/01_anomalies_filtered/data.pkl', 
-            path_meta='pipeline/data/00_anomalies_unfiltered/anomalies_meta.xlsx',
-            nrows=None):
+if __name__ == "__main__":
+    run_pipeline()
 
-            # Load data, subset to nrows, set index
-            data = pd.read_pickle(path_data)
-            data = data.take(range(nrows if nrows is not None else len(data))) # subset to specified number of rows
-            data = data.sort_index()
+class Dataset():
 
-            # Get features and targets
-            self.targets = data[["r"]]
-            self.features = data.drop(["r", "FTID"], axis=1)
-            
-            # Load meta
-            self.meta = pd.read_excel(path_meta, sheet_name=1)
+    def load(self):
+        """
+        Loads the data from path into working memory.
+        """
+        self.features = pd.read_pickle(self.paths.get("features"))
+        self.targets = pd.read_pickle(self.paths.get("targets"))
+        
 
-            # check that meta corresponds one to one with features 
-            assert set(self.meta.sc.tolist()).difference(set(self.features.columns.unique().tolist())) == set()
-            assert set(self.features.columns.tolist()).difference(set(self.meta.sc.unique().tolist())) == set()
-
-            # Sort the features on meta
-            sorted_features = self.meta.sort_values(['class','class2']).sc.tolist()
-            self.features = self.features[sorted_features]
-
+class Meta(Dataset):
+    PATHS = {
+        "all": 'data/meta.xlsx'
+    }
+    def __init__(self, paths = PATHS):
+        self.paths = paths
     
+    def load(self):
+        self.sheet0 = pd.read_excel(self.paths.get("all"), sheet_name=0)
+
     @property
     def classification1(self):
         classification1 = dict()
-        for c in self.meta['class'].unique().tolist(): 
-            classification1[c.lower()] = self.meta[self.meta['class'] == c].name.tolist()
+        for c in self.sheet0['class'].unique().tolist(): 
+            classification1[c.lower()] = self.sheet0[self.sheet0['class'] == c].name.tolist()
         return classification1
             
     @property
     def classification2(self):
         classification2 = dict()
-        for c in self.meta.class2.unique().tolist(): 
-            classification2[c.lower()] = self.meta[self.meta['class2'] == c].name.tolist()
+        for c in self.sheet0.class2.unique().tolist(): 
+            classification2[c.lower()] = self.sheet0[self.sheet0['class2'] == c].name.tolist()
         return classification2
             
     @property 
     def sc_to_name(self):
-        return dict(zip(self.meta.name_sc, self.meta.name))
+        return dict(zip(self.sheet0.name_sc, self.sheet0.name))
     
     @property 
     def name_to_sc(self):
-        return dict(zip(self.meta.name, self.meta.name_sc))
+        return dict(zip(self.sheet0.name, self.sheet0.name_sc))
+
+
+class Raw(Dataset):
+    PATHS = {
+        "filter": "data/raw/DST_universe_filter.gzip",
+        "features": "data/raw/DST_signals.gzip",
+        "targets": "data/raw/DST_returns.gzip"
+    }
+    def __init__(self, paths = PATHS):
+        self.paths = paths
+    
+    def load(self):
+        self.universe_filter = pd.read_parquet(self.paths.get("filter"))
+        self.features = pd.read_parquet(self.paths.get("features"))
+        self.targets = pd.read_parquet(self.paths.get("targets"))
+
+
+class Filtered(Dataset):
+    PATHS = {
+        "features":'data/filtered/features.pkl', 
+        "targets": 'data/filtered/targets.pkl'
+    }
+    def __init__(self, paths = PATHS):
+        self.paths = paths
         
+    def calculate(self, ancestor_paths = Raw.PATHS):
+        """
+        Recalculates the data using ancestors. 
+        """
+        ancestor = Raw(paths = ancestor_paths)
+        ancestor.load()
+        features = ancestor.features[ancestor.features['DTID'].isin(ancestor.universe_filter.DTID.unique().tolist())]
+        targets = ancestor.targets[ancestor.targets['DTID'].isin(ancestor.universe_filter.DTID.unique().tolist())]
+        features.drop("FTID", axis=1, inplace=True)
+
+        for dataset, path in zip([features, targets], [self.paths.get("features"), self.paths.get("targets")]): 
+            dataset.set_index(['DTID', 'date'], inplace=True)
+            dataset.sort_index(inplace=True)
+            dataset.to_pickle(path)
+
+
+class Subset(Dataset):
+    PATHS = {
+        "features": 'data/subset/features.pkl',
+        "targets": 'data/subset/targets.pkl'
+    }
+    def __init__(self, paths = PATHS):
+        self.paths = paths 
+
+    def calculate(self, ancestor_paths=Filtered.PATHS, nrow=None):
+        ancestor = Filtered(paths=ancestor_paths)
+        ancestor.load()
+        features = ancestor.features.head(nrow)
+        targets = ancestor.targets.head(nrow)
+        for dataset, path in zip([features, targets], [self.paths.get("features"), self.paths.get("targets")]): 
+            dataset.to_pickle(path)
+
+
+class Cleaned(Dataset):
+    PATHS = {
+        "features":'data/cleaned/features.pkl',
+        "targets": 'data/cleaned/targets.pkl'
+    }
+    def __init__(self, paths= PATHS):
+        self.paths = paths
+
+    def calculate(self, ancestor_paths = Subset.PATHS, freq="Y"):
+        ancestor = Subset(paths = ancestor_paths)
+        ancestor.load()
+        features = self.groupby_clean(ancestor.features, freq=freq)
+        targets = ancestor.targets
+        for dataset, path in zip([features, targets], [self.paths.get("features"), self.paths.get("targets")]): 
+            dataset.to_pickle(path)
+    
+    @staticmethod
+    def replace_inf(df):
+        return df.replace([np.inf, -np.inf], np.nan)
+
+    @staticmethod
+    def winsorize(df):
+        t = scipy.stats.mstats.winsorize(df, axis=0, limits=(0.01,0.01))
+        return pd.DataFrame(t, columns=df.columns, index=df.index)
+
+    @staticmethod
+    def center(df):
+        """
+        removes the mean of the data, columnwise
+        """
+        scaler = preprocessing.StandardScaler(with_std=False)
+        t = scaler.fit_transform(df)
+        return pd.DataFrame(t, columns=df.columns, index=df.index)
+        
+    @staticmethod
+    def normalize(df):
+        max_abs_scaler = preprocessing.MaxAbsScaler()
+        t = max_abs_scaler.fit_transform(df)
+        return pd.DataFrame(t, columns=df.columns, index=df.index)
+
+    @staticmethod
+    def impute_nan(df):
+        imputer = impute.SimpleImputer(missing_values=np.nan, strategy="constant", fill_value=0)
+        t = imputer.fit_transform(df)
+        return pd.DataFrame(t, columns=df.columns, index=df.index)
+
+    def clean(self, df):
+        return self.impute_nan(self.normalize(self.center(self.winsorize(self.replace_inf(df)))))
+
+    def groupby_clean(self, df, freq = "Y"):
+        # Clean data using yearly cross-sections
+        df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.clean)
+        return df.sort_index()
 
 
