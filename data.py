@@ -18,6 +18,7 @@ def run_pipeline(nrow=None):
     subset.calculate(nrow=nrow)
     cleaned = Cleaned()
     cleaned.calculate()
+    cleaned.load()
     return cleaned
 
 if __name__ == "__main__":
