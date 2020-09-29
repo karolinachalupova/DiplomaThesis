@@ -92,17 +92,30 @@ class Filtered(Dataset):
         
     def calculate(self, ancestor_paths = Raw.PATHS):
         """
-        Recalculates the data using ancestors. 
+        Removes examples that do not meat specified criteria.
         """
         ancestor = Raw(paths = ancestor_paths)
         ancestor.load()
+        # Removes examples that are not present in universe filter.
         features = ancestor.features[ancestor.features['DTID'].isin(ancestor.universe_filter.DTID.unique().tolist())]
         targets = ancestor.targets[ancestor.targets['DTID'].isin(ancestor.universe_filter.DTID.unique().tolist())]
+
+        # Removes examples where target is NaN.
+        targets = targets[targets.r.isna()==False]
+
+        # Set index and sort.
+        for dataset in [features, targets]:
+            dataset.set_index(['DTID', 'date'], inplace=True)
+            dataset.sort_index(inplace=True)
+        
+        # Removes examples without target or without features.
+        features = features.loc[targets.index]
+        targets = targets.loc[features.index]
+        assert features.index == targets.index
+
         features.drop("FTID", axis=1, inplace=True)
 
         for dataset, path in zip([features, targets], [self.paths.get("features"), self.paths.get("targets")]): 
-            dataset.set_index(['DTID', 'date'], inplace=True)
-            dataset.sort_index(inplace=True)
             dataset.to_pickle(path)
 
 
