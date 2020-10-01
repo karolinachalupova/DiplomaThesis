@@ -111,7 +111,7 @@ class Filtered(Dataset):
         # Removes examples without target or without features.
         features = features.loc[targets.index]
         targets = targets.loc[features.index]
-        assert features.index == targets.index
+        assert (features.index == targets.index).all()
 
         features.drop("FTID", axis=1, inplace=True)
 
