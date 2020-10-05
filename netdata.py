@@ -13,35 +13,20 @@ class NetData():
         def __init__(self, 
             data:dict, 
             shuffle_batches:bool, 
-            seed:int=42, 
-            subset_percent:float=None):
+            seed:int=42):
             """
             Args: 
                 data (dict): dictionary with keys "features" and "targets", 
-                    each containing a np.array.
+                    each containing a pd.DataFrame
                 shuffle_batches (bool): Bool indicating whether or not the batches 
                     should be shuffled. 
                 seed (int): random seed used for random shuffling of batches 
                     (and, if subset_percent is not None, for random subsetting)
-                subset_percent (float): float between 0 and 1, percentage of data to use. 
-                    If not None, randomly drops 1-subset_percent of data. 
-                    Use only during experimentation if you want to avoid training 
-                    (validating, testing) on too big data, 
-                    otherwise keep the default `None` to preserve entire dataframe.
             """
-            if subset_percent is not None:
-                # Randomly drop `subset_percent` percent of rows from both features and targets
-                
-                num_rows_to_remove = round(len(data["features"])*subset_percent)
-                np.random.seed(seed)
-                drop_idx = np.random.choice(
-                    data["features"].index, num_rows_to_remove, replace=False)
-                data = {
-                    "features": data["features"].drop(drop_idx), 
-                    "targets": data["targets"].drop(drop_idx)
-                }
-
-            self._data = data
+            self._data = {
+                "features": np.asarray(data["features"]),
+                "targets": np.asarray(data["targets"])
+            }
             self._size = len(self._data["features"])
             
             self._shuffler = np.random.RandomState(seed) if shuffle_batches else None 
@@ -56,7 +41,7 @@ class NetData():
         
         def batches(self, size=None):
             """
-            Splits data into batches. 
+            Generator object splitting data into batches.
             Additonally, if `shuffle_batches` is True, shuffles data within each batch.
             """
             permutation = self._shuffler.permutation(self._size) if self._shuffler else np.arange(self._size)
@@ -114,7 +99,7 @@ class NetData():
         # Split data into train, valid and test
         for dataset in ["train", "valid", "test"]:
             data = {
-                "features": np.asarray(d.features.loc[masks.get(dataset)]),
-                "targets": np.asarray(d.targets.loc[masks.get(dataset)]),
+                "features": d.features.loc[masks.get(dataset)],
+                "targets": d.targets.loc[masks.get(dataset)],
             }
             setattr(self, dataset, self.Dataset(data, shuffle_batches=dataset=="train"))
