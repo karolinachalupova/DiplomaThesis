@@ -10,24 +10,32 @@ from data import Cleaned
 class NetData():
 
     class Dataset():
-        def __init__(self, data:dict, shuffle_batches:bool, seed:int=42, subset_percent:float=None):
+        def __init__(self, 
+            data:dict, 
+            shuffle_batches:bool, 
+            seed:int=42, 
+            subset_percent:float=None):
             """
             Args: 
-                data (dict): dictionary with keys "features" and "targets", each containing a np.array.
-                shuffle_batches (bool): Bool indicating whether or not the batches should be shuffled. 
+                data (dict): dictionary with keys "features" and "targets", 
+                    each containing a np.array.
+                shuffle_batches (bool): Bool indicating whether or not the batches 
+                    should be shuffled. 
                 seed (int): random seed used for random shuffling of batches 
                     (and, if subset_percent is not None, for random subsetting)
                 subset_percent (float): float between 0 and 1, percentage of data to use. 
                     If not None, randomly drops 1-subset_percent of data. 
-                    Use only during experimentation if you want to avoid training (validating, testing)
-                    on too big data, otherwise keep the default `None` to preserve entire dataframe.
+                    Use only during experimentation if you want to avoid training 
+                    (validating, testing) on too big data, 
+                    otherwise keep the default `None` to preserve entire dataframe.
             """
             if subset_percent is not None:
                 # Randomly drop `subset_percent` percent of rows from both features and targets
                 
                 num_rows_to_remove = round(len(data["features"])*subset_percent)
                 np.random.seed(seed)
-                drop_idx = np.random.choice(data["features"].index, num_rows_to_remove, replace=False)
+                drop_idx = np.random.choice(
+                    data["features"].index, num_rows_to_remove, replace=False)
                 data = {
                     "features": data["features"].drop(drop_idx), 
                     "targets": data["targets"].drop(drop_idx)
