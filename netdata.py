@@ -85,6 +85,9 @@ class NetData():
         d.load()
         # d has attributes `targets` and `features`, each is a pd.DataFrame.
 
+        # Number of features per example 
+        self.F = d.features.shape[1]
+
         # Create organizing masks 
         idx_year = d.targets.index.get_level_values('date').year
         splityear1 = idx_year.min() + self.ytrain
