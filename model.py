@@ -1,66 +1,83 @@
 """
-Defines and trains models, evaluates performance on test set.
+Defines and trains models
+
+As of 10/12/2019: One caveat of using TF2.0 is that TF AutoGraph
+functionality does not interact nicely with Ray actors. One way to get around
+this is to `import tensorflow` inside the Tune Trainable.
 """
 import argparse
 import numpy as np
-import tensorflow as tf
 import os
 import re
 import datetime
+
+from tensorflow.keras.layers import Input, Dense, BatchNormalization, ReLU
+from tensorflow.keras.regularizers import L1L2
+from tensorflow.keras import Model
+from tensorflow.keras.optimizers import Adam 
+from tensorflow.keras.metrics import MeanSquaredError
+
+from ray import tune
 
 from netdata import NetData
 
 
 class Network(): 
-    def __init__(self, args):
-        print("Initializing network...")
+    def __init__(self, args, learning_rate, l1):
         hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
-        regularizer = tf.keras.regularizers.L1L2(l1=args.l1)
-        inputs = tf.keras.layers.Input(shape=[153])
+        inputs = Input(shape=[153])
         hidden = inputs
         for size in hidden_layers: 
-            hidden = tf.keras.layers.Dense(
+            hidden = Dense(
                 size,  
-                kernel_regularizer=regularizer, 
-                bias_regularizer=regularizer)(hidden)
-            hidden = tf.keras.layers.BatchNormalization()(hidden)
-            hidden = tf.keras.layers.ReLU()(hidden)
-        outputs = tf.keras.layers.Dense(1)(hidden)
-        self.model = tf.keras.Model(inputs=inputs, outputs=outputs)
+                kernel_regularizer=L1L2(l1=l1), 
+                bias_regularizer=L1L2(l1=l1))(hidden)
+            hidden = BatchNormalization()(hidden)
+            hidden = ReLU()(hidden)
+        outputs = Dense(1)(hidden)
+        self.model = Model(inputs=inputs, outputs=outputs)
         
         self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=args.learning_rate),
-            loss = tf.keras.losses.MeanSquaredError(),
-            metrics = [tf.keras.metrics.MeanSquaredError()]
+            optimizer=Adam(learning_rate=learning_rate),
+            loss ='mse',
+            metrics = [MeanSquaredError(name="mse")]
         )
-    
-    def train(self):
-        tb_callback = tf.keras.callbacks.TensorBoard(
-            args.logdir, histogram_freq=1, update_freq=100, profile_batch=0)
-        early_stopping_callback = tf.keras.callbacks.EarlyStopping(
-            monitor='loss', patience=args.patience)
 
-        print("Loading data...")
-        nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
-        print("Fitting the model...")
-        history = self.model.fit(
-            x=nd.train.data["features"],
-            y=nd.train.data["targets"],
-            batch_size = args.batch_size, 
-            epochs = args.epochs, 
-            validation_data=(nd.valid.data["features"], nd.valid.data["targets"]),
-            callbacks=[tb_callback, early_stopping_callback]
+
+class Training(tune.Trainable):
+    def setup(self, config): 
+        import tensorflow as tf  # IMPORTANT: See the note above.
+
+        # Load training and valid data
+        self.nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+
+        # Obtain model 
+        self.network = Network(
+            args=args, 
+            learning_rate=config.get("learning_rate"),
+            l1=config.get("l1")
         )
-        print("Saving the model...")
-        self.model.save(os.path.join(args.logdir, "model.h5"))
-    
-    def evaluate(self):
-        nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
-        return self.model.evaluate(
-            x=nd.test.data["features"],
-            y=nd.test.data["targets"],
-            batch_size=args.batch_size
-        )
+
+    def step(self):
+        # TODO: implement early stopping (and tensorboard callback?)
+
+        # Train single epoch
+        self.network.model.reset_metrics()
+        for batch in self.nd.train.batches(args.batch_size): 
+            train_loss, train_mse = self.network.model.train_on_batch(batch["features"], batch["targets"])
+        
+        # Validate
+        self.network.model.reset_metrics()
+        for batch in self.nd.valid.batches(args.batch_size):
+            valid_loss, valid_mse = self.network.model.test_on_batch(batch["features"], batch["targets"])
+
+        return {
+            "epoch": self.iteration, 
+            "train_loss": train_loss,
+            "train_mse": train_mse, 
+            "valid_loss": valid_loss, 
+            "valid_mse": valid_mse
+        }
 
 if __name__ == "__main__":
     # Parse arguments
@@ -81,6 +98,7 @@ if __name__ == "__main__":
 
     # Fix random seeds and threads
     np.random.seed(args.seed)
+    import tensorflow as tf
     tf.random.set_seed(args.seed)
     tf.config.threading.set_inter_op_parallelism_threads(args.threads)
     tf.config.threading.set_intra_op_parallelism_threads(args.threads)
@@ -96,9 +114,14 @@ if __name__ == "__main__":
         ",".join(("{}={}".format(re.sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(vars(args).items())))
     ))
 
-    network = Network(args)
-    network.train()
+    analysis = tune.run(
+        Training, 
+        stop={'training_iteration': args.epochs},
+        verbose=1,
+        config = {
+            "learning_rate": tune.loguniform(0.001, 0.1),
+            "l1": tune.loguniform(0.00001, 0.001),
+        }
+    )
 
-        
-       
 
