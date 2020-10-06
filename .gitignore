@@ -8,10 +8,12 @@
 
 __pycache__/
 .ipynb_checkpoints/
+.vscode/
 
 /data/
 /ignored/
 /logs/
+
 
 *.pdf
 *.doc
