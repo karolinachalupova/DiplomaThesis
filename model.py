@@ -5,10 +5,62 @@ import argparse
 import numpy as np
 import tensorflow as tf
 import os
+import re
 import datetime
 
 from netdata import NetData
 
+
+class Network(): 
+    def __init__(self, args):
+        print("Initializing network...")
+        hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
+        regularizer = tf.keras.regularizers.L1L2(l1=args.l1)
+        inputs = tf.keras.layers.Input(shape=[153])
+        hidden = inputs
+        for size in hidden_layers: 
+            hidden = tf.keras.layers.Dense(
+                size,  
+                kernel_regularizer=regularizer, 
+                bias_regularizer=regularizer)(hidden)
+            hidden = tf.keras.layers.BatchNormalization()(hidden)
+            hidden = tf.keras.layers.ReLU()(hidden)
+        outputs = tf.keras.layers.Dense(1)(hidden)
+        self.model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        
+        self.model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=args.learning_rate),
+            loss = tf.keras.losses.MeanSquaredError(),
+            metrics = [tf.keras.metrics.MeanSquaredError()]
+        )
+    
+    def train(self):
+        tb_callback = tf.keras.callbacks.TensorBoard(
+            args.logdir, histogram_freq=1, update_freq=100, profile_batch=0)
+        early_stopping_callback = tf.keras.callbacks.EarlyStopping(
+            monitor='loss', patience=args.patience)
+
+        print("Loading data...")
+        nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+        print("Fitting the model...")
+        history = self.model.fit(
+            x=nd.train.data["features"],
+            y=nd.train.data["targets"],
+            batch_size = args.batch_size, 
+            epochs = args.epochs, 
+            validation_data=(nd.valid.data["features"], nd.valid.data["targets"]),
+            callbacks=[tb_callback, early_stopping_callback]
+        )
+        print("Saving the model...")
+        self.model.save(os.path.join(args.logdir, "model.h5"))
+    
+    def evaluate(self):
+        nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+        return self.model.evaluate(
+            x=nd.test.data["features"],
+            y=nd.test.data["targets"],
+            batch_size=args.batch_size
+        )
 
 if __name__ == "__main__":
     # Parse arguments
@@ -24,7 +76,7 @@ if __name__ == "__main__":
     parser.add_argument("--patience", default=5, type=int, help="Patience for early stopping.")
     parser.add_argument("--seed", default=42, type=int, help="Random seed.")
     parser.add_argument("--threads", default=2, type=int, help="Maximum number of threads to use.")
-    parser.add_argument("--verbose", default=False, action="store_true", help="Verbose TF logging.")
+    parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
     # Fix random seeds and threads
@@ -47,51 +99,6 @@ if __name__ == "__main__":
     network = Network(args)
     network.train()
 
-class Network(): 
-    def __init__(self, args):
-        hidden_layers = list(int(n for n in (args.hidden_layers.split(','))))
-        regularizer = tf.keras.regularizers.L1L2(l1=args.l1)
-        inputs = tf.keras.layers.Input()
-        hidden = inputs
-        for size in hidden_layers: 
-            hidden = tf.keras.layers.Dense(
-                size,  
-                kernel_regularizer=regularizer, 
-                bias_regularizer=regularizer)(hidden)
-            hidden = tf.keras.layers.BatchNormalization()(hidden)
-            hidden = tf.keras.layers.ReLU()(hidden)
-        outputs = tf.keras.layers.Dense(1)
-        self.model = tf.keras.Model(inputs=inputs, outputs=outputs)
-        
-        self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=args.learning_rate),
-            loss = tf.keras.losses.MeanSquaredError(),
-        )
-    
-    def train(self):
-        tb_callback = tf.keras.callbacks.TensorBoard(
-            args.logdir, histogram_freq=1, update_freq=100, profile_batch=0)
-        early_stopping_callback = tf.keras.callbacks.EarlyStopping(
-            monitor='loss', patience=1)
-
-        nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
-        history = self.model.fit(
-            x=nd.train.data["features"],
-            y=nd.train.data["labels"],
-            batch_size = args.batch_size, 
-            epochs = args.epochs, 
-            validation_data=(nd.valid.data["features"], nd.valid.data["labels"]),
-            callbacks=[tb_callback, early_stopping_callback]
-        )
-        self.model.save(os.path.join(args.logdir, "model.h5"))
-    
-    def evaluate(self):
-        nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
-        return self.model.evaluate(
-            x=nd.test.data["features"],
-            y=nd.test.data["labels"],
-            batch_size=args.batch_size
-        )
         
        
 
