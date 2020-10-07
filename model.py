@@ -59,7 +59,7 @@ class Training(tune.Trainable):
         )
 
     def step(self):
-        # TODO: implement early stopping (and tensorboard callback?)
+        # TODO: implement early stopping
 
         # Train single epoch
         self.network.model.reset_metrics()
@@ -82,18 +82,26 @@ class Training(tune.Trainable):
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch_size", default=10000, type=int, help="Batch size.")
-    parser.add_argument("--epochs", default=100, type=int, help="Number of epochs.")
+
+    parser.add_argument("--batch_size", default=1000, type=int, help="Batch size. Gu:10000")
+    parser.add_argument("--epochs", default=5, type=int, help="Number of epochs. Gu:100")
+    parser.add_argument("--patience", default=5, type=int, help="Patience for early stopping. Gu:5")
+    
     parser.add_argument("--ytrain", default=9, type=int, help="Number of years in train set.")
     parser.add_argument("--yvalid", default=6, type=int, help="Number of years in validation set.")
     parser.add_argument("--ytest", default=1, type=int, help="Number of years in test set.")
-    parser.add_argument("--hidden_layers", default="32", type=str, help='Number of neurons in hidden layers.')
-    parser.add_argument("--learning_rate", default=0.001, type=float, help="Initial learning rate.")
-    parser.add_argument("--l1", default=0.001, type=float, help='L1 regularization term.')
-    parser.add_argument("--patience", default=5, type=int, help="Patience for early stopping.")
+    parser.add_argument("--hidden_layers", default="32", type=str, help='Number of neurons in hidden layers. Gu:32,16,8,4,2')
     parser.add_argument("--seed", default=42, type=int, help="Random seed.")
-    parser.add_argument("--threads", default=2, type=int, help="Maximum number of threads to use.")
+    
+    parser.add_argument("--learning_rate_low", default=0.001, type=float, help="Initial learning rate, hyperparam lower bound. Gu:0.001")
+    parser.add_argument("--learning_rate_high", default=0.01, type=float, help="Initial learning rate hyperparam upper bound. Gu:0.01")
+    parser.add_argument("--l1_low", default=0.00001, type=float, help='L1 regularization term, hyperparam lower bound. Gu: 0.00001')
+    parser.add_argument("--l1_high", default=0.001, type=float, help='L1 regularization term, hyperparam upper bound. Gu: 0.001')
+    parser.add_argument("--num_samples", default=3, type=int, help='Number of trials in the hyperparameter search.')
+    
+    parser.add_argument("--threads", default=1, type=int, help="Maximum number of threads to use.")
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
+    
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
     # Fix random seeds and threads
@@ -117,11 +125,15 @@ if __name__ == "__main__":
     analysis = tune.run(
         Training, 
         stop={'training_iteration': args.epochs},
+        metric="valid_mse",
+        mode="min",
+        local_dir=args.logdir,
         verbose=1,
         config = {
-            "learning_rate": tune.loguniform(0.001, 0.1),
-            "l1": tune.loguniform(0.00001, 0.001),
-        }
+            "learning_rate": tune.loguniform(args.learning_rate_low, args.learning_rate_high),
+            "l1": tune.loguniform(args.l1_low, args.l1_high),
+        },
+        num_samples=args.num_samples
     )
 
 
