@@ -8,8 +8,13 @@
 
 __pycache__/
 .ipynb_checkpoints/
+.vscode/
 
 /data/
-/literature/
-/latex_template/
-/progress_reports/
+/ignored/
+/logs/
+
+
+*.pdf
+*.doc
+*.ipynb
