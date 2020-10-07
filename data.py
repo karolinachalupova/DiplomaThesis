@@ -8,6 +8,9 @@ import numpy as np
 import pickle
 import scipy
 import sklearn 
+import os
+
+directory = os.path.dirname(os.path.abspath(__file__))
 
 def run_pipeline(nrow=None):
     """
@@ -52,9 +55,9 @@ class Data():
 
 class Raw():
     PATHS = {
-        "filter": "data/raw/DST_universe_filter.gzip",
-        "features": "data/raw/DST_signals.gzip",
-        "targets": "data/raw/DST_returns.gzip"
+        "filter": os.path.join(directory, "data/raw/DST_universe_filter.gzip"),
+        "features":  os.path.join(directory, "data/raw/DST_signals.gzip"),
+        "targets":  os.path.join(directory, "data/raw/DST_returns.gzip")
     }
     def __init__(self, paths = PATHS):
         self.paths = paths
@@ -67,8 +70,8 @@ class Raw():
 
 class Filtered(Data):
     PATHS = {
-        "features":'data/filtered/features.pkl', 
-        "targets": 'data/filtered/targets.pkl'
+        "features":  os.path.join(directory, 'data/filtered/features.pkl'), 
+        "targets":  os.path.join(directory, 'data/filtered/targets.pkl')
     } 
     def __init__(self, paths = PATHS):
         self.paths = paths
@@ -99,8 +102,8 @@ class Filtered(Data):
 
 class Subset(Data):
     PATHS = {
-        "features": 'data/subset/features.pkl',
-        "targets": 'data/subset/targets.pkl'
+        "features":  os.path.join(directory, 'data/subset/features.pkl'),
+        "targets":  os.path.join(directory, 'data/subset/targets.pkl')
     }
     def __init__(self, paths = PATHS):
         self.paths = paths 
@@ -116,8 +119,8 @@ class Subset(Data):
 
 class Cleaned(Data):
     PATHS = {
-        "features":'data/cleaned/features.pkl',
-        "targets": 'data/cleaned/targets.pkl'
+        "features":  os.path.join(directory, 'data/cleaned/features.pkl'),
+        "targets":  os.path.join(directory, 'data/cleaned/targets.pkl')
     }
     def __init__(self, paths= PATHS):
         self.paths = paths
@@ -170,7 +173,7 @@ class Cleaned(Data):
 
 class Meta():
     PATHS = {
-        "all": 'data/meta.xlsx'
+        "all":  os.path.join(directory, 'data/meta.xlsx')
     }
     def __init__(self, paths = PATHS):
         self.paths = paths
