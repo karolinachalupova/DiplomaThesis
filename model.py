@@ -18,6 +18,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import MeanSquaredError
 
 from ray import tune
+import ray
 
 from netdata import NetData
 
@@ -48,8 +49,9 @@ class Training(tune.Trainable):
     def setup(self, config): 
         import tensorflow as tf  # IMPORTANT: See the note above.
 
-        # Load training and valid data
-        self.nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+        # I use get_pinned_object so that data is not 
+        # reloaded to memory for each trial
+        self.data = tune.utils.get_pinned_object(data_id)  
 
         # Obtain model 
         self.network = Network(
@@ -58,26 +60,38 @@ class Training(tune.Trainable):
             l1=config.get("l1")
         )
 
-    def step(self):
-        # TODO: implement early stopping
+        self.valid_losses = [] # For early stopping
 
+    def step(self):
         # Train single epoch
         self.network.model.reset_metrics()
-        for batch in self.nd.train.batches(args.batch_size): 
+        for batch in self.data.train.batches(args.batch_size): 
             train_loss, train_mse = self.network.model.train_on_batch(batch["features"], batch["targets"])
         
         # Validate
         self.network.model.reset_metrics()
-        for batch in self.nd.valid.batches(args.batch_size):
+        for batch in self.data.valid.batches(args.batch_size):
             valid_loss, valid_mse = self.network.model.test_on_batch(batch["features"], batch["targets"])
+        
+        # Early stopping
+        # If valid_loss is larger than all last `args.patience` valid losses, stop early
+        stop_early = (valid_loss > np.array(self.valid_losses[:args.patience])).all()
+        self.valid_losses.append(valid_loss)
 
         return {
             "epoch": self.iteration, 
             "train_loss": train_loss,
             "train_mse": train_mse, 
             "valid_loss": valid_loss, 
-            "valid_mse": valid_mse
+            "valid_mse": valid_mse,
+            "stop_early": stop_early
         }
+    
+    def save_checkpoint(self, tmp_checkpoint_dir):
+        checkpoint_path = os.path.join(tmp_checkpoint_dir, "model.h5")
+        self.network.model.save(checkpoint_path)
+        return tmp_checkpoint_dir
+    
 
 if __name__ == "__main__":
     # Parse arguments
@@ -87,8 +101,8 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", default=5, type=int, help="Number of epochs. Gu:100")
     parser.add_argument("--patience", default=5, type=int, help="Patience for early stopping. Gu:5")
     
-    parser.add_argument("--ytrain", default=9, type=int, help="Number of years in train set.")
-    parser.add_argument("--yvalid", default=6, type=int, help="Number of years in validation set.")
+    parser.add_argument("--ytrain", default=1, type=int, help="Number of years in train set.")
+    parser.add_argument("--yvalid", default=1, type=int, help="Number of years in validation set.")
     parser.add_argument("--ytest", default=1, type=int, help="Number of years in test set.")
     parser.add_argument("--hidden_layers", default="32", type=str, help='Number of neurons in hidden layers. Gu:32,16,8,4,2')
     parser.add_argument("--seed", default=42, type=int, help="Random seed.")
@@ -97,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate_high", default=0.01, type=float, help="Initial learning rate hyperparam upper bound. Gu:0.01")
     parser.add_argument("--l1_low", default=0.00001, type=float, help='L1 regularization term, hyperparam lower bound. Gu: 0.00001')
     parser.add_argument("--l1_high", default=0.001, type=float, help='L1 regularization term, hyperparam upper bound. Gu: 0.001')
-    parser.add_argument("--num_samples", default=3, type=int, help='Number of trials in the hyperparameter search.')
+    parser.add_argument("--num_samples", default=5, type=int, help='Number of trials in the hyperparameter search.')
     
     parser.add_argument("--threads", default=1, type=int, help="Maximum number of threads to use.")
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
@@ -122,9 +136,20 @@ if __name__ == "__main__":
         ",".join(("{}={}".format(re.sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(vars(args).items())))
     ))
 
+    # Initialize ray 
+    ray.init()
+
+    # Load data 
+    data = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+    # I use pin_in_object_store so that data is not 
+    # reloaded to memory for each trial
+    data_id = tune.utils.pin_in_object_store(data)
+
+    # Run the training 
     analysis = tune.run(
-        Training, 
-        stop={'training_iteration': args.epochs},
+        Training,
+        stop={'training_iteration': args.epochs, 'stop_early': True},
+        checkpoint_at_end=True,
         metric="valid_mse",
         mode="min",
         local_dir=args.logdir,
