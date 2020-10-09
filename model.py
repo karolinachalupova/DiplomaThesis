@@ -60,7 +60,12 @@ class Training(tune.Trainable):
             l1=config.get("l1")
         )
 
-        self.valid_losses = [] # For early stopping
+        # Remember the lowest validation loss reached so far
+        # as well as number of consecutive periods without 
+        # improvement in this minumum 
+        # (used for early stopping)
+        self.min_valid_loss = np.inf
+        self.consec_epochs_wo_impr = 0
 
     def step(self):
         # Train single epoch
@@ -74,9 +79,13 @@ class Training(tune.Trainable):
             valid_loss, valid_mse = self.network.model.test_on_batch(batch["features"], batch["targets"])
         
         # Early stopping
-        # If valid_loss is larger than all last `args.patience` valid losses, stop early
-        stop_early = (valid_loss > np.array(self.valid_losses[:args.patience])).all()
-        self.valid_losses.append(valid_loss)
+        # If valid_loss does not improve (w. r. t. absolute minimum reached so far)
+        # for `args.patience` consecutive periods, stop training
+        if valid_loss > self.min_valid_loss: 
+            self.consec_epochs_wo_impr += 1
+        else: 
+            self.consec_epochs_wo_impr = 0
+            self.min_valid_loss = valid_loss 
 
         return {
             "epoch": self.iteration, 
@@ -84,7 +93,7 @@ class Training(tune.Trainable):
             "train_mse": train_mse, 
             "valid_loss": valid_loss, 
             "valid_mse": valid_mse,
-            "stop_early": stop_early
+            "stop_early": self.consec_epochs_wo_impr == args.patience
         }
     
     def save_checkpoint(self, tmp_checkpoint_dir):
