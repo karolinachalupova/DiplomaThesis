@@ -15,9 +15,7 @@ from tensorflow.keras.layers import Input, Dense, BatchNormalization, ReLU
 from tensorflow.keras.regularizers import L1L2
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam 
-from tensorflow.keras.metrics import RootMeanSquaredError, MAE
-
-from tensorflow_addons.metrics import RSquare
+from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError
 
 from ray import tune
 import ray
@@ -43,11 +41,7 @@ class Network():
         self.model.compile(
             optimizer=Adam(learning_rate=learning_rate),
             loss ='mse',
-            metrics = [
-                RootMeanSquaredError(name="rmse"), 
-                MAE(name="mae"),
-                RSquare(name="rsq")
-                ]
+            metrics = [RootMeanSquaredError(), MeanAbsoluteError()]
         )
 
 
@@ -77,12 +71,12 @@ class Training(tune.Trainable):
         # Train single epoch
         self.network.model.reset_metrics()
         for batch in self.data.train.batches(args.batch_size): 
-            train_loss, train_rmse, train_mae, train_rsq = self.network.model.train_on_batch(batch["features"], batch["targets"])
+            train_loss, train_rmse, train_mae = self.network.model.train_on_batch(batch["features"], batch["targets"])
         
         # Validate
         self.network.model.reset_metrics()
         for batch in self.data.valid.batches(args.batch_size):
-            valid_loss, valid_rmse, valid_mae, valid_rsq = self.network.model.test_on_batch(batch["features"], batch["targets"])
+            valid_loss, valid_rmse, valid_mae = self.network.model.test_on_batch(batch["features"], batch["targets"])
         
         # Early stopping
         # If valid_loss does not improve (w. r. t. absolute minimum reached so far)
@@ -98,11 +92,9 @@ class Training(tune.Trainable):
             "train_loss": train_loss,
             "train_rmse": train_rmse,
             "train_mae": train_mae,
-            "train_rsq": train_rsq
             "valid_loss": valid_loss, 
             "valid_rmse": valid_rmse,
             "valid_mae": valid_mae, 
-            "valid_rsq": valid_rsq,
             "stop_early": self.consec_epochs_wo_impr == args.patience
         }
     
