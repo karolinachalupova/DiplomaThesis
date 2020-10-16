@@ -122,7 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate_high", default=0.01, type=float, help="Initial learning rate hyperparam upper bound. Gu:0.01")
     parser.add_argument("--l1_low", default=0.00001, type=float, help='L1 regularization term, hyperparam lower bound. Gu: 0.00001')
     parser.add_argument("--l1_high", default=0.001, type=float, help='L1 regularization term, hyperparam upper bound. Gu: 0.001')
-    parser.add_argument("--num_samples", default=5, type=int, help='Number of trials in the hyperparameter search.')
+    parser.add_argument("--num_samples", default=20, type=int, help='Number of trials in the hyperparameter search.')
     
     parser.add_argument("--threads", default=1, type=int, help="Maximum number of threads to use.")
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
