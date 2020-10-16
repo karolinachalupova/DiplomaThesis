@@ -1,13 +1,23 @@
 # DiplomaThesis
 Explaining Equity Returns with Interpretable Machine Learning. WIP.
 
+## Motivation and Research question
+There is a tradeoff between performance and interpretability. Gu et al., 2018 (Empirical asset pricing via machine learning) shows that neural networks are superior to other models in their ability to predict equity returns. However, neural networks are also the least readily interpretable models. 
+
+Also, Zou et al. (Interpretation of neural networks is fragile) show using adversarial attack that a small change in input can dramatically alter neural network interpretation. Linear model would not be suspectible to such adversarial attack by construction, and the authors suggest that neural network's the suspectibility to attack is precisely due to their complexity. If we change input in an immaterial fashion and interpretation changes completely, the interpretability of such a model is not good.  
+
+Also, neural networks perform well when used in ensembles. A possible way of making ensemble is to train the same model multiple times with different random seed. By interpreting same network with different seeds could be seen as another measure to asses stability of the model in terms of interpretation. Is the model's interpreation completely different just because there is a different random seed? 
+
+Is there a sweet spot between performance and interpretability? Simpler models should be less sensitive to adversarial attacks and random differences in initialization (seed) and complex models should be more sensitive. I would like to examine this tradeoff explicitly. 
+
+
 ## Way ahead 
-- train networks similar to Gu et al., 2018: Empirical asset pricing via machine learning. **<- I'm doing this right now, I don't think I have problems. But please see issue #4, this is crucial to decide.**
+- train networks similar to Gu et al., 2018. **<- I'm doing this right now, I don't think I have problems. But please see issue #4, this is crucial to decide.**
 - interpret them: feature importance, shapley values, other?
 - see what influences interpretability to be robust vs. fragile  
   - measures of fragility: 
        - how much the interpretation differ for different random seeds? 
-       - is the network suspectible to adversarial attack on interpretability as in Zou (Interpretation of Neural Networks is Fragile)? They show that a small change in input can dramatically alter interpretation.  
+       - to what degree is the network suspectible to adversarial attack on interpretability as in Zou? 
   - studied factors to influence interpretability: 
       - depth of neural net (0-5 hidden layers)
       - other?
