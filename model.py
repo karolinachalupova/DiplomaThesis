@@ -108,13 +108,13 @@ if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--batch_size", default=1000, type=int, help="Batch size. Gu:10000")
-    parser.add_argument("--epochs", default=5, type=int, help="Number of epochs. Gu:100")
+    parser.add_argument("--batch_size", default=5000, type=int, help="Batch size. Gu:10000")
+    parser.add_argument("--epochs", default=100, type=int, help="Number of epochs. Gu:100")
     parser.add_argument("--patience", default=5, type=int, help="Patience for early stopping. Gu:5")
     
-    parser.add_argument("--ytrain", default=1, type=int, help="Number of years in train set.")
-    parser.add_argument("--yvalid", default=1, type=int, help="Number of years in validation set.")
-    parser.add_argument("--ytest", default=1, type=int, help="Number of years in test set.")
+    parser.add_argument("--ytrain", default=9, type=int, help="Number of years in train set.")
+    parser.add_argument("--yvalid", default=3, type=int, help="Number of years in validation set.")
+    parser.add_argument("--ytest", default=3, type=int, help="Number of years in test set.")
     parser.add_argument("--hidden_layers", default="32", type=str, help='Number of neurons in hidden layers. Gu:32,16,8,4,2')
     parser.add_argument("--seed", default=42, type=int, help="Random seed.")
     
@@ -171,6 +171,8 @@ if __name__ == "__main__":
         },
         num_samples=args.num_samples
     )
+
+
 
 
 
