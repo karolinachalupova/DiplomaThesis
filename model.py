@@ -147,7 +147,9 @@ if __name__ == "__main__":
         ",".join(("{}={}".format(re.sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(vars(args).items())))
     ))
 
-    # Initialize ray 
+    # Initialize ray
+    if ray.is_initialized(): 
+        ray.shutdown()
     ray.init()
 
     # Load data 
@@ -169,8 +171,11 @@ if __name__ == "__main__":
             "learning_rate": tune.loguniform(args.learning_rate_low, args.learning_rate_high),
             "l1": tune.loguniform(args.l1_low, args.l1_high),
         },
-        num_samples=args.num_samples
+        num_samples=args.num_samples,
+        resources_per_trial={"cpu":0, "gpu":1}
     )
+
+    ray.shutdown()
 
 
 
