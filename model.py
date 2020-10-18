@@ -21,12 +21,12 @@ from ray import tune
 import ray
 
 from netdata import NetData
-
+from data import Selected
 
 class Network(): 
     def __init__(self, args, learning_rate, l1):
         hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
-        inputs = Input(shape=[153])
+        inputs = Input(shape=[Selected.N_FEATURES])
         hidden = inputs
         for size in hidden_layers: 
             hidden = Dense(

@@ -27,8 +27,9 @@ def run_pipeline(nrow=None):
     subset.calculate(nrow=nrow)
     cleaned = Cleaned()
     cleaned.calculate()
-    cleaned.load()
-    return cleaned
+    selected = Selected() 
+    selected.calculate()
+    return selected
 
 if __name__ == "__main__":
     run_pipeline()
@@ -169,6 +170,32 @@ class Cleaned(Data):
         # Clean data using yearly cross-sections
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.clean)
         return df.sort_index()
+
+
+class Selected(Data):
+    PATHS = {
+            "features":  os.path.join(directory, 'data/selected/features.pkl'),
+            "targets":  os.path.join(directory, 'data/selected/targets.pkl')
+        }
+    N_FEATURES = 30
+    def __init__(self, paths= PATHS):
+        self.paths = paths
+
+    def calculate(self, ancestor_paths = Cleaned.PATHS):
+        ancestor = Cleaned(paths = ancestor_paths)
+        ancestor.load()
+
+        meta = Meta()
+        meta.load()
+
+        # Select N_FEATURES most important features based on 
+        # Tobek and Hronec, 2020, JFM: Does it pay to follow anomalies research? 
+        selected_cols = meta.signals[meta.signals["important_otmh_global_liquid"]<=self.N_FEATURES].sc.tolist()
+        assert len(selected_cols) == self.N_FEATURES, "Number of selected features does not match number of columns"
+
+        self.features = ancestor.features[selected_cols]
+        self.targets = ancestor.targets
+        self.save()
 
 
 class Meta():
