@@ -10,15 +10,13 @@
 
 
 \section{Anomalies Data}
-	The anomaly dataset consists of 153 anomalies published in leading financial and accounting journals. The data is monthly and spans from January 1990 to December 2018. It covers the same 8350 firms as the raw data, totaling 1,607,117 observations. 
+	The anomaly dataset of OTMH (TODO cite) consists of 153 anomalies published in leading financial and accounting journals. The data is monthly and spans from January 1990 to December 2018. It covers the same 8350 firms as the raw data, totaling 1,607,117 observations. I choose 30 most important anomalies found in OTMH for my thesis.    
 	
-	The anomalies can be classified into three groups: Fundamentals, Frictions, and I/B/E/S anomalies. Fundamental anomalies are primarily calculated from yearly accounting statements and are exemplified by Total Accruals, Asset Growth, or Leverage. Fundamental anomalies fall into 5 broad categories: Accruals (e.g., Total Accruals, Change in Common Equity, Inventory Growth), Investment (e.g., Asset Growth, Debt Issuance, Net Operating Assets), Intangibles (e.g., Asset Liquidity, Earnings Persistence, Herfindahl Index), Profitability (e.g., Profit Margin, Return-on-Equity, Capital Turnover) and Value (e.g., Enterprise Multiple, Assets-to-Market, or Net Payout Yield). Friction anomalies are primarily calculated from daily market data. For example, they include Bid-Ask Spread, 11-Month Residual Momentum, 52-Week-High, and Long-Term Reversal. I/B/E/S anomalies are calculated from the I/B/E/S dataset and cover analysts' forecasts and recommendations, such as Analyst Value, Change in Recommendation, or Forecast Dispersion. There are 93 Fundamentals, 48 Frictions and 12 I/B/E/S anomalies. Within the Fundamentals category, there are 21 Accruals, 15 Investment, 25 Intangibles, 18 Profitability, and 14 Value anomalies.  
+	The list of the anomalies can be found in the Appendix. [TODO]. 
 	
-	A complete list of the anomalies can be found in the Appendix. [TODO]. 
-	
-	Tables \ref{tab:descr_fund}, \ref{tab:descr_frictions}, and \ref{tab:descr_ibes} show descriptive statistics of the anomalies data. [TODO fit too long fund table to page or split across multiple pages.]
+	Table \ref{tab:descr} shows descriptive statistics of the anomalies data. [TODO fit too long fund table to page or split across multiple pages.]
 		
-	Figures \ref{fig:corrplot_funds}, \ref{fig:corrplot_frictions}, and \ref{fig:corrplot_ibes} show plots of correlation matrices of Fundamental, Frictions, and I/B/E/S anomalies respectively. Correlations between variables from different categories are not shown, as they are all very low but for negligible exceptions. 
+	Figure \ref{fig:corrplot}, shows plot of the correlation matrix of the anomalies.
 
 	Figure \ref{fig:hist_returns} shows histogram of monthly returns. 
 	
@@ -26,48 +24,17 @@
 	%\input{Tables/descr.tex}
 	
 	\begin{table}
-		\resizebox{\textwidth}{!}{\input{Tables/descr_fund.tex}}
-		\caption{Descriptive Statistics of the Fundamental Anomalies}
-		\label{tab:descr_fund}
+		\resizebox{\textwidth}{!}{\input{Tables/descr.tex}}
+		\caption{Descriptive Statistics of the Anomalies}
+		\label{tab:descr}
 	\end{table}
 
-	\begin{table}
-		\centering
-		\resizebox{\textwidth}{!}{\input{Tables/descr_frictions.tex}}
-		\caption{Descriptive Statistics of the Frictions Anomalies}
-		\label{tab:descr_frictions}
-	\end{table}
-
-	\begin{table}
-		\centering
-		\resizebox{\textwidth}{!}{\input{Tables/descr_ibes.tex}}
-		\caption{Descriptive Statistics of the I/B/E/S Anomalies}
-		\label{tab:descr_ibes}
-	\end{table}
-	
 
 	\begin{center}
 		\begin{figure}
-			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_funds.pdf}
-			\caption{Correlation Matrix of Fundamental Anomalies}
-			\label{fig:corrplot_funds}
-		\end{figure}
-	\end{center}
-	
-	\begin{center}
-		\begin{figure}
-			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_frictions.pdf}
-			\caption{Correlation Matrix of Frictions Anomalies}
-			\label{fig:corrplot_frictions}
-		\end{figure}
-	\end{center}
-	
-	
-	\begin{center}
-		\begin{figure}
-			\includegraphics{Figures/corrplot_ibes.pdf}
-			\caption{Correlation Matrix of I/B/E/S Anomalies}
-			\label{fig:corrplot_ibes}
+			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot.pdf}
+			\caption{Correlation Matrix of the Anomalies}
+			\label{fig:corrplot}
 		\end{figure}
 	\end{center}
 	
