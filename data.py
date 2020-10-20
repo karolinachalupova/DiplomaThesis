@@ -229,3 +229,7 @@ class Meta():
     @property 
     def name_to_sc(self):
         return dict(zip(self.signals.name, self.signals.name_sc))
+    
+    @property 
+    def sc_to_latex(self):
+        return dict(zip(self.signals.name_sc, self.signals.name_tex))
