@@ -10,18 +10,34 @@ import numpy as np
 import os
 import re
 import datetime
+import pickle
 
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, ReLU
 from tensorflow.keras.regularizers import L1L2
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam 
-from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError
+from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError, Metric
+from tensorflow import reduce_sum, square, subtract, reduce_mean, divide
 
 from ray import tune
 import ray
 
 from netdata import NetData
 from data import Selected
+
+class RSquare(Metric):
+    def __init__(self, name="r_square", **kwargs):
+        super(RSquare, self).__init__(name=name, **kwargs) 
+        self.r_square = self.add_weight(name="rsq", initializer="zeros")
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        total_error = reduce_sum(square(y_true))  # No demeaning - see Gu et al. (2020) 
+        unexplained_error = reduce_sum(square(subtract(y_true, y_pred)))
+        rsq = subtract(1.0, divide(unexplained_error, total_error))
+        self.r_square.assign_add(rsq)
+
+    def result(self):
+        return self.r_square
 
 class Network(): 
     def __init__(self, args, learning_rate, l1):
@@ -41,8 +57,12 @@ class Network():
         self.model.compile(
             optimizer=Adam(learning_rate=learning_rate),
             loss ='mse',
-            metrics = [RootMeanSquaredError(), MeanAbsoluteError()]
+            metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
         )
+    
+    @classmethod
+    def from_modeldir(path):
+        pass
 
 
 class Training(tune.Trainable):
@@ -71,12 +91,12 @@ class Training(tune.Trainable):
         # Train single epoch
         self.network.model.reset_metrics()
         for batch in self.data.train.batches(args.batch_size): 
-            train_loss, train_rmse, train_mae = self.network.model.train_on_batch(batch["features"], batch["targets"])
+            train_loss, train_rmse, train_mae, train_rsq = self.network.model.train_on_batch(batch["features"], batch["targets"])
         
         # Validate
         self.network.model.reset_metrics()
         for batch in self.data.valid.batches(args.batch_size):
-            valid_loss, valid_rmse, valid_mae = self.network.model.test_on_batch(batch["features"], batch["targets"])
+            valid_loss, valid_rmse, valid_mae, valid_rsq = self.network.model.test_on_batch(batch["features"], batch["targets"])
         
         # Early stopping
         # If valid_loss does not improve (w. r. t. absolute minimum reached so far)
@@ -92,9 +112,11 @@ class Training(tune.Trainable):
             "train_loss": train_loss,
             "train_rmse": train_rmse,
             "train_mae": train_mae,
+            "train_rsq": train_rsq,
             "valid_loss": valid_loss, 
             "valid_rmse": valid_rmse,
-            "valid_mae": valid_mae, 
+            "valid_mae": valid_mae,
+            "valid_rsq": valid_rsq,
             "stop_early": self.consec_epochs_wo_impr == args.patience
         }
     
@@ -176,6 +198,10 @@ if __name__ == "__main__":
     )
 
     ray.shutdown()
+
+    # Save args
+    with open(os.path.join(args.logdir,"args.pickle"), 'wb') as f: 
+        pickle.dump(vars(args), f)
 
 
 
