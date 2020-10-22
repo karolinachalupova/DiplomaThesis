@@ -172,7 +172,7 @@ if __name__ == "__main__":
             "l1": tune.loguniform(args.l1_low, args.l1_high),
         },
         num_samples=args.num_samples,
-        resources_per_trial={"cpu":0, "gpu":1}
+        resources_per_trial={"cpu":1, "gpu":0}
     )
 
     ray.shutdown()
