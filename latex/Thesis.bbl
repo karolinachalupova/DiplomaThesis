@@ -1,4 +1,4 @@
-\begin{thebibliography}{23}
+\begin{thebibliography}{24}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -124,5 +124,10 @@
   contributions.}
 \newblock \emph{Knowledge and information systems} \textbf{41(3)}: pp.
   647--665.
+
+\bibitem[{Tobek \& Hronec(2020)}]{tobek2020does}
+\textsc{Tobek}, O. \& M.~\textsc{Hronec} (2020): \enquote{Does it pay to follow
+  anomalies research? machine learning approach with international evidence.}
+\newblock \emph{Journal of Financial Markets} p. 100588.
 
 \end{thebibliography}
