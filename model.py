@@ -60,11 +60,7 @@ class Network():
             metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
         )
     
-    @classmethod
-    def from_modeldir(path):
-        pass
-
-
+    
 class Training(tune.Trainable):
     def setup(self, config): 
         import tensorflow as tf  # IMPORTANT: See the note above.
