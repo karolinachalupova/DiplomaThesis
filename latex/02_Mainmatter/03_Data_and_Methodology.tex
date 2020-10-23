@@ -1,73 +1,41 @@
 \chapter{Data and Methodology}
 \label{chap:met}
 
-\section{Raw Data}
+\section{Data}
 
-	The data originates from two sources. The first and most important source is Thomson Reuters Datastream. It covers publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore) and contains the firms' yearly accounting figures and daily market information (e.g., price and volume).  The second data source is Institutional Brokers’ Estimate System (I/B/E/S) from Wharton Research Data Services, which provides analysts' forecasts. 
+	I obtain the dataset from \cite{tobek2020does}. The dataset comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. I use the liquid universe, which contains 8,350 companies,  totaling 1,607,117 observations. 
 	
-	The firms are filtered based on [TODO add source of filtering methods].  
-	The final sample includes 8350 companies.
-
-
-\section{Anomalies Data}
-	The anomaly dataset consists of 153 anomalies published in leading financial and accounting journals. The data is monthly and spans from January 1990 to December 2018. It covers the same 8350 firms as the raw data, totaling 1,607,117 observations. 
+	This thesis uses 30 anomalies that were identified as strongest predictors of equity returns in the \cite{tobek2020does} paper. The authors compute 153  anomalies, firm-level characteristics that have been put forward by leading financial and accounting journals as predictors of equity returns. The authors then use the 153 anomalies in a single model, which allows individual effects to crowd each other out, and results in ordering of the predictors from the strongest to the weakest. This thesis takes 30 predictors identified as strongest on liquid global universe of stocks (Figure 8 in \cite{tobek2020does}).
 	
-	The anomalies can be classified into three groups: Fundamentals, Frictions, and I/B/E/S anomalies. Fundamental anomalies are primarily calculated from yearly accounting statements and are exemplified by Total Accruals, Asset Growth, or Leverage. Fundamental anomalies fall into 5 broad categories: Accruals (e.g., Total Accruals, Change in Common Equity, Inventory Growth), Investment (e.g., Asset Growth, Debt Issuance, Net Operating Assets), Intangibles (e.g., Asset Liquidity, Earnings Persistence, Herfindahl Index), Profitability (e.g., Profit Margin, Return-on-Equity, Capital Turnover) and Value (e.g., Enterprise Multiple, Assets-to-Market, or Net Payout Yield). Friction anomalies are primarily calculated from daily market data. For example, they include Bid-Ask Spread, 11-Month Residual Momentum, 52-Week-High, and Long-Term Reversal. I/B/E/S anomalies are calculated from the I/B/E/S dataset and cover analysts' forecasts and recommendations, such as Analyst Value, Change in Recommendation, or Forecast Dispersion. There are 93 Fundamentals, 48 Frictions and 12 I/B/E/S anomalies. Within the Fundamentals category, there are 21 Accruals, 15 Investment, 25 Intangibles, 18 Profitability, and 14 Value anomalies.  
+	Table [TODO add summary table] shows the 30 anomalies studied. 
 	
-	A complete list of the anomalies can be found in the Appendix. [TODO]. 
+	I preprocess all predictors in the following manner (in line with \cite{gu2020empirical}). First, I winsorize bottom and top 1\% of each variable to mitigate the impact of observations with implausibly large or small values. Second, I center each variable so that its mean is 0 and subsequently normalize so that the resulting values lie between -1 and 1. This is done because neural networks work better with data on the same scale. Finally, I impute missing values by mean (that is, 0), as all values entering a neural network must be numerical and the value 0 can be interpreted as "no information". I perform all these operations on data grouped by year, that is, first split the data into groups by year, then apply the transformations and finally combine back into single dataset. The main motivation for this is to prevent information from getting from test sets to training and validation sets.    	
 	
-	Tables \ref{tab:descr_fund}, \ref{tab:descr_frictions}, and \ref{tab:descr_ibes} show descriptive statistics of the anomalies data. [TODO fit too long fund table to page or split across multiple pages.]
+	Table \ref{tab:descr} shows descriptive statistics of the anomalies data after these transformations.
 		
-	Figures \ref{fig:corrplot_funds}, \ref{fig:corrplot_frictions}, and \ref{fig:corrplot_ibes} show plots of correlation matrices of Fundamental, Frictions, and I/B/E/S anomalies respectively. Correlations between variables from different categories are not shown, as they are all very low but for negligible exceptions. 
+	Figure \ref{fig:corrplot}, shows plot of the correlation matrix of the anomalies.
 
-	Figure \ref{fig:hist_returns} shows histogram of monthly returns. 
+	The task is to predict the return of given stock in month $t+1$ given that stock's anomalies as of the time $t$. (Two technical notes: first, the dataset is organized so that this shift is taken care of, i.e., the features corresponding to the given target have the same index. Second, the anomalies as of the time $t-1$ can be (and often are) calculated from raw data based on several preceding time periods, e.g., $t$, $t-1$, $t-2$ and therefore the time index  represents the entire information set rather than financial or accounting information being \textit{published} at that time index. For example, a single observation at a given time index $t$ consists of the target (stock's return in $t+1$), and anomalies calculated as of $t$, such as average return in the last six months ($t$, $t-1$, $t-2$, $t-3$, $t-4$, $t-5$))
+	
+	Figure \ref{fig:hist_returns} shows histogram of the targets (monthly returns). 
+	
+	
 	
 
 	%\input{Tables/descr.tex}
 	
 	\begin{table}
-		\resizebox{\textwidth}{!}{\input{Tables/descr_fund.tex}}
-		\caption{Descriptive Statistics of the Fundamental Anomalies}
-		\label{tab:descr_fund}
+		\resizebox{\textwidth}{!}{\input{Tables/descr.tex}}
+		\caption{Descriptive Statistics of the Anomalies}
+		\label{tab:descr}
 	\end{table}
 
-	\begin{table}
-		\centering
-		\resizebox{\textwidth}{!}{\input{Tables/descr_frictions.tex}}
-		\caption{Descriptive Statistics of the Frictions Anomalies}
-		\label{tab:descr_frictions}
-	\end{table}
-
-	\begin{table}
-		\centering
-		\resizebox{\textwidth}{!}{\input{Tables/descr_ibes.tex}}
-		\caption{Descriptive Statistics of the I/B/E/S Anomalies}
-		\label{tab:descr_ibes}
-	\end{table}
-	
 
 	\begin{center}
 		\begin{figure}
-			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_funds.pdf}
-			\caption{Correlation Matrix of Fundamental Anomalies}
-			\label{fig:corrplot_funds}
-		\end{figure}
-	\end{center}
-	
-	\begin{center}
-		\begin{figure}
-			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot_frictions.pdf}
-			\caption{Correlation Matrix of Frictions Anomalies}
-			\label{fig:corrplot_frictions}
-		\end{figure}
-	\end{center}
-	
-	
-	\begin{center}
-		\begin{figure}
-			\includegraphics{Figures/corrplot_ibes.pdf}
-			\caption{Correlation Matrix of I/B/E/S Anomalies}
-			\label{fig:corrplot_ibes}
+			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot.pdf}
+			\caption{Correlation Matrix of the Anomalies}
+			\label{fig:corrplot}
 		\end{figure}
 	\end{center}
 	
@@ -81,7 +49,22 @@
 	\end{center}
 
 
-		
+\section{Methodology}
+
+	I train 5 distinct feed-forward neural networks, each with 3 different random seeds. I use the years 1990 to 2011 as training set (22 years), the years 2012 to 2017 as validation set (6 years) and the year 2018 as test set. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and Shapley values and investigate whether this interpretability is robust (with respect to random seeds and minor changes in input) as the complexity of the model (number of hidden layers) increases. I also investigate whether the interpretation of the model is stable in time. Finally, I perform adversarial attack on the network's interpretability \cite{ghorbani2019interpretation}. The following section describes, in this order, the methodological issues related to the model's architecture, training, performance evaluation, interpretation, time-stability checks, and adversarial attack on interpretability.    
+	
+	\subsection{Neural Network Architecture}
+	
+	\subsection{Training the Neural Networks}
+	
+	\subsection{Evaluating Model Performance}
+	
+	\subsection{Interpreting the Neural Networks}
+	
+	\subsection{Stability in Time}
+	
+	\subsection{Adversarial Attack on Neural Network Interpretability}
+	
 	
 
 

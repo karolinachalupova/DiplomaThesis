@@ -27,8 +27,9 @@ def run_pipeline(nrow=None):
     subset.calculate(nrow=nrow)
     cleaned = Cleaned()
     cleaned.calculate()
-    cleaned.load()
-    return cleaned
+    selected = Selected() 
+    selected.calculate()
+    return selected
 
 if __name__ == "__main__":
     run_pipeline()
@@ -171,34 +172,64 @@ class Cleaned(Data):
         return df.sort_index()
 
 
+class Selected(Data):
+    PATHS = {
+            "features":  os.path.join(directory, 'data/selected/features.pkl'),
+            "targets":  os.path.join(directory, 'data/selected/targets.pkl')
+        }
+    N_FEATURES = 30
+    def __init__(self, paths= PATHS):
+        self.paths = paths
+
+    def calculate(self, ancestor_paths = Cleaned.PATHS):
+        ancestor = Cleaned(paths = ancestor_paths)
+        ancestor.load()
+
+        meta = Meta()
+        meta.load()
+
+        # Select N_FEATURES most important features based on 
+        # Tobek and Hronec, 2020, JFM: Does it pay to follow anomalies research? 
+        selected_cols = meta.signals[meta.signals["important_otmh_global_liquid"]<=self.N_FEATURES].sc.tolist()
+        assert len(selected_cols) == self.N_FEATURES, "Number of selected features does not match number of columns"
+
+        self.features = ancestor.features[selected_cols]
+        self.targets = ancestor.targets
+        self.save()
+
+
 class Meta():
     PATHS = {
-        "all":  os.path.join(directory, 'data/meta.xlsx')
+        "all":  os.path.join(directory, 'data/meta_KCHnotes.xlsx')
     }
     def __init__(self, paths = PATHS):
         self.paths = paths
     
     def load(self):
-        self.sheet0 = pd.read_excel(self.paths.get("all"), sheet_name=0)
+        self.signals = pd.read_excel(self.paths.get("all"), sheet_name="signals")
 
     @property
     def classification1(self):
         classification1 = dict()
-        for c in self.sheet0['class'].unique().tolist(): 
-            classification1[c.lower()] = self.sheet0[self.sheet0['class'] == c].name.tolist()
+        for c in self.signals['class'].unique().tolist(): 
+            classification1[c.lower()] = self.signals[self.signals['class'] == c].name.tolist()
         return classification1
             
     @property
     def classification2(self):
         classification2 = dict()
-        for c in self.sheet0.class2.unique().tolist(): 
-            classification2[c.lower()] = self.sheet0[self.sheet0['class2'] == c].name.tolist()
+        for c in self.signals.class2.unique().tolist(): 
+            classification2[c.lower()] = self.signals[self.signals['class2'] == c].name.tolist()
         return classification2
             
     @property 
     def sc_to_name(self):
-        return dict(zip(self.sheet0.name_sc, self.sheet0.name))
+        return dict(zip(self.signals.name_sc, self.signals.name))
     
     @property 
     def name_to_sc(self):
-        return dict(zip(self.sheet0.name, self.sheet0.name_sc))
+        return dict(zip(self.signals.name, self.signals.name_sc))
+    
+    @property 
+    def sc_to_latex(self):
+        return dict(zip(self.signals.name_sc, self.signals.name_tex))

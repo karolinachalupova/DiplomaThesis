@@ -10,22 +10,39 @@ import numpy as np
 import os
 import re
 import datetime
+import pickle
 
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, ReLU
 from tensorflow.keras.regularizers import L1L2
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam 
-from tensorflow.keras.metrics import MeanSquaredError
+from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError, Metric
+from tensorflow import reduce_sum, square, subtract, reduce_mean, divide
 
 from ray import tune
+import ray
 
 from netdata import NetData
+from data import Selected
 
+class RSquare(Metric):
+    def __init__(self, name="r_square", **kwargs):
+        super(RSquare, self).__init__(name=name, **kwargs) 
+        self.r_square = self.add_weight(name="rsq", initializer="zeros")
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        total_error = reduce_sum(square(y_true))  # No demeaning - see Gu et al. (2020) 
+        unexplained_error = reduce_sum(square(subtract(y_true, y_pred)))
+        rsq = subtract(1.0, divide(unexplained_error, total_error))
+        self.r_square.assign_add(rsq)
+
+    def result(self):
+        return self.r_square
 
 class Network(): 
     def __init__(self, args, learning_rate, l1):
         hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
-        inputs = Input(shape=[153])
+        inputs = Input(shape=[Selected.N_FEATURES])
         hidden = inputs
         for size in hidden_layers: 
             hidden = Dense(
@@ -40,16 +57,17 @@ class Network():
         self.model.compile(
             optimizer=Adam(learning_rate=learning_rate),
             loss ='mse',
-            metrics = [MeanSquaredError(name="mse")]
+            metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
         )
-
-
+    
+    
 class Training(tune.Trainable):
     def setup(self, config): 
         import tensorflow as tf  # IMPORTANT: See the note above.
 
-        # Load training and valid data
-        self.nd = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+        # I use get_pinned_object so that data is not 
+        # reloaded to memory for each trial
+        self.data = tune.utils.get_pinned_object(data_id)  
 
         # Obtain model 
         self.network = Network(
@@ -58,38 +76,63 @@ class Training(tune.Trainable):
             l1=config.get("l1")
         )
 
-    def step(self):
-        # TODO: implement early stopping
+        # Remember the lowest validation loss reached so far
+        # as well as number of consecutive periods without 
+        # improvement in this minumum 
+        # (used for early stopping)
+        self.min_valid_loss = np.inf
+        self.consec_epochs_wo_impr = 0
 
+    def step(self):
         # Train single epoch
         self.network.model.reset_metrics()
-        for batch in self.nd.train.batches(args.batch_size): 
-            train_loss, train_mse = self.network.model.train_on_batch(batch["features"], batch["targets"])
+        for batch in self.data.train.batches(args.batch_size): 
+            train_loss, train_rmse, train_mae, train_rsq = self.network.model.train_on_batch(batch["features"], batch["targets"])
         
         # Validate
         self.network.model.reset_metrics()
-        for batch in self.nd.valid.batches(args.batch_size):
-            valid_loss, valid_mse = self.network.model.test_on_batch(batch["features"], batch["targets"])
+        for batch in self.data.valid.batches(args.batch_size):
+            valid_loss, valid_rmse, valid_mae, valid_rsq = self.network.model.test_on_batch(batch["features"], batch["targets"])
+        
+        # Early stopping
+        # If valid_loss does not improve (w. r. t. absolute minimum reached so far)
+        # for `args.patience` consecutive periods, stop training
+        if valid_loss > self.min_valid_loss: 
+            self.consec_epochs_wo_impr += 1
+        else: 
+            self.consec_epochs_wo_impr = 0
+            self.min_valid_loss = valid_loss 
 
         return {
             "epoch": self.iteration, 
             "train_loss": train_loss,
-            "train_mse": train_mse, 
+            "train_rmse": train_rmse,
+            "train_mae": train_mae,
+            "train_rsq": train_rsq,
             "valid_loss": valid_loss, 
-            "valid_mse": valid_mse
+            "valid_rmse": valid_rmse,
+            "valid_mae": valid_mae,
+            "valid_rsq": valid_rsq,
+            "stop_early": self.consec_epochs_wo_impr == args.patience
         }
+    
+    def save_checkpoint(self, tmp_checkpoint_dir):
+        checkpoint_path = os.path.join(tmp_checkpoint_dir, "model.h5")
+        self.network.model.save(checkpoint_path)
+        return tmp_checkpoint_dir
+    
 
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--batch_size", default=1000, type=int, help="Batch size. Gu:10000")
-    parser.add_argument("--epochs", default=5, type=int, help="Number of epochs. Gu:100")
+    parser.add_argument("--batch_size", default=5000, type=int, help="Batch size. Gu:10000")
+    parser.add_argument("--epochs", default=100, type=int, help="Number of epochs. Gu:100")
     parser.add_argument("--patience", default=5, type=int, help="Patience for early stopping. Gu:5")
     
     parser.add_argument("--ytrain", default=9, type=int, help="Number of years in train set.")
-    parser.add_argument("--yvalid", default=6, type=int, help="Number of years in validation set.")
-    parser.add_argument("--ytest", default=1, type=int, help="Number of years in test set.")
+    parser.add_argument("--yvalid", default=3, type=int, help="Number of years in validation set.")
+    parser.add_argument("--ytest", default=3, type=int, help="Number of years in test set.")
     parser.add_argument("--hidden_layers", default="32", type=str, help='Number of neurons in hidden layers. Gu:32,16,8,4,2')
     parser.add_argument("--seed", default=42, type=int, help="Random seed.")
     
@@ -97,7 +140,7 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate_high", default=0.01, type=float, help="Initial learning rate hyperparam upper bound. Gu:0.01")
     parser.add_argument("--l1_low", default=0.00001, type=float, help='L1 regularization term, hyperparam lower bound. Gu: 0.00001')
     parser.add_argument("--l1_high", default=0.001, type=float, help='L1 regularization term, hyperparam upper bound. Gu: 0.001')
-    parser.add_argument("--num_samples", default=3, type=int, help='Number of trials in the hyperparameter search.')
+    parser.add_argument("--num_samples", default=20, type=int, help='Number of trials in the hyperparameter search.')
     
     parser.add_argument("--threads", default=1, type=int, help="Maximum number of threads to use.")
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
@@ -122,10 +165,23 @@ if __name__ == "__main__":
         ",".join(("{}={}".format(re.sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(vars(args).items())))
     ))
 
+    # Initialize ray
+    if ray.is_initialized(): 
+        ray.shutdown()
+    ray.init()
+
+    # Load data 
+    data = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+    # I use pin_in_object_store so that data is not 
+    # reloaded to memory for each trial
+    data_id = tune.utils.pin_in_object_store(data)
+
+    # Run the training 
     analysis = tune.run(
-        Training, 
-        stop={'training_iteration': args.epochs},
-        metric="valid_mse",
+        Training,
+        stop={'training_iteration': args.epochs, 'stop_early': True},
+        checkpoint_at_end=True,
+        metric="valid_rmse",
         mode="min",
         local_dir=args.logdir,
         verbose=1,
@@ -133,7 +189,17 @@ if __name__ == "__main__":
             "learning_rate": tune.loguniform(args.learning_rate_low, args.learning_rate_high),
             "l1": tune.loguniform(args.l1_low, args.l1_high),
         },
-        num_samples=args.num_samples
+        num_samples=args.num_samples,
+        resources_per_trial={"cpu":1, "gpu":0}
     )
+
+    ray.shutdown()
+
+    # Save args
+    with open(os.path.join(args.logdir,"args.pickle"), 'wb') as f: 
+        pickle.dump(vars(args), f)
+
+
+
 
 

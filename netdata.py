@@ -4,7 +4,7 @@ Defines how data is split into training, validation and test sets.
 import numpy as np
 import pandas as pd
 
-from data import Cleaned
+from data import Selected
 
 
 class NetData():
@@ -81,12 +81,12 @@ class NetData():
         self.ytest = ytest
 
         # Load entire dataset
-        d = Cleaned()
+        d = Selected()
         d.load()
         # d has attributes `targets` and `features`, each is a pd.DataFrame.
 
         # Number of features per example 
-        self.F = d.features.shape[1]
+        assert d.features.shape[1] == Selected.N_FEATURES, "Number of selected features does not match number of columns"
 
         # Create organizing masks 
         idx_year = d.targets.index.get_level_values('date').year
