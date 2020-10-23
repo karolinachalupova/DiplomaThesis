@@ -20,11 +20,20 @@ class AModel():
     def evaluate(self, on="test", batch_size=10000000):
         netdata = self.netdata
         if on=="test":
-            return self.model.evaluate(x=netdata.test.data["features"], y=netdata.test.data["targets"],batch_size=batch_size)
+            return self.model.evaluate(
+                x=netdata.test.data["features"], 
+                y=netdata.test.data["targets"],
+                batch_size=batch_size)
         if on=="valid": 
-            return self.model.evaluate(x=netdata.valid.data["features"], y=netdata.valid.data["targets"],batch_size=batch_size)
+            return self.model.evaluate(
+                x=netdata.valid.data["features"], y=
+                netdata.valid.data["targets"],
+                batch_size=batch_size)
         if on=="train":
-            return self.model.evaluate(x=netdata.train.data["features"], y=netdata.train.data["targets"],batch_size=batch_size)
+            return self.model.evaluate(
+                x=netdata.train.data["features"],
+                y=netdata.train.data["targets"],
+                batch_size=batch_size)
 
 class Networks():
     def __init__(self, logs:str, dataset):
@@ -38,9 +47,12 @@ class Ensemble(AModel):
     def __init__(self, nets):
         self.nets = nets 
         # Check that all have the same yvalid ytest ytrain 
-        assert len(set([network.args.ytrain for network in self.nets])) == 1, "Networks in emsemble must have same args.ytrain"
-        assert len(set([network.args.yvalid for network in self.nets])) == 1,  "Networks in emsemble must have same args.yvalid" 
-        assert len(set([network.args.ytest for network in self.nets])) == 1,  "Networks in emsemble must have same args.ytest"
+        assert len(set([network.args.ytrain for network in self.nets])) == 1, (
+            "Networks in emsemble must have same args.ytrain")
+        assert len(set([network.args.yvalid for network in self.nets])) == 1, (
+            "Networks in emsemble must have same args.yvalid")
+        assert len(set([network.args.ytest for network in self.nets])) == 1, (
+            "Networks in emsemble must have same args.ytest")
     
         self.model = create_ensemble([network.model for network in self.nets])
     
@@ -60,7 +72,8 @@ class Net(AModel):
             dataset: instance of data.Selected
             logdir(str): path to the logging folder of the model. 
                 The logging folder of a trained model contains:
-                1) folder "Training", witch contains logdirs of individual hyperparameter searches
+                1) folder "Training", witch contains logdirs 
+                of individual hyperparameter searches
                 2) pickle "args.pickle", which contains a dict of the network args. 
         """
         self.logdir = logdir
@@ -84,7 +97,11 @@ class Net(AModel):
     
     @property 
     def netdata(self):
-        return NetData(ytrain=self.args.ytrain, yvalid=self.args.yvalid, ytest=self.args.ytest, dataset=self.dataset)
+        return NetData(
+            ytrain=self.args.ytrain, 
+            yvalid=self.args.yvalid, 
+            ytest=self.args.ytest, 
+            dataset=self.dataset)
     
 
     
