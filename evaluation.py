@@ -6,6 +6,7 @@ import os
 import pickle
 import argparse
 import tensorflow as tf
+import pandas as pd
 
 from sklearn.metrics import r2_score
 from ray import tune
@@ -42,6 +43,26 @@ class Networks():
         finished = [os.path.isfile(os.path.join(logdir, "args.pickle")) for logdir in logdirs]
         self.logdirs = [logdir for f, logdir in zip(finished, logdirs) if f]  # use finished logdirs only 
         self.nets = [Net(logdir, dataset) for logdir in self.logdirs]
+    
+    @property 
+    def dataframe(self):
+        """
+        Returns a dataframe, where each net is a row and args are columns.
+        There are instances of Net in the "index" column.
+        """
+        return pd.DataFrame(dict(zip(self.nets, [vars(net.args) for net in self.nets]))).transpose().reset_index()
+    
+    def create_ensembles(self, common_args=["hidden_layers", "ytrain", "yvalid", "ytest"]):
+        """
+        Groups self.nets into ensembles by grouping 
+        together networks that have common arguments (`common_args`)
+        Arguments: 
+            common_args: list of args keys based on which to group.
+        """
+        # there are instances of Net in the "index" column
+        groups = self.dataframe.groupby(common_args)["index"].apply(list)  
+        return [Ensemble(group) for group in groups]
+    
 
 class Ensemble(AModel): 
     def __init__(self, nets):
