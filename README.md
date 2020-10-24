@@ -12,12 +12,18 @@ Is there a sweet spot between performance and interpretability? Simpler models s
 
 
 ## Way ahead 
-- train networks similar to Gu et al., 2018. **<- I'm doing this right now
+### Train networks similar to Gu et al., 2018. 
+**<- I'm doing this right now
 
-  - interpret them: feature importance, shapley values, other?
-       - There is a good python library for some ML interpretation https://github.com/SeldonIO/alibi
-       - I would like to use model reliance from Fisher, but I cannot find an implementation. I think the paper is super interesting if you want to have a look. https://arxiv.org/abs/1801.01489 If there is time, I can try to code it up. I understand MR but don't quite understand the MCR. But it sounds very hot: "Specically, we derive connections between permutation importance estimates for a single prediction model, U-statistics, conditional variable importance, conditional causal eects, and linear model coecients. We then give probabilistic bounds for MCR, using a novel, generalizable technique.""Overall, we find that MCR provides more robust and conservative intervals for the reliance of f0 on X1 and X2, relative to standard bootstrap approaches." It should help with Correlated feature problems Issue. 
-       - Idea: bootstrap confidence intervals for feature importance 
+### Interpret them: 
+- metrics: feature importance, shapley values, other?
+- There is a good python library for some ML interpretation https://github.com/SeldonIO/alibi
+- Model Relience from Fisher https://arxiv.org/abs/1801.01489  is super interesting (e.g., gives confidence intervals for featue importance, helps understand why ensembles work, solves the problem of interpreting models with correlated features). If I understand correctly, the MR is permutation feature importance and MCR provides confidence interval for MR. 
+     - Issue A: I cannot find an implementation. I can try to code it up. 
+     - Issue B: I understand MR but don't quite understand the MCR. Specifically, what models consitute the epsilon-Rahomon set - what is their general family - different models / architectures / seeds? 
+- Idea: bootstrap confidence intervals for feature importance 
+
+### Interpretability determinants
 - see what influences interpretability to be robust vs. fragile  
   - measures of fragility: 
        - how much the interpretation differ for different random seeds? 
