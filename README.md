@@ -16,7 +16,7 @@ Is there a sweet spot between performance and interpretability? Simpler models s
 
   - interpret them: feature importance, shapley values, other?
        - There is a good python library for some ML interpretation https://github.com/SeldonIO/alibi
-       - I would like to use model reliance from Fisher, but I cannot find an implementation. I think the paper is super interesting if you want to have a look. https://arxiv.org/abs/1801.01489 If there is time, I can try to code it up. I understand MR but don't quite understand the MCR. But it sounds very hot: "Overall, we find that MCR provides more robust and conservative intervals for the reliance of f0 on X1 and X2, relative to standard bootstrap approaches."
+       - I would like to use model reliance from Fisher, but I cannot find an implementation. I think the paper is super interesting if you want to have a look. https://arxiv.org/abs/1801.01489 If there is time, I can try to code it up. I understand MR but don't quite understand the MCR. But it sounds very hot: "Specically, we derive connections between permutation importance estimates for a single prediction model, U-statistics, conditional variable importance, conditional causal eects, and linear model coecients. We then give probabilistic bounds for MCR, using a novel, generalizable technique.""Overall, we find that MCR provides more robust and conservative intervals for the reliance of f0 on X1 and X2, relative to standard bootstrap approaches." It should help with Correlated feature problems Issue. 
        - Idea: bootstrap confidence intervals for feature importance 
 - see what influences interpretability to be robust vs. fragile  
   - measures of fragility: 
