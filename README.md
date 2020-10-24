@@ -20,7 +20,7 @@ Is there a sweet spot between performance and interpretability? Simpler models s
 - There is a good python library for some ML interpretation https://github.com/SeldonIO/alibi
 - Model Relience from Fisher https://arxiv.org/abs/1801.01489  is super interesting (e.g., gives confidence intervals for featue importance, helps understand why ensembles work, solves the problem of interpreting models with correlated features). If I understand correctly, the MR is permutation feature importance and MCR provides confidence interval for MR. 
      - Issue A: I cannot find an implementation. I can try to code it up. 
-     - Issue B: I understand MR but don't quite understand the MCR. Specifically, what models consitute the epsilon-Rahomon set - what is their general family - different models / architectures / seeds? 
+     - Issue B: I understand MR but don't quite understand the MCR. Specifically, what models consitute the epsilon-Rashomon set - what is their general family - different models / architectures / seeds? 
 - Idea: bootstrap confidence intervals for feature importance 
 
 ### Interpretability determinants
