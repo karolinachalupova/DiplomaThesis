@@ -2,6 +2,7 @@
 Model performance evaluation
 """
 
+import numpy as np
 import os
 import pickle
 import argparse
@@ -15,26 +16,25 @@ from train_network import create_model, NetData, create_ensemble
 
 
 class AModel():
-    def predict(self):
-        return self.model.predict(self.netdata.test.data["features"])
-    
     def evaluate(self, on="test", batch_size=10000000):
         netdata = self.netdata
+        names = [self.model.loss] + [m.name for m in self.model.metrics] 
         if on=="test":
-            return self.model.evaluate(
+            values = self.model.evaluate(
                 x=netdata.test.data["features"], 
                 y=netdata.test.data["targets"],
                 batch_size=batch_size)
-        if on=="valid": 
-            return self.model.evaluate(
-                x=netdata.valid.data["features"], y=
-                netdata.valid.data["targets"],
+        elif on=="valid": 
+            values = self.model.evaluate(
+                x=netdata.valid.data["features"], 
+                y= netdata.valid.data["targets"],
                 batch_size=batch_size)
-        if on=="train":
-            return self.model.evaluate(
+        elif on=="train":
+            values = self.model.evaluate(
                 x=netdata.train.data["features"],
                 y=netdata.train.data["targets"],
                 batch_size=batch_size)
+        return dict(zip(names, values))
 
 class Networks():
     def __init__(self, logs:str, dataset):
@@ -52,7 +52,13 @@ class Networks():
         """
         return pd.DataFrame(dict(zip(self.nets, [vars(net.args) for net in self.nets]))).transpose().reset_index()
     
-    def create_ensembles(self, common_args=["hidden_layers", "ytrain", "yvalid", "ytest"]):
+    def evaluate_on_test(self):
+        return pd.DataFrame(dict(zip(self.nets, [net.evaluate(on="test") for net in self.nets]))).transpose().reset_index()
+    
+    def evaluate_on_valid(self):
+        return pd.DataFrame(dict(zip(self.nets, [net.evaluate(on="valid") for net in self.nets]))).transpose().reset_index()
+    
+    def create_ensembles(self, best_n:int=None, common_args=["hidden_layers", "ytrain", "yvalid", "ytest"]):
         """
         Groups self.nets into ensembles by grouping 
         together networks that have common arguments (`common_args`)
@@ -60,8 +66,50 @@ class Networks():
             common_args: list of args keys based on which to group.
         """
         # there are instances of Net in the "index" column
-        groups = self.dataframe.groupby(common_args)["index"].apply(list)  
+        groups = self.dataframe.groupby(common_args)["index"].apply(list)
+        if best_n is not None:
+            groups = [self.best_n(group,2) for group in groups]
         return [Ensemble(group) for group in groups]
+    
+    @staticmethod
+    def best(models, metric="mse", mode="min"):
+        """
+        Returns `n` best models (best performance on validation set)
+        n is chosen such that the ensemble of the models has best 
+        performance on validation set
+        """
+        metrics = np.array([model.evaluate(on="valid").get(metric) for model in models])
+        # models sorted in ascending order on metric
+        sorted_models = [x for _,x in sorted(zip(metrics, models))]
+        if mode == "min":
+            # Taking models from the left side of the ascending list
+            ensemble_metrics = np.array([Ensemble(sorted_models[:n]).evaluate(on="valid").get(metric) for n in range(2,len(models)+1)])
+            return sorted_models[:np.argmin(ensemble_metrics)+2]
+        elif mode =="max": 
+            # Taking models from the right side of the ascending list
+            ensemble_metrics = np.array([Ensemble(sorted_models[n:]).evaluate(on="valid").get(metric) for n in range(0,len(models)-1)])
+            return sorted_models[np.argmax(ensemble_metrics):]
+        else: 
+            raise ValueError("Argument mode only takes values 'min' or 'max'")
+    
+    @staticmethod
+    def best_n(models, n=2, metric="mse", mode="min"):
+        """
+        Returns `n` best models (best performance on validation set)
+        n is chosen such that the ensemble of the models has best 
+        performance on validation set
+        """
+        metrics = np.array([model.evaluate(on="valid").get(metric) for model in models])
+        # models sorted in ascending order on metric
+        sorted_models = [x for _,x in sorted(zip(metrics, models))]
+        if mode == "min":
+            # Taking models from the left side of the ascending list
+            return sorted_models[:n]
+        elif mode =="max": 
+            # Taking models from the right side of the ascending list
+            return sorted_models[-n:]
+        else: 
+            raise ValueError("Argument mode only takes values 'min' or 'max'")
     
 
 class Ensemble(AModel): 
