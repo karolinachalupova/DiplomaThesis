@@ -1,5 +1,5 @@
 """
-Defines and trains models
+Defines and trains model
 
 As of 10/12/2019: One caveat of using TF2.0 is that TF AutoGraph
 functionality does not interact nicely with Ray actors. One way to get around
@@ -7,22 +7,22 @@ this is to `import tensorflow` inside the Tune Trainable.
 """
 import argparse
 import numpy as np
+import pandas as pd
 import os
 import re
 import datetime
 import pickle
 
-from tensorflow.keras.layers import Input, Dense, BatchNormalization, ReLU
+from tensorflow.keras.layers import Input, Dense, BatchNormalization, ReLU, average
 from tensorflow.keras.regularizers import L1L2
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam 
 from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError, Metric
-from tensorflow import reduce_sum, square, subtract, reduce_mean, divide
+from tensorflow import reduce_sum, square, subtract, reduce_mean, divide, cast, float32
 
 from ray import tune
 import ray
 
-from netdata import NetData
 from data import Selected
 
 class RSquare(Metric):
@@ -31,35 +31,48 @@ class RSquare(Metric):
         self.r_square = self.add_weight(name="rsq", initializer="zeros")
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        total_error = reduce_sum(square(y_true))  # No demeaning - see Gu et al. (2020) 
-        unexplained_error = reduce_sum(square(subtract(y_true, y_pred)))
+        total_error = reduce_sum(square(cast(y_true, float32)))  # No demeaning - see Gu et al. (2020) 
+        unexplained_error = reduce_sum(square(subtract(cast(y_true, float32), y_pred)))
         rsq = subtract(1.0, divide(unexplained_error, total_error))
-        self.r_square.assign_add(rsq)
+        self.r_square.assign(rsq)
 
     def result(self):
         return self.r_square
 
-class Network(): 
-    def __init__(self, args, learning_rate, l1):
-        hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
+def create_model(args, learning_rate, l1):
+    hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
+    inputs = Input(shape=[Selected.N_FEATURES])
+    hidden = inputs
+    for size in hidden_layers: 
+        hidden = Dense(
+            size,  
+            kernel_regularizer=L1L2(l1=l1), 
+            bias_regularizer=L1L2(l1=l1))(hidden)
+        hidden = BatchNormalization()(hidden)
+        hidden = ReLU()(hidden)
+    outputs = Dense(1)(hidden)
+    model = Model(inputs=inputs, outputs=outputs)
+    
+    model.compile(
+        optimizer=Adam(learning_rate=learning_rate),
+        loss ='mse',
+        metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
+    )
+    return model
+
+def create_ensemble(models):
+    if len(models) == 1:
+        return models[0]
+    else: 
         inputs = Input(shape=[Selected.N_FEATURES])
-        hidden = inputs
-        for size in hidden_layers: 
-            hidden = Dense(
-                size,  
-                kernel_regularizer=L1L2(l1=l1), 
-                bias_regularizer=L1L2(l1=l1))(hidden)
-            hidden = BatchNormalization()(hidden)
-            hidden = ReLU()(hidden)
-        outputs = Dense(1)(hidden)
-        self.model = Model(inputs=inputs, outputs=outputs)
-        
-        self.model.compile(
-            optimizer=Adam(learning_rate=learning_rate),
-            loss ='mse',
+        predictions = [model(inputs) for model in models]
+        outputs = average(predictions)
+        model = Model(inputs=inputs, outputs=outputs)
+        model.compile(
+            loss = 'mse',
             metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
         )
-    
+        return model
     
 class Training(tune.Trainable):
     def setup(self, config): 
@@ -70,7 +83,7 @@ class Training(tune.Trainable):
         self.data = tune.utils.get_pinned_object(data_id)  
 
         # Obtain model 
-        self.network = Network(
+        self.model = create_model(
             args=args, 
             learning_rate=config.get("learning_rate"),
             l1=config.get("l1")
@@ -85,14 +98,14 @@ class Training(tune.Trainable):
 
     def step(self):
         # Train single epoch
-        self.network.model.reset_metrics()
+        self.model.reset_metrics()
         for batch in self.data.train.batches(args.batch_size): 
-            train_loss, train_rmse, train_mae, train_rsq = self.network.model.train_on_batch(batch["features"], batch["targets"])
+            train_loss, train_rmse, train_mae, train_rsq = self.model.train_on_batch(batch["features"], batch["targets"])
         
         # Validate
-        self.network.model.reset_metrics()
+        self.model.reset_metrics()
         for batch in self.data.valid.batches(args.batch_size):
-            valid_loss, valid_rmse, valid_mae, valid_rsq = self.network.model.test_on_batch(batch["features"], batch["targets"])
+            valid_loss, valid_rmse, valid_mae, valid_rsq = self.model.test_on_batch(batch["features"], batch["targets"])
         
         # Early stopping
         # If valid_loss does not improve (w. r. t. absolute minimum reached so far)
@@ -118,9 +131,107 @@ class Training(tune.Trainable):
     
     def save_checkpoint(self, tmp_checkpoint_dir):
         checkpoint_path = os.path.join(tmp_checkpoint_dir, "model.h5")
-        self.network.model.save(checkpoint_path)
+        self.model.save(checkpoint_path)
         return tmp_checkpoint_dir
     
+
+class NetData():
+
+    class Dataset():
+        def __init__(self, 
+            data:dict, 
+            shuffle_batches:bool, 
+            seed:int=42):
+            """
+            Args: 
+                data (dict): dictionary with keys "features" and "targets", 
+                    each containing a pd.DataFrame
+                shuffle_batches (bool): Bool indicating whether or not the batches 
+                    should be shuffled. 
+                seed (int): random seed used for random shuffling of batches 
+                    (and, if subset_percent is not None, for random subsetting)
+            """
+            self._data = {
+                "features": np.asarray(data["features"]),
+                "targets": np.asarray(data["targets"])
+            }
+            self._size = len(self._data["features"])
+            
+            self._shuffler = np.random.RandomState(seed) if shuffle_batches else None 
+    
+        @property 
+        def data(self):
+            return self._data
+        
+        @property 
+        def size(self):
+            return self._size 
+        
+        def batches(self, size=None):
+            """
+            Generator object splitting data into batches.
+            Additonally, if `shuffle_batches` is True, shuffles data within each batch.
+            """
+            permutation = self._shuffler.permutation(self._size) if self._shuffler else np.arange(self._size)
+            while len(permutation):
+                batch_size = min(size or np.inf, len(permutation))
+                batch_perm = permutation[:batch_size]
+                permutation = permutation[batch_size:]
+
+                batch = {}
+                for key in self._data:
+                    batch[key] = self._data[key][batch_perm]
+                yield batch
+
+    def __init__(self, ytrain:int, yvalid:int, ytest:int, dataset):
+        """
+        Splits dataset into train, valid, and test sets.
+        
+        Following Gu et al. (2018), I split the data 
+        by taking first `ytrain` years as train set, 
+        the immediately following `yvalid` years as validation set, 
+        and the `ytest` years after that as test set.
+
+        Args: 
+            ytrain (int): number of years in training set
+            yvalid (int): number of years in validation set
+            ytest (int): number of years in test set
+            dataset (instance of loaded data.Selected) 
+                dataset has attributes `targets` and `features`, each is a pd.DataFrame.
+        
+        Examples: 
+            >>> netdata = NetData(dataset)
+            >>> netdata.train.data["features"], netdata.train.data["targets"]
+            >>> netdata.valid.data["features"], netdata.valid.data["targets"]
+            >>> netdata.test.data["features"], netdata.test.data["targets"]
+
+        """
+        self.ytrain = ytrain
+        self.yvalid = yvalid
+        self.ytest = ytest
+
+        # Number of features per example 
+        assert dataset.features.shape[1] == Selected.N_FEATURES, "Number of selected features does not match number of columns"
+
+        # Create organizing masks 
+        idx_year = dataset.targets.index.get_level_values('date').year
+        splityear1 = idx_year.min() + self.ytrain
+        splityear2 = splityear1 + self.yvalid
+        splityear3 = splityear2 + self.ytest
+        masks = {
+            "train": (idx_year < splityear1),
+            "valid": (idx_year >= splityear1) & (idx_year < splityear2),
+            "test": (idx_year >= splityear2) & (idx_year < splityear3)
+        }
+
+        # Split data into train, valid and test
+        for name in ["train", "valid", "test"]:
+            data = {
+                "features": dataset.features.loc[masks.get(name)],
+                "targets": dataset.targets.loc[masks.get(name)],
+            }
+            setattr(self, name, self.Dataset(data, shuffle_batches=name=="train"))
+
 
 if __name__ == "__main__":
     # Parse arguments
@@ -170,11 +281,13 @@ if __name__ == "__main__":
         ray.shutdown()
     ray.init()
 
-    # Load data 
-    data = NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest)
+    # Load data
+    dataset = Selected()
+    dataset.load()
     # I use pin_in_object_store so that data is not 
     # reloaded to memory for each trial
-    data_id = tune.utils.pin_in_object_store(data)
+    data_id = tune.utils.pin_in_object_store(
+        NetData(ytrain=args.ytrain, yvalid=args.yvalid, ytest=args.ytest, dataset=dataset))
 
     # Run the training 
     analysis = tune.run(

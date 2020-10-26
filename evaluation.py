@@ -1,0 +1,168 @@
+"""
+Model performance evaluation
+"""
+import re
+import json
+import numpy as np
+import os
+import pickle
+import argparse
+import tensorflow as tf
+import pandas as pd
+
+from ray import tune
+
+from train_network import create_model, NetData, create_ensemble
+
+from interpretation import ModelReliance
+
+from data import Selected
+
+
+class Nets():
+    def __init__(self, nets, dataset):
+        self.nets = nets
+        self.dataset = dataset
+    
+    @classmethod
+    def from_logs(cls, logs, dataset):
+        logdirs = [os.path.join(logs, x) for x in os.listdir(logs)]
+        finished = [os.path.isfile(os.path.join(logdir, "args.pickle")) for logdir in logdirs]
+        logdirs = [logdir for f, logdir in zip(finished, logdirs) if f]  # use finished logdirs only 
+        nets = [Net.from_logdir(logdir, dataset) for logdir in logdirs]
+        return cls(nets, dataset)
+    
+    @property 
+    def dataframe(self):
+        """
+        Returns a dataframe, where each net is a row and args are columns.
+        There are instances of Net in the "index" column.
+        """
+        return pd.DataFrame(dict(zip(self.nets, [vars(net.args) for net in self.nets]))).transpose()
+    
+    def evaluate(self, on="test"):
+        return pd.DataFrame(dict(zip(self.nets, [net.evaluate(on=on) for net in self.nets]))).transpose()
+    
+    def get_evaluation(self):
+        return pd.concat([
+            self.dataframe, 
+            self.evaluate(on="train"), 
+            self.evaluate(on="valid"),
+            self.evaluate(on="test")], axis=1)
+    
+    def create_ensembles(self, common_args=["hidden_layers", "ytrain", "yvalid", "ytest"]):
+        """
+        Groups self.nets into ensembles by grouping 
+        together networks that have common arguments (`common_args`)
+        Arguments: 
+            common_args: list of args keys based on which to group.
+        """
+        # there are instances of Net in the "index" column
+        df = self.dataframe.reset_index()
+        groups = df.groupby(common_args)["index"].apply(list)
+        models = [create_ensemble([net.model for net in group]) for group in groups]
+        args_list = [argparse.Namespace(**{key: value for key, value in vars(group[0].args).items() if key in common_args}) for group in groups]
+        return [Net(model, args, self.dataset) for model, args in zip(models, args_list)]
+    
+
+
+class Net():
+    def __init__(self, model, args, dataset):
+        self.model = model
+        self.args = args
+        self.dataset = dataset
+    
+    @classmethod
+    def from_logdir(cls, logdir, dataset):
+        """
+        Best tf.keras.model 
+        (best: best performance on validation set out of all models in the logdir)
+        used to choose optimum hyperparameters. 
+        
+        Arguments: 
+            dataset: instance of data.Selected
+            logdir(str): path to the logging folder of the model. 
+                The logging folder of a trained model contains:
+                1) folder "Training", witch contains logdirs 
+                of individual hyperparameter searches
+                2) pickle "args.pickle", which contains a dict of the network args. 
+        """
+        with open(os.path.join(logdir, "args.pickle"), "rb") as f: 
+            args = argparse.Namespace(**pickle.load(f))  # loads dict and converts it to namespace
+        analysis = tune.Analysis(os.path.join(logdir, "Training"))
+        best_config = analysis.get_best_config(metric="valid_rmse", mode="min")
+        best_logdir = analysis.get_best_logdir(metric="valid_rmse", mode="min")
+        model = create_model(args=args, **best_config)
+        checkpoint_folder_name = [s for s in os.listdir(best_logdir) if s.startswith("checkpoint")][0]
+        model.load_weights(os.path.join(best_logdir, checkpoint_folder_name, "model.h5"))
+        return cls(model, args, dataset)
+
+    def __repr__(self):
+        return "{}: {}".format(
+            self.__class__, 
+            ",".join(("{}={}".format(re.sub("(.)[^_]*_?", r"\1", key), value) for key, value in vars(self.args).items())))
+    
+
+    def evaluate(self, on="test", batch_size=10000000):
+        netdata = self.netdata
+        names = [self.model.loss] + [m.name for m in self.model.metrics] 
+        if on=="test":
+            values = self.model.evaluate(
+                x=netdata.test.data["features"], 
+                y=netdata.test.data["targets"],
+                batch_size=batch_size)
+        elif on=="valid": 
+            values = self.model.evaluate(
+                x=netdata.valid.data["features"], 
+                y= netdata.valid.data["targets"],
+                batch_size=batch_size)
+        elif on=="train":
+            values = self.model.evaluate(
+                x=netdata.train.data["features"],
+                y=netdata.train.data["targets"],
+                batch_size=batch_size)
+        return dict(zip([on + "_" + name for name in names], values))
+    
+    def model_reliance(self):
+        loss = tf.keras.losses.MeanSquaredError if self.model.loss == "mse" else self.model.loss
+        mr = ModelReliance(loss=loss)
+        return mr.fit(self.model, x=self.netdata.test.data["features"], y=self.netdata.test.data["targets"])
+
+    def save(self):
+        # make sure folder exists, if not create
+        path = os.path.join("results",self.__repr__().split(": ")[1])
+        if not os.path.exists(path):
+            os.makedirs(path)
+        
+        # save model architecture
+        with open(os.path.join(path, 'model.json'),'w') as f: 
+            json.dump(self.model.to_json(), f)
+
+        # save model weights
+        self.model.save_weights(os.path.join(path,'weights.h5'))
+        
+        # save model args
+        with open(os.path.join(path, 'args.pickle'), 'wb') as f:
+            pickle.dump(vars(self.args), f) 
+    
+    @property 
+    def netdata(self):
+        return NetData(
+            ytrain=self.args.ytrain, 
+            yvalid=self.args.yvalid, 
+            ytest=self.args.ytest, 
+            dataset=self.dataset)
+    
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs", type=str, help="Path to logdir")
+    args = parser.parse_args([] if "__file__" not in globals() else None)
+    
+    dataset=Selected()
+    dataset.load()
+    nets = Nets.from_logs(args.logdir, dataset)
+    ensembles = Nets(nets.create_ensembles(),dataset)
+    for net in ensembles.nets: 
+        net.save()
+    ensembles.get_evaluation().to_csv(os.path.join('results', 'evaluation.csv'))
