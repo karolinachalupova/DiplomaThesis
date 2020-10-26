@@ -13,6 +13,7 @@ __pycache__/
 /data/
 /ignored/
 /logs/
+/results/
 
 
 *.pdf
