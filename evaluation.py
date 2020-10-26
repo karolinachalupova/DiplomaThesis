@@ -72,7 +72,8 @@ class Net():
         self.model = model
         self.args = args
         self.dataset = dataset
-        self.ytest = ytest
+        self.args.ytest = ytest
+        self.args.n_models = self.n_models
     
     @classmethod
     def from_logdir(cls, logdir, dataset, ytest):
@@ -152,8 +153,12 @@ class Net():
         return NetData(
             ytrain=self.args.ytrain, 
             yvalid=self.args.yvalid, 
-            ytest=self.ytest, 
+            ytest=self.args.ytest, 
             dataset=self.dataset)
+    
+    @property 
+    def n_models(self):
+        return np.array([type(self.model.layers[i]) == tf.keras.Model for i in range(len(self.model.layers))]).sum()
     
 
 if __name__ == "__main__":
