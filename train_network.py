@@ -61,15 +61,18 @@ def create_model(args, learning_rate, l1):
     return model
 
 def create_ensemble(models):
-    inputs = Input(shape=[Selected.N_FEATURES])
-    predictions = [model(inputs) for model in models]
-    outputs = average(predictions)
-    model = Model(inputs=inputs, outputs=outputs)
-    model.compile(
-        loss = 'mse',
-        metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
-    )
-    return model
+    if len(models) == 1:
+        return models[0]
+    else: 
+        inputs = Input(shape=[Selected.N_FEATURES])
+        predictions = [model(inputs) for model in models]
+        outputs = average(predictions)
+        model = Model(inputs=inputs, outputs=outputs)
+        model.compile(
+            loss = 'mse',
+            metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
+        )
+        return model
     
 class Training(tune.Trainable):
     def setup(self, config): 
