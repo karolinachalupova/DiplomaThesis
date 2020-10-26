@@ -20,17 +20,18 @@ from data import Selected
 
 
 class Nets():
-    def __init__(self, nets, dataset):
+    def __init__(self, nets, dataset, ytest):
         self.nets = nets
         self.dataset = dataset
+        self.ytest = ytest
     
     @classmethod
-    def from_logs(cls, logs, dataset):
+    def from_logs(cls, logs, dataset, ytest):
         logdirs = [os.path.join(logs, x) for x in os.listdir(logs)]
         finished = [os.path.isfile(os.path.join(logdir, "args.pickle")) for logdir in logdirs]
         logdirs = [logdir for f, logdir in zip(finished, logdirs) if f]  # use finished logdirs only 
-        nets = [Net.from_logdir(logdir, dataset) for logdir in logdirs]
-        return cls(nets, dataset)
+        nets = [Net.from_logdir(logdir, dataset, ytest) for logdir in logdirs]
+        return cls(nets, dataset, ytest)
     
     @property 
     def dataframe(self):
@@ -67,13 +68,14 @@ class Nets():
 
 
 class Net():
-    def __init__(self, model, args, dataset):
+    def __init__(self, model, args, dataset, ytest):
         self.model = model
         self.args = args
         self.dataset = dataset
+        self.ytest = ytest
     
     @classmethod
-    def from_logdir(cls, logdir, dataset):
+    def from_logdir(cls, logdir, dataset, ytest):
         """
         Best tf.keras.model 
         (best: best performance on validation set out of all models in the logdir)
@@ -95,7 +97,7 @@ class Net():
         model = create_model(args=args, **best_config)
         checkpoint_folder_name = [s for s in os.listdir(best_logdir) if s.startswith("checkpoint")][0]
         model.load_weights(os.path.join(best_logdir, checkpoint_folder_name, "model.h5"))
-        return cls(model, args, dataset)
+        return cls(model, args, dataset, ytest)
 
     def __repr__(self):
         return "{}: {}".format(
@@ -150,7 +152,7 @@ class Net():
         return NetData(
             ytrain=self.args.ytrain, 
             yvalid=self.args.yvalid, 
-            ytest=self.args.ytest, 
+            ytest=self.ytest, 
             dataset=self.dataset)
     
 
@@ -161,8 +163,8 @@ if __name__ == "__main__":
     
     dataset=Selected()
     dataset.load()
-    nets = Nets.from_logs(args.logdir, dataset)
-    ensembles = Nets(nets.create_ensembles(),dataset)
+    nets = Nets.from_logs(args.logdir, dataset, ytest=1)
+    ensembles = Nets(nets.create_ensembles(),dataset, ytest=1)
     for net in ensembles.nets: 
         net.save()
     ensembles.get_evaluation().to_csv(os.path.join('results', 'evaluation.csv'))
