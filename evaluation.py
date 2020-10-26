@@ -63,7 +63,7 @@ class Nets():
         groups = df.groupby(common_args)["index"].apply(list)
         models = [create_ensemble([net.model for net in group]) for group in groups]
         args_list = [argparse.Namespace(**{key: value for key, value in vars(group[0].args).items() if key in common_args}) for group in groups]
-        return [Net(model, args, self.dataset) for model, args in zip(models, args_list)]
+        return [Net(model, args, self.dataset, ytest=self.ytest) for model, args in zip(models, args_list)]
     
 
 
