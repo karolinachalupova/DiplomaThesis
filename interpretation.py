@@ -29,7 +29,7 @@ class ModelReliance():
         feature = x[:,index]
         halves = np.split(feature,2)
         perturbed = np.concatenate((halves[1], halves[0]))
-        x = np.concatenate((x[:,0:index], perturbed, x[:,index+1:]),axis=1)
+        x = np.concatenate((x[:,0:index], perturbed[:,None], x[:,index+1:]),axis=1)
         return adjustment * self.loss(y, f.predict(x)).numpy()
     
     def fit_single_feature(self, f, x, y, index):
