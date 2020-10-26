@@ -2,6 +2,7 @@
 Model performance evaluation
 """
 import re
+import json
 import numpy as np
 import os
 import pickle
@@ -12,6 +13,10 @@ import pandas as pd
 from ray import tune
 
 from train_network import create_model, NetData, create_ensemble
+
+from interpretation import ModelReliance
+
+from data import Selected
 
 
 class Nets():
@@ -33,13 +38,17 @@ class Nets():
         Returns a dataframe, where each net is a row and args are columns.
         There are instances of Net in the "index" column.
         """
-        return pd.DataFrame(dict(zip(self.nets, [vars(net.args) for net in self.nets]))).transpose().reset_index()
+        return pd.DataFrame(dict(zip(self.nets, [vars(net.args) for net in self.nets]))).transpose()
     
-    def evaluate_on_test(self):
-        return pd.DataFrame(dict(zip(self.nets, [net.evaluate(on="test") for net in self.nets]))).transpose().reset_index()
+    def evaluate(self, on="test"):
+        return pd.DataFrame(dict(zip(self.nets, [net.evaluate(on=on) for net in self.nets]))).transpose()
     
-    def evaluate_on_valid(self):
-        return pd.DataFrame(dict(zip(self.nets, [net.evaluate(on="valid") for net in self.nets]))).transpose().reset_index()
+    def get_evaluation(self):
+        return pd.concat([
+            self.dataframe, 
+            self.evaluate(on="train"), 
+            self.evaluate(on="valid"),
+            self.evaluate(on="test")], axis=1)
     
     def create_ensembles(self, common_args=["hidden_layers", "ytrain", "yvalid", "ytest"]):
         """
@@ -49,10 +58,12 @@ class Nets():
             common_args: list of args keys based on which to group.
         """
         # there are instances of Net in the "index" column
-        groups = self.dataframe.groupby(common_args)["index"].apply(list)
+        df = self.dataframe.reset_index()
+        groups = df.groupby(common_args)["index"].apply(list)
         models = [create_ensemble([net.model for net in group]) for group in groups]
         args_list = [argparse.Namespace(**{key: value for key, value in vars(group[0].args).items() if key in common_args}) for group in groups]
         return [Net(model, args, self.dataset) for model, args in zip(models, args_list)]
+    
 
 
 class Net():
@@ -110,7 +121,29 @@ class Net():
                 x=netdata.train.data["features"],
                 y=netdata.train.data["targets"],
                 batch_size=batch_size)
-        return dict(zip(names, values))
+        return dict(zip([on + "_" + name for name in names], values))
+    
+    def model_reliance(self):
+        loss = tf.keras.losses.MeanSquaredError if self.model.loss == "mse" else self.model.loss
+        mr = ModelReliance(loss=loss)
+        return mr.fit(self.model, x=self.netdata.test.data["features"], y=self.netdata.test.data["targets"])
+
+    def save(self):
+        # make sure folder exists, if not create
+        path = os.path.join("results",self.__repr__().split(": ")[1])
+        if not os.path.exists(path):
+            os.makedirs(path)
+        
+        # save model architecture
+        with open(os.path.join(path, 'model.json'),'w') as f: 
+            json.dump(self.model.to_json(), f)
+
+        # save model weights
+        self.model.save_weights(os.path.join(path,'weights.h5'))
+        
+        # save model args
+        with open(os.path.join(path, 'args.pickle'), 'wb') as f:
+            pickle.dump(vars(self.args), f) 
     
     @property 
     def netdata(self):
@@ -121,6 +154,15 @@ class Net():
             dataset=self.dataset)
     
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs", type=str, help="Path to logdir")
+    args = parser.parse_args([] if "__file__" not in globals() else None)
     
-
-    
+    dataset=Selected()
+    dataset.load()
+    nets = Nets.from_logs(args.logdir, dataset)
+    ensembles = Nets(nets.create_ensembles(),dataset)
+    for net in ensembles.nets: 
+        net.save()
+    ensembles.get_evaluation().to_csv(os.path.join('results', 'evaluation.csv'))
