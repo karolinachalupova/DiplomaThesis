@@ -47,6 +47,9 @@ def delete_unfinished_logdirs(logs):
 class Nets():
     def __init__(self, nets):
         self.nets = nets
+        # Check that elements in nets are instances of Net
+        if not np.array([isinstance(net, Net) for net in self.nets]).all():
+            raise ValueError("nets must be a list of instances of Net.")
     
     @classmethod
     def from_logs(cls, logs):
