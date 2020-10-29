@@ -2,6 +2,7 @@
 Model performance evaluation
 """
 import re
+import itertools
 import shutil
 import json
 import numpy as np
@@ -16,6 +17,7 @@ from ray import tune
 from train_network import create_model, NetData, create_ensemble
 
 from interpretation import ModelReliance
+from alibi.explainers import IntegratedGradients
 
 from data import Selected
 
@@ -67,15 +69,14 @@ class Nets():
         """
         return pd.DataFrame(dict(zip(self.nets, [vars(net.args) for net in self.nets]))).transpose()
     
-    def evaluate(self, on="test"):
-        return pd.DataFrame(dict(zip(self.nets, [net.evaluate(on=on) for net in self.nets]))).transpose()
+    def performance(self):
+        return pd.concat([net.performance() for net in self.nets])
     
-    def get_evaluation(self):
-        return pd.concat([
-            self.dataframe, 
-            self.evaluate(on="train"), 
-            self.evaluate(on="valid"),
-            self.evaluate(on="test")], axis=1)
+    def model_reliance(self):
+        return pd.concat([net.model_reliance() for net in self.nets])
+    
+    def integrated_gradients_global(self):
+        return pd.concat([net.integrated_gradients()[1] for net in self.nets])
     
     def create_ensembles(self, common_args=["hidden_layers", "ytrain", "yvalid", "ytest"]):
         """
@@ -160,30 +161,54 @@ class Net():
         self.dataset = dataset
         self.args.ytest = ytest
     
-    def evaluate(self, on="test", batch_size=10000000):
+    def performance(self, batch_size=10000000):
         netdata = self.netdata
-        names = [self.model.loss] + [m.name for m in self.model.metrics] 
-        if on=="test":
-            values = self.model.evaluate(
-                x=netdata.test.data["features"], 
-                y=netdata.test.data["targets"],
-                batch_size=batch_size)
-        elif on=="valid": 
-            values = self.model.evaluate(
-                x=netdata.valid.data["features"], 
-                y= netdata.valid.data["targets"],
-                batch_size=batch_size)
-        elif on=="train":
-            values = self.model.evaluate(
+        names = [self.model.loss] + [m.name for m in self.model.metrics]
+        train_perf = self.model.evaluate(
                 x=netdata.train.data["features"],
                 y=netdata.train.data["targets"],
                 batch_size=batch_size)
-        return dict(zip([on + "_" + name for name in names], values))
+        valid_perf = self.model.evaluate(
+                x=netdata.valid.data["features"], 
+                y= netdata.valid.data["targets"],
+                batch_size=batch_size)
+        test_perf = self.model.evaluate(
+                x=netdata.test.data["features"], 
+                y=netdata.test.data["targets"],
+                batch_size=batch_size)
+
+        return pd.DataFrame(
+            train_perf+valid_perf+test_perf, 
+            index = [s+"_"+n for s, n in itertools.product(["train", "valid", "test"],names)],
+            columns=[self.__repr__()]).transpose()
     
     def model_reliance(self):
         loss = tf.keras.losses.MeanSquaredError if self.model.loss == "mse" else self.model.loss
         mr = ModelReliance(loss=loss)
-        return mr.fit(self.model, x=self.netdata.test.data["features"], y=self.netdata.test.data["targets"])
+        array = mr.fit(self.model, x=self.netdata.test.data["features"], y=self.netdata.test.data["targets"])
+        return pd.DataFrame(
+            array, 
+            index = self.netdata.test.columns['features'],
+            columns=[self.__repr__()]).transpose()
+    
+    def integrated_gradients(self):
+        explainer  = IntegratedGradients(self.model,
+                          layer=None,
+                          method="gausslegendre",
+                          n_steps=50,
+                          internal_batch_size=10000)
+        explanation = explainer.explain(self.netdata.test.data["features"])
+        attributions = explanation.attributions
+
+        loc = pd.DataFrame(
+            attributions, 
+            columns=self.netdata.test.columns["features"], 
+            index=self.netdata.test.index)
+        
+        glob = pd.DataFrame(loc.mean(), columns=[self.__repr__()]).transpose()
+
+        return loc, glob
+
 
     def save(self):
         # make sure folder exists, if not create
@@ -200,7 +225,8 @@ class Net():
         
         # save model args
         with open(os.path.join(path, 'args.pickle'), 'wb') as f:
-            pickle.dump(vars(self.args), f) 
+            pickle.dump(vars(self.args), f)
+        
     
     @property 
     def netdata(self):
@@ -227,4 +253,10 @@ if __name__ == "__main__":
     [net.set_dataset(dataset, ytest=1) for net in ensembles.nets]
     for net in ensembles.nets: 
         net.save()
-    ensembles.get_evaluation().to_csv(os.path.join('results', 'evaluation.csv'))
+
+    for filename, df in {
+        "args": ensembles.dataframe, 
+        "performance": ensembles.performance(),
+        "integrated_gradients_global": ensembles.integrated_gradients_global(),
+        "model_reliance": ensembles.model_reliance()}.items():
+            df.to_csv(os.path.join('results', filename+'.csv'))
