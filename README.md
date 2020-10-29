@@ -18,14 +18,15 @@ Is there a sweet spot between performance and interpretability? Simpler models s
 
 ### Interpretation <- I'm doing this right now
 - Global feature importance 
-     - DONE model reliance (Fisher) - see issues
-     - DONE integrated gradients 
+     - model reliance (Fisher) - see issues, SOMEWHAT DONE
+     - integrated gradients SOMEWHAT DONE
      - other?
 - Local feature importance 
      - shapley values?
      - integrated gradients?
      - other?
 - Other? 
+- (for SOMEWHAT DONE, see results_plots.ipynb)
 
 ### Interpretability determinants
 - see what influences interpretability to be robust vs. fragile  
