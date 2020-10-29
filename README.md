@@ -13,15 +13,19 @@ Is there a sweet spot between performance and interpretability? Simpler models s
 
 ## Way ahead 
 ### Train networks similar to Gu et al., 2018. 
-**<- I'm doing this right now
+- I finished training 5 different depths times 9 random seeds times 5 train-valid-test splits (12-12-1, 13-12-1,14-12-1, 15-12-1, 16-12-1, numbers designate amount of years of data in given sample)
+- The performance is not terrible, but R2 OOS is all over the place (see results_plots.ipynb)
 
-### Interpret them: 
-- metrics: feature importance, shapley values, other?
-- There is a good python library for some ML interpretation https://github.com/SeldonIO/alibi
-- Model Relience from Fisher https://arxiv.org/abs/1801.01489  is super interesting (e.g., gives confidence intervals for featue importance, helps understand why ensembles work, solves the problem of interpreting models with correlated features). If I understand correctly, the MR is permutation feature importance and MCR provides confidence interval for MR. 
-     - Issue A: I cannot find an implementation. I can try to code it up. 
-     - Issue B: I understand MR but don't quite understand the MCR. Specifically, what models consitute the epsilon-Rashomon set - what is their general family - different models / architectures / seeds? 
-- Idea: bootstrap confidence intervals for feature importance 
+### Interpret the <- I'm doing this right now
+- Global feature importance 
+     - DONE model reliance (Fisher) - see issues
+     - DONE integrated gradients 
+     - other?
+- Local feature importance 
+     - shapley values?
+     - integrated gradients?
+     - other?
+- Other? 
 
 ### Interpretability determinants
 - see what influences interpretability to be robust vs. fragile  
