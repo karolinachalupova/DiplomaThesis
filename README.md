@@ -16,7 +16,7 @@ Is there a sweet spot between performance and interpretability? Simpler models s
 - I finished training 5 different depths times 9 random seeds times 5 train-valid-test splits (12-12-1, 13-12-1,14-12-1, 15-12-1, 16-12-1, numbers designate amount of years of data in given sample)
 - The performance is not terrible, but R2 OOS is all over the place (see results_plots.ipynb)
 
-### Interpret the <- I'm doing this right now
+### Interpretation <- I'm doing this right now
 - Global feature importance 
      - DONE model reliance (Fisher) - see issues
      - DONE integrated gradients 
