@@ -19,3 +19,5 @@ __pycache__/
 *.pdf
 *.doc
 *.ipynb
+
+!results_plots.ipynb

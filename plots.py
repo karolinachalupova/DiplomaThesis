@@ -9,7 +9,69 @@ from matplotlib import pyplot as plt
 import scipy.stats as st
 from tqdm import tqdm
 
+import matplotlib as mpl
+mpl.use('pgf')
+
+
 sns.set()
+
+
+
+class LatexFigure():
+    def __init__(self, fig):
+        """
+        Arguments: 
+            fig: matplotlib fig
+        """
+        self.fig = fig
+        self._setup()
+
+    def fit(self, scale=1, square=False): 
+        """
+        Scales matplotplib figure to fit page size using provided scale
+        """
+        self.fig.set_size_inches(self._figsize(scale,square=square))
+    
+    def save(self, path:str):
+        self.fig.savefig(path, bbox_inches='tight')
+    
+
+    @staticmethod
+    def _figsize(scale:int, square:bool):
+        fig_width_pt = 401.18405                        # Get this from LaTeX using \the\textwidth
+        inches_per_pt = 1.0/72.27                       # Convert pt to inch
+        fig_width = fig_width_pt*inches_per_pt*scale    # width in inches
+        if square: 
+            fig_height=fig_width
+        else: 
+            golden_mean = (np.sqrt(5.0)-1.0)/2.0            # Aesthetic ratio (you could change this)
+            fig_height = fig_width*golden_mean              # height in inches
+        fig_size = [fig_width,fig_height]
+        return fig_size
+
+    def _setup(self):
+        """
+        Sets up matplolib so that all figures look latexy
+        """
+        pgf_with_latex = {                      # setup matplotlib to use latex for output
+            "pgf.texsystem": "pdflatex",        # change this if using xetex or lautex
+            "text.usetex": True,                # use LaTeX to write all text
+            "font.family": "serif",
+            "font.serif": [],                   # blank entries should cause plots to inherit fonts from the document
+            "font.sans-serif": [],
+            "font.monospace": [],
+            "axes.labelsize": 10,               # LaTeX default is 10pt font.
+            "font.size": 10,
+            "legend.fontsize": 8,               # Make the legend/label fonts a little smaller
+            "xtick.labelsize": 8,
+            "ytick.labelsize": 8,
+            "figure.figsize": self._figsize(0.9, square=False),     # default fig size of 0.9 textwidth
+            "pgf.preamble": [
+                r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts becasue your computer can handle it :)
+                r"\usepackage[T1]{fontenc}",        # plots will be generated using this preamble
+                ]
+            }
+        mpl.rcParams.update(pgf_with_latex)
 
 def _heatmap(x, y, legend, **kwargs):
     if 'color' in kwargs:
@@ -147,85 +209,3 @@ def corrplot(data, size_scale=500, marker='s', legend=True):
     )
 
 
-def fit_scipy_distributions(array, bins, plot_hist = True, plot_best_fit = True, plot_all_fits = False):
-    """
-    Fits a range of Scipy's distributions (see scipy.stats) against an array-like input.
-    Returns the sum of squared error (SSE) between the fits and the actual distribution.
-    Can also choose to plot the array's histogram along with the computed fits.
-    N.B. Modify the "CHANGE IF REQUIRED" comments!
-    
-    Input: array - array-like input
-           bins - number of bins wanted for the histogram
-           plot_hist - boolean, whether you want to show the histogram
-           plot_best_fit - boolean, whether you want to overlay the plot of the best fitting distribution
-           plot_all_fits - boolean, whether you want to overlay ALL the fits (can be messy!)
-    
-    Returns: results - dataframe with SSE and distribution name, in ascending order (i.e. best fit first)
-             best_name - string with the name of the best fitting distribution
-             best_params - list with the parameters of the best fitting distribution.
-    """
-    
-    if plot_best_fit or plot_all_fits:
-        assert plot_hist, "plot_hist must be True if setting plot_best_fit or plot_all_fits to True"
-    
-    # Returns un-normalised (i.e. counts) histogram
-    y, x = np.histogram(np.array(array), bins=bins)
-    
-    # Some details about the histogram
-    bin_width = x[1]-x[0]
-    N = len(array)
-    x_mid = (x + np.roll(x, -1))[:-1] / 2.0 # go from bin edges to bin middles
-    
-    # selection of available distributions
-    # CHANGE THIS IF REQUIRED
-    DISTRIBUTIONS = [st.alpha,st.cauchy,st.cosine,st.laplace,st.levy,st.levy_l,st.norm]
-
-    if plot_hist:
-        fig, ax = plt.subplots()
-        h = ax.hist(np.array(array), bins = bins, color = 'w')
-
-    # loop through the distributions and store the sum of squared errors
-    # so we know which one eventually will have the best fit
-    sses = []
-    for dist in tqdm(DISTRIBUTIONS):
-        name = dist.__class__.__name__[:-4]
-
-        params = dist.fit(np.array(array))
-        arg = params[:-2]
-        loc = params[-2]
-        scale = params[-1]
-
-        pdf = dist.pdf(x_mid, loc=loc, scale=scale, *arg)
-        pdf_scaled = pdf * bin_width * N # to go from pdf back to counts need to un-normalise the pdf
-
-        sse = np.sum((y - pdf_scaled)**2)
-        sses.append([sse, name])
-
-        # Not strictly necessary to plot, but pretty patterns
-        if plot_all_fits:
-            ax.plot(x_mid, pdf_scaled, label = name)
-    
-    if plot_all_fits:
-        plt.legend(loc=1)
-
-    # CHANGE THIS IF REQUIRED
-    ax.set_xlabel('x label')
-    ax.set_ylabel('y label')
-
-    # Things to return - df of SSE and distribution name, the best distribution and its parameters
-    results = pd.DataFrame(sses, columns = ['SSE','distribution']).sort_values(by='SSE') 
-    best_name = results.iloc[0]['distribution']
-    best_dist = getattr(st, best_name)
-    best_params = best_dist.fit(np.array(array))
-    
-    if plot_best_fit:
-        new_x = np.linspace(x_mid[0] - (bin_width * 2), x_mid[-1] + (bin_width * 2), 1000)
-        best_pdf = best_dist.pdf(new_x, *best_params[:-2], loc=best_params[-2], scale=best_params[-1])
-        best_pdf_scaled = best_pdf * bin_width * N
-        ax.plot(new_x, best_pdf_scaled, label = best_name)
-        plt.legend(loc=1)
-    
-    if plot_hist:
-        plt.show()
-    
-    return results, best_name, best_params

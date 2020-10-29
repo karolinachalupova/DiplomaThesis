@@ -157,7 +157,14 @@ class NetData():
             }
             self._size = len(self._data["features"])
             
-            self._shuffler = np.random.RandomState(seed) if shuffle_batches else None 
+            self._shuffler = np.random.RandomState(seed) if shuffle_batches else None
+
+            self._columns = {
+                "features": data["features"].columns.tolist(),
+                "targets": data["targets"].columns.tolist()
+            }
+
+            self._index = data["features"].index
     
         @property 
         def data(self):
@@ -166,6 +173,14 @@ class NetData():
         @property 
         def size(self):
             return self._size 
+        
+        @property 
+        def columns(self):
+            return self._columns
+        
+        @property 
+        def index(self):
+            return self._index
         
         def batches(self, size=None):
             """
