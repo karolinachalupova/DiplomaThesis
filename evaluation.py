@@ -205,14 +205,20 @@ class Net():
             columns=self.netdata.test.columns["features"], 
             index=self.netdata.test.index)
         
-        glob = pd.DataFrame(loc.mean(), columns=[self.__repr__()]).transpose()
+        # We need to take absolute value so that features that have both positive 
+        # and negative impact do not seem unimportant 
+        glob = pd.DataFrame(loc.abs().mean(), columns=[self.__repr__()]).transpose()
 
         return loc, glob
+    
+    @property 
+    def path(self):
+        return os.path.join("models{}".format("_individual" if self.n_models == 0 else "_ensembles"),self.__repr__().split(": ")[1])
 
 
     def save(self):
         # make sure folder exists, if not create
-        path = os.path.join("results",self.__repr__().split(": ")[1])
+        path = self.path
         if not os.path.exists(path):
             os.makedirs(path)
         
@@ -243,20 +249,32 @@ class Net():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs", type=str, help="Path to logdir")
+    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs", type=str, help="Path to logdir.")
+    parser.add_argument("--ensemble", default=False, action="store_true", help="Use ensembles instead of individual models.")
+
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
     dataset=Selected()
     dataset.load()
     nets = Nets.from_logs(args.logdir)
-    ensembles = Nets(nets.create_ensembles())
-    [net.set_dataset(dataset, ytest=1) for net in ensembles.nets]
-    for net in ensembles.nets: 
-        net.save()
+    
+    if args.ensemble:
+        models = Nets(nets.create_ensembles())
+    else: 
+        models = nets
 
-    for filename, df in {
-        "args": ensembles.dataframe, 
-        "performance": ensembles.performance(),
-        "integrated_gradients_global": ensembles.integrated_gradients_global(),
-        "model_reliance": ensembles.model_reliance()}.items():
-            df.to_csv(os.path.join('results', filename+'.csv'))
+    [net.set_dataset(dataset, ytest=1) for net in models.nets]
+
+    for net in models.nets: 
+        net.save()
+    
+    path ="results{}".format("_ensembles" if args.ensemble else "_individual")
+
+    models.dataframe.to_csv(os.path.join(path, 'args.csv'))
+    models.performance().to_csv(os.path.join(path, 'performance.csv'))
+    models.model_reliance().to_csv(os.path.join(path, 'model_reliance.csv'))
+    models.integrated_gradients_global().to_csv(os.path.join(path, 'integrated_gradients_global.csv'))
+    
+
+
+
