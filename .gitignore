@@ -14,10 +14,7 @@ __pycache__/
 /ignored/
 /logs/
 /results/
-/models_individual/
-/models_ensembles/
-/results_individual/
-/results_ensembles/
+/models/
 
 
 *.pdf

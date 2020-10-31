@@ -213,7 +213,7 @@ class Net():
     
     @property 
     def path(self):
-        return os.path.join("models{}".format("_individual" if self.n_models == 0 else "_ensembles"),self.__repr__().split(": ")[1])
+        return os.path.join("models", "{}".format("individual" if self.n_models == 0 else "ensembles"),self.__repr__().split(": ")[1])
 
 
     def save(self):
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     for net in models.nets: 
         net.save()
     
-    path ="results{}".format("_ensembles" if args.ensemble else "_individual")
+    path =os.path.join("results","{}".format("ensembles" if args.ensemble else "individual"))
     if not os.path.exists(path):
             os.makedirs(path)
 
