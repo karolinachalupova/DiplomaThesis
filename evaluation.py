@@ -269,6 +269,8 @@ if __name__ == "__main__":
         net.save()
     
     path ="results{}".format("_ensembles" if args.ensemble else "_individual")
+    if not os.path.exists(path):
+            os.makedirs(path)
 
     models.dataframe.to_csv(os.path.join(path, 'args.csv'))
     models.performance().to_csv(os.path.join(path, 'performance.csv'))
