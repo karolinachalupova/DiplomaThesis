@@ -51,19 +51,76 @@
 
 \section{Methodology}
 
-	I train 5 distinct feed-forward neural networks, each with 3 different random seeds. I use the years 1990 to 2011 as training set (22 years), the years 2012 to 2017 as validation set (6 years) and the year 2018 as test set. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and Shapley values and investigate whether this interpretability is robust (with respect to random seeds and minor changes in input) as the complexity of the model (number of hidden layers) increases. I also investigate whether the interpretation of the model is stable in time. Finally, I perform adversarial attack on the network's interpretability \cite{ghorbani2019interpretation}. The following section describes, in this order, the methodological issues related to the model's architecture, training, performance evaluation, interpretation, time-stability checks, and adversarial attack on interpretability.    
+	I train 5 distinct feed-forward neural networks, each with 9 different random seeds. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and investigate whether this interpretability is robust across different random seeds. I also investigate whether the interpretation of the model is stable in time. This  section describes the methodological issues related, in this order, to the model's architecture, training, performance evaluation and interpretation of the neural networks employed in this thesis.
 	
-	\subsection{Neural Network Architecture}
+	\subsection{Architecture of the Neural Networks}
 	
-	\subsection{Training the Neural Networks}
+	The prediction task is to predict stock's return in the following month using a set of the stock's charasteristics calculated as of the current month. My neural networks' architecture is a standard one for this prediction task and identical to \cite{gu2020empirical}. In summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 5 different depths are used, with 1, 2, 3, 4, and 5 hidden layers consisting of 32, 16, 8, 4, and 2 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using l1 penalty. The following explains and motivates these choices in detail, but a reader who is already well-versed in neural network design can easily skip to the next subsection, concerned with training. 
 	
-	\subsection{Evaluating Model Performance}
+	First, let us describe a feed-forward neural network in general terms (e.g., \cite{goodfellow2016deep}). A feed-forward neural network can be represented as directed graph, consisting of several layers. The input layer of $N$ neurons (nodes in the graph). This layer is connected to the next layer of neurons (the first hidden layer) by edges going from each input neuron to each hidden layer neuron. When each neuron of a layer is connected to each neuron in the next layer, we say that the two layers are fully connected. Each edge connecting two neurons is parametrized by a single trainable weight. More hidden layers can be connected to the previous hidden layer in the same fashion. Finally, the last hidden layer is connected, again, fully, to the output layer, which is the final prediction.
 	
-	\subsection{Interpreting the Neural Networks}
+	This directed graph is a representation of the computation performed by the neural network to get from the input to the output. The values of a given hidden layer, \vec{h}, are computed using the previous layer's values $\vec{x}$, and the matrix of weights on the edges $\vec{W}$ using sum of products: 
 	
-	\subsection{Stability in Time}
+	\begin{equation}
+		\vec{h} = f(\vec{W}\vec{x})
+	\end{equation}
 	
-	\subsection{Adversarial Attack on Neural Network Interpretability}
+	or written element-wise, the value of neuron $h_i$ in the hidden layer is computed as 
+	
+	\begin{equation}
+		h_i = f \left( \sum_{j}w_{i,j}x_j \right)
+	\end{equation}
+	
+	where the function $f$ is a non-linear activation function, such as the rectified linear unit (ReLU):
+	
+	\[
+		f(z) = \text{ReLU}(z) =   
+			\begin{cases}
+				1 & \text{if } z \geq 0\\
+				0 & \text{otherwise}
+			\end{cases}.
+	\]
+	
+	The output layer is computed using the last hidden layer in the same manner, except in the case of regression there is no activation function. Denoting $\vec{V}$ the weights on the last edges and $\vec{h}$ the output of the last hidden layer, the output of the neural network $\vec{o}$ has the elements: 
+	
+	\begin{equation}
+		o_i = \sum_{j}v_{i,j} h_j.
+	\end{equation}
+	
+	In this thesis, the output is a scalar, so this further simplifies to 
+	
+	\begin{equation}
+		o = \sum_{j}v_{j} h_j.
+	\end{equation}
+	
+	Obviously, in the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract, all-encompassing information from them. This information then enters the next hidden layer and the information is made yet more high-level. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 5 hidden layers, where the most abstract or high-level information is extracted. 
+	
+	In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point, dimension of the input layer) and propagates it through the series of hidden layers to produce the return prediction.	A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is not necessary, as reaching the best possible performance is not the goal of this thesis. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons: I train models of 5 different depths (1, 2, 3, 4, and 5 hidden layers), with 32 neurons in the first layer, 16 in the second layer, 8 in the third, 4 in the fourth and 2 in the fifth.  
+	
+	In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer. This changes the above formula for hidden layer values to: 
+	
+	\begin{equation}
+		\vec{h} = \text{ReLU}(\text{BN}(\vec{W}\vec{x}))
+	\end{equation}
+	
+	where $\text{BN}$ represents the batch-normalization operation. The operation simply normalizes its input data (subtracts mean and divides by standard deviation), but the data is split to batches to improve computing speed of the operation. The operation helps with multiple aspects of training the neural networks, as it prevents the values coming out of a hidden layer from being extreme. This helps to regularize the network and also speeds up the training \citep{ioffe2015batch}. 
+	
+	
+	\subsection{Regularization and Training}
+	
+	Neural networks are non-parametric way of modeling the relationship between the predictors and the predicted variables, in the sense that there is no apriori assumption made about the functional form of the relationship. In fact, the Universal Approximation Theorem shows that with already a single hidden layer, the network outlined above is able to approximate any "well-behaved" function arbitrarily well. This is directly opposed to the linear approach, where we fit the relationship between inputs and outputs assuming a linear functional form. 
+	
+	This necessarily means that neural networks are prone to overfitting the training data. A number of methods, commonly called regularization, is applied in the architecture and the training process. I use the same regularization techniques as \cite{gu2020empirical}, namely, early stopping, learning rate shrinkage, weight regularization, batch normalization and ensembling.  
+	
+	To show there is no serious over-fitting, the networks are trained and tuned on a subset of the data (training and validation samples) and evaluated on held-out data (testing sample).
+	
+	\subsection{Performance Evaluation}
+	
+	\subsection{Interpretation}
+	
+
+	
+
 	
 	
 

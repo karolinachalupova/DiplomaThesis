@@ -1,4 +1,4 @@
-\begin{thebibliography}{25}
+\begin{thebibliography}{26}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -62,12 +62,11 @@
 \newblock \emph{Journal of Machine Learning Research} \textbf{20(177)}: pp.
   1--81.
 
-\bibitem[{Ghorbani \emph{et~al.}(2019)Ghorbani, Abid, \&
-  Zou}]{ghorbani2019interpretation}
-\textsc{Ghorbani}, A., A.~\textsc{Abid}, \& J.~\textsc{Zou} (2019):
-  \enquote{Interpretation of neural networks is fragile.}
-\newblock In \enquote{Proceedings of the AAAI Conference on Artificial
-  Intelligence,} volume~33, pp. 3681--3688.
+\bibitem[{Goodfellow \emph{et~al.}(2016)Goodfellow, Bengio, Courville, \&
+  Bengio}]{goodfellow2016deep}
+\textsc{Goodfellow}, I., Y.~\textsc{Bengio}, A.~\textsc{Courville}, \&
+  Y.~\textsc{Bengio} (2016): \emph{Deep learning}, volume~1.
+\newblock MIT press Cambridge.
 
 \bibitem[{Gu \emph{et~al.}(2020)Gu, Kelly, \& Xiu}]{gu2020empirical}
 \textsc{Gu}, S., B.~\textsc{Kelly}, \& D.~\textsc{Xiu} (2020):
@@ -84,6 +83,11 @@
 \textsc{Heaton}, J. \& D.~\textsc{Lucas} (2000): \enquote{Portfolio choice and
   asset prices: The importance of entrepreneurial risk.}
 \newblock \emph{The journal of finance} \textbf{55(3)}: pp. 1163--1198.
+
+\bibitem[{Ioffe \& Szegedy(2015)}]{ioffe2015batch}
+\textsc{Ioffe}, S. \& C.~\textsc{Szegedy} (2015): \enquote{Batch normalization:
+  Accelerating deep network training by reducing internal covariate shift.}
+\newblock \emph{arXiv preprint arXiv:1502.03167} .
 
 \bibitem[{Kelly \emph{et~al.}(2019)Kelly, Pruitt, \&
   Su}]{kelly2019characteristics}
