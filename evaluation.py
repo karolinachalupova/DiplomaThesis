@@ -164,18 +164,18 @@ class Net():
     def performance(self, batch_size=10000000):
         netdata = self.netdata
         names = [self.model.loss] + [m.name for m in self.model.metrics]
-        train_perf = self.model.evaluate(
+        train_perf = list(self.model.evaluate(
                 x=netdata.train.data["features"],
                 y=netdata.train.data["targets"],
-                batch_size=batch_size)
-        valid_perf = self.model.evaluate(
+                batch_size=batch_size))
+        valid_perf = list(self.model.evaluate(
                 x=netdata.valid.data["features"], 
                 y= netdata.valid.data["targets"],
-                batch_size=batch_size)
-        test_perf = self.model.evaluate(
+                batch_size=batch_size))
+        test_perf = list(self.model.evaluate(
                 x=netdata.test.data["features"], 
                 y=netdata.test.data["targets"],
-                batch_size=batch_size)
+                batch_size=batch_size))
 
         return pd.DataFrame(
             train_perf+valid_perf+test_perf, 
