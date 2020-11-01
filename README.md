@@ -33,10 +33,10 @@ Simpler models should be less sensitive to random differences in initialization 
      - I identify important and unimportant features. 
      - the unimportant features are unimportant no matter what seed, time or measure of feature importance. 
      - among the set of very important features, the interpretation is not stable across random seeds. This is very interesting: 
-           - it depends on feature and its degree of correlation with other important features. It is interesting to show if the stability of interpretation of two features is related to their correlation (crowding each other out depending on random seeds)
-           - it depends on depth. Shallow networks have highly correlated interpretation accros random seeds, and the amount of correlation declines with depth.
-      - the results hold in time and for different measures of feature importance
-      - The results can help explain why ensembling works so well: different models pick up different correlated features and the truth is in between. 
+            - it depends on feature and its degree of correlation with other important features. It is interesting to show if the stability of interpretation of two features is related to their correlation (crowding each other out depending on random seeds)
+            - it depends on depth. Shallow networks have highly correlated interpretation accros random seeds, and the amount of correlation declines with depth.
+     - the results hold in time and for different measures of feature importance
+     - The results can help explain why ensembling works so well: different models pick up different correlated features and the truth is in between. 
 
 ## Little TODOs
 - recalculate results using SGD optimization in training
