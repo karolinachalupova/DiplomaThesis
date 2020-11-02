@@ -159,10 +159,57 @@
 	
 	\subsection{Interpretation}
 	
+	Possibly the most straightforward way of interpreting any model is to show how individual predictors contribute to the prediction, in other words, which explanatory variables matter the most and which are less important. This notion is called \textit{global feature importance} and can be generally thought of as the ML counterpart to coefficients in a linear regression. The measure is considered to be global, since it explains how the model decides overall. This is opposed to analyzing individual predictions, which can also be done and is called local feature importance. However, to understand the model on the highest level, it is useful to study the importances in aggregate, that is, globally. This thesis employs two measures of global feature importance, Model Reliance \citep{fisher2019all} and Integrated Gradients \citep{sundararajan2017axiomatic}. The reasons behind choosing these measures as well as their theoretical underpinnings are explained in the Literature Review. This section describes the technical aspects of the measures' construction.
 	
+	\subsubsection{Model Reliance}
+		The first measure of global feature importance used is Model Reliance \citep{fisher2019all}. It is based on the idea that if a feature is important for making prediction, then distorting the feature by adding noise to it will damage prediction performance. Vice versa, if distorting a feature leaves the prediction performance relatively intact, that feature can be considered unimportant for the prediction. Thus, denoting  the prediction function (such as an ML model) $f$, Model Reliance of  $f$ on random variable $X$ can be \textit{informally} defined as
+		
+		\begin{equation}
+			MR(f):=\frac{\text{Expected loss of \textit{f} under noise}}{\text{Expected loss of \textit{f} without noise}},
+		\end{equation}
+		
+		where the noise renders the random variable $X$ completely uninformative of the predicted variable while it at the same time does \textit{not} change the marginal distribution of $X$. More specifically, denote the predicted random variable as $Y$ and consider $X_1$ and $X_2$ as two explanatory random variables. The expected loss of $f$ can be then denoted as 
+		
+		\begin{equation}
+			e_{\text{orig}}(f):= \mathbb{E} L(f,(Y,X_1, X_2)).
+		\end{equation} 
+		
+		Further denote $X_1^s$ as random variable following the same marginal distribution as $X_1$, but independent of $Y$. 
+		
+		Then the expected loss of $f$ under noise, which distorts $X_1$ to $X_1^s$, can be denoted as 
+		
+		\begin{equation}
+			e_{\text{switch}}(f):= \mathbb{E} L(f,(Y,X_1^s, X_2)).
+		\end{equation} 
+		
+		Finally, Model Reliance can be \textit{formally} defined as 
+		
+		\begin{equation}
+			MR(f):=\frac{e_{\text{switch}}(f)}{e_{\text{orig}}(f)}
+		\end{equation}
+		
+		To see the intuition behind this formula, consider first the case that $X$ is very informative of $Y$. Then, 	$e_{\text{switch}}$ is much larger than $e_{\text{orig}}$ and Model Reliance is larger than 1. The more $X$ is informative of $Y$, the larger the  Model Reliance of $f$ on $X$ – the more the model \textit{relies} on the feature to make the prediction. In the case when Model Reliance is exactly 1, the feature can be considered unimportant, as completely distorting it does not change the model's loss. Model Reliance can also be less than one, in the case that the distorted feature actually perform better than the original feature.
+				
+		The sample estimate of $e_{\text{orig}}(f)$ is the loss used in the model's training. Denoting the target as $\vec{y} \in \mathbb{R}^N$ and the feature matrix as $\vec{X} \in \mathbb{R}^{N\times2}$:
+		
+		\begin{equation}
+			\hat{e}_{\text{orig}}(f):= \frac{1}{N} \sum_{i=1}^{N} L\left(f, (\vec{y}_{[i]}, \vec{X}_{1[i,\cdot]}, \vec{X}_{2[i,\cdot]}) \right)
+		\end{equation} 
+		
+		The sample estimate of $e_{\text{switch}}(f)$ can be done in two different ways, either by randomly permuting the values of the given feature or by dividing the feature's values in halves and the switching the halves. This thesis uses the latter, as it is computationally less demanding. (In both cases, the rest of the features and the predicted variables are intact.) It follows that the sample estimate of $e_{\text{switch}}(f)$ can be calculated as
+		
+		
+		\begin{equation}
+			\begin{split}
+				\hat{e}_{\text{switch}}(f):= & \frac{1}{2 \lfloor N/2 \rfloor} \sum_{i=1}^{\lfloor N/2 \rfloor} L \left(f, \left( \vec{y}_{[i]}, \vec{X}_{1[i+\lfloor N/2 \rfloor,\cdot]},\vec{X}_{2[i,\cdot]} \right) \right) + \\ 
+				& + L \left( f, \left(\vec{y}_{[i+\lfloor N/2 \rfloor]}, \vec{X}_{1[i,\cdot]},\vec{X}_{2[i+\lfloor N/2 \rfloor,\cdot]} \right) \right). 
+			\end{split}
+		\end{equation}
+		
+		This is simply the loss of the prediction using the same data as original, but with values in the feature column $\vec{X}_1$ split in half and the halves swapped, leaving the other feature columns and the predicted variable unchanged. (If $N$ is even, the split in half can be performed exactly, and if $N$ is odd, the last observation in the dataset is not used and the split is then performed in the same way as if $N$ is even.) 
 	
-
-	
-	
+		
+	\subsubsection{Integrated Gradients}
+		The second measure of global feature importance is Integrated Gradients \citep{sundararajan2017axiomatic}. 
 
 
