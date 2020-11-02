@@ -206,7 +206,17 @@
 			\end{split}
 		\end{equation}
 		
-		This is simply the loss of the prediction using the same data as original, but with values in the feature column $\vec{X}_1$ split in half and the halves swapped, leaving the other feature columns and the predicted variable unchanged. (If $N$ is even, the split in half can be performed exactly, and if $N$ is odd, the last observation in the dataset is not used and the split is then performed in the same way as if $N$ is even.) 
+		This is simply the loss of the prediction using the same data as original, but with values in the feature column $\vec{X}_1$ split in half and the halves swapped, leaving the other feature columns (here, $\vec{X}_2$) and the predicted variable unchanged. (If $N$ is even, the split in half can be performed exactly, and if $N$ is odd, the last observation in the dataset is not used and the split is then performed in the same way as if $N$ is even.) The extension to the case with more than two features is straightforward: when calculating Model Reliance of feature $\vec{X}_1$, we disturbed the values in $\vec{X}_1$, leaving $\vec{y}$ and $\vec{X}_2$ unchanged. If we additionally have, say, $\vec{X}_3$ and $\vec{X}_4$, they are treated in the same way as $\vec{X}_2$, that is, unchanged. 
+		
+		Finally, the sample estimate of Model Reliance on a given feature is: 
+		
+		\begin{equation}
+			\widehat{MR}(f):=\frac{\hat{e}_{\text{switch}}(f)}{\hat{e}_{\text{orig}}(f)}.
+		\end{equation}
+			
+		That is, when calculating reliance of the model on a given feature, two predictions are made using the model: one is the usual one, with all features as well as the target undisturbed, the other is almost the same, except that we have disturbed the given feature (and the given feature only) by swapping halves of its values. The loss of both predictions is then computed as usual. Model Reliance is then the ratio of these two losses, the disturbed loss divided by the undisturbed one.   
+		
+		
 	
 		
 	\subsubsection{Integrated Gradients}
