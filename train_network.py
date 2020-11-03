@@ -53,10 +53,13 @@ def create_model(args, learning_rate, l1):
     outputs = Dense(1)(hidden)
     model = Model(inputs=inputs, outputs=outputs)
     
-    if args.optimizer == "adam":
+    # I know this is ugly, but I added the sgd arg only later so older networks 
+    # do not have args.optimizer 
+    try: 
+        if args.optimizer == "sgd":
+            optimizer = SGD(learning_rate=learning_rate, momentum=0.99, nesterov=True)
+    except AttributeError: 
         optimizer = Adam(learning_rate=learning_rate)
-    elif args.optimizer == "sgd":
-        optimizer = SGD(learning_rate=learning_rate, momentum=0.99, nesterov=True)
     
     model.compile(
         optimizer=optimizer,

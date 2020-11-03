@@ -126,6 +126,12 @@ class Net():
         self.model = model
         self.args = args
         self.args.n_models = self.n_models
+        # I know this is ugly, but I added the sgd arg only later so older networks 
+        # do not have args.optimizer 
+        try: 
+            self.args.optimizer = args.optimizer 
+        except AttributeError: 
+            self.args.optimizer = "adam" 
     
     @classmethod
     def from_logdir(cls, logdir):
