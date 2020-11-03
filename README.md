@@ -40,7 +40,6 @@ Simpler models should be less sensitive to random differences in initialization 
 
 ## Little TODOs
 IN RESULTS
-- recalculate results using SGD optimization in training
 - recalculate all results and replace the feature VolTrend by VolMV (will not affect the results much, but just to be 100percent correct)
 
 IN TEXT
