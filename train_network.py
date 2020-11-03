@@ -54,10 +54,12 @@ def create_model(args, learning_rate, l1):
     model = Model(inputs=inputs, outputs=outputs)
     
     # I know this is ugly, but I added the sgd arg only later so older networks 
-    # do not have args.optimizer 
+    # do not have args.optimizer (and were optimized with Adam)
     try: 
         if args.optimizer == "sgd":
             optimizer = SGD(learning_rate=learning_rate, momentum=0.99, nesterov=True)
+        elif args.optimizer == "adam":
+            optimizer = Adam(learning_rate=learning_rate)
     except AttributeError: 
         optimizer = Adam(learning_rate=learning_rate)
     
