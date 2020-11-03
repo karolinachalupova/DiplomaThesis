@@ -39,8 +39,12 @@ Simpler models should be less sensitive to random differences in initialization 
      - The results can help explain why ensembling works so well: different models pick up different correlated features and the truth is in between. 
 
 ## Little TODOs
+IN RESULTS
 - recalculate results using SGD optimization in training
 - recalculate all results and replace the feature VolTrend by VolMV (will not affect the results much, but just to be 100percent correct)
+
+IN TEXT
+- go back to notation in literature review and unify it with the rest of the thesis – namely, expectations, vectors, vector elements, random variables.
 
 
 ## Results to calculate if there is time and interesting ideas that have been sidelined
