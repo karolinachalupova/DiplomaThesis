@@ -31,11 +31,11 @@ Simpler models should be less sensitive to random differences in initialization 
 - intuitively: if the effect of feature is robust across random seeds, we can put some confidence in the interpetation. On the other hand, if different seeds find different importnce of that feature, it is more likely that a given seed shows the feature as important simply due to chance. This points to the direction of how sure we can be about  the interpretation of the model. -> related to the statistical idea of confidence intervals.  
 - Results: 
      - I identify important and unimportant features. 
-     - the unimportant features are unimportant no matter what seed, time or measure of feature importance. 
-     - among the set of very important features, the interpretation is not stable across random seeds. This is very interesting: 
+     - Integrated gradient: interpretation is stable across time and random seed. 
+            - it depends on depth. Shallow networks have highly correlated interpretation accros random seeds, and the amount of correlation declines with depth. 
+     - Model Reliance: interpretation differs across random seeds 
             - it depends on feature and its degree of correlation with other important features. It is interesting to show if the stability of interpretation of two features is related to their correlation (crowding each other out depending on random seeds)
-            - it depends on depth. Shallow networks have highly correlated interpretation accros random seeds, and the amount of correlation declines with depth.
-     - the results hold in time and for different measures of feature importance
+     - Model Reliance and Integrated gradients differ more for shallow models than for deep  
      - The results can help explain why ensembling works so well: different models pick up different correlated features and the truth is in between. 
 
 ## Little TODOs
