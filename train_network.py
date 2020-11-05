@@ -16,7 +16,7 @@ import pickle
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, ReLU, average
 from tensorflow.keras.regularizers import L1L2
 from tensorflow.keras import Model
-from tensorflow.keras.optimizers import Adam 
+from tensorflow.keras.optimizers import Adam, SGD 
 from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError, Metric
 from tensorflow import reduce_sum, square, subtract, reduce_mean, divide, cast, float32
 
@@ -53,8 +53,18 @@ def create_model(args, learning_rate, l1):
     outputs = Dense(1)(hidden)
     model = Model(inputs=inputs, outputs=outputs)
     
+    # I know this is ugly, but I added the sgd arg only later so older networks 
+    # do not have args.optimizer (and were optimized with Adam)
+    try: 
+        if args.optimizer == "sgd":
+            optimizer = SGD(learning_rate=learning_rate, momentum=0.99, nesterov=True)
+        elif args.optimizer == "adam":
+            optimizer = Adam(learning_rate=learning_rate)
+    except AttributeError: 
+        optimizer = Adam(learning_rate=learning_rate)
+    
     model.compile(
-        optimizer=Adam(learning_rate=learning_rate),
+        optimizer=optimizer,
         loss ='mse',
         metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
     )
@@ -270,6 +280,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--threads", default=1, type=int, help="Maximum number of threads to use.")
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
+    parser.add_argument("--optimizer", default="adam", type=str, help="Optimizer for gradient descent. Gu: adam")
     
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
