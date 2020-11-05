@@ -190,10 +190,10 @@
 		
 		To see the intuition behind this formula, consider first the case that $X$ is very informative of $Y$. Then, 	$e_{\text{switch}}$ is much larger than $e_{\text{orig}}$ and Model Reliance is larger than 1. The more $X$ is informative of $Y$, the larger the  Model Reliance of $f$ on $X$ – the more the model \textit{relies} on the feature to make the prediction. In the case when Model Reliance is exactly 1, the feature can be considered unimportant, as completely distorting it does not change the model's loss. Model Reliance can also be less than one, in the case that the distorted feature actually perform better than the original feature.
 				
-		The sample estimate of $e_{\text{orig}}(f)$ is the loss used in the model's training. Denoting the target as $\vec{y} \in \mathbb{R}^N$ and the feature matrix as $\vec{X} \in \mathbb{R}^{N\times2}$:
+		The sample estimate of $e_{\text{orig}}(f)$ is the loss used in the model's training. Denoting the target as $\vec{y} \in \mathbb{R}^N$ and consider two features $\vec{x_1}, \vec{x_2} \in \mathbb{R}^{N}$:
 		
 		\begin{equation}
-			\hat{e}_{\text{orig}}(f):= \frac{1}{N} \sum_{i=1}^{N} L\left(f, (\vec{y}_{[i]}, \vec{X}_{1[i,\cdot]}, \vec{X}_{2[i,\cdot]}) \right)
+			\hat{e}_{\text{orig}}(f):= \frac{1}{N} \sum_{i=1}^{N} L\left(f, (y_i, x_{1_i}, x_{2_i}) \right)
 		\end{equation} 
 		
 		The sample estimate of $e_{\text{switch}}(f)$ can be done in two different ways, either by randomly permuting the values of the given feature or by dividing the feature's values in halves and the switching the halves. This thesis uses the latter, as it is computationally less demanding. (In both cases, the rest of the features and the predicted variables are intact.) It follows that the sample estimate of $e_{\text{switch}}(f)$ can be calculated as
@@ -201,12 +201,12 @@
 		
 		\begin{equation}
 			\begin{split}
-				\hat{e}_{\text{switch}}(f):= & \frac{1}{2 \lfloor N/2 \rfloor} \sum_{i=1}^{\lfloor N/2 \rfloor} L \left(f, \left( \vec{y}_{[i]}, \vec{X}_{1[i+\lfloor N/2 \rfloor,\cdot]},\vec{X}_{2[i,\cdot]} \right) \right) + \\ 
-				& + L \left( f, \left(\vec{y}_{[i+\lfloor N/2 \rfloor]}, \vec{X}_{1[i,\cdot]},\vec{X}_{2[i+\lfloor N/2 \rfloor,\cdot]} \right) \right). 
+				\hat{e}_{\text{switch}}(f):= & \frac{1}{2 \lfloor N/2 \rfloor} \sum_{i=1}^{\lfloor N/2 \rfloor} L \left(f, \left( y_i, x_{1_{i+\lfloor N/2 \rfloor}}, x_{2_{i}} \right) \right) + \\ 
+				& + L \left( f, \left(y_{i+\lfloor N/2 \rfloor}, x_{1_{i}}, x_{2_{i+\lfloor N/2 \rfloor}} \right) \right). 
 			\end{split}
 		\end{equation}
 		
-		This is simply the loss of the prediction using the same data as original, but with values in the feature column $\vec{X}_1$ split in half and the halves swapped, leaving the other feature columns (here, $\vec{X}_2$) and the predicted variable unchanged. (If $N$ is even, the split in half can be performed exactly, and if $N$ is odd, the last observation in the dataset is not used and the split is then performed in the same way as if $N$ is even.) The extension to the case with more than two features is straightforward: when calculating Model Reliance of feature $\vec{X}_1$, we disturbed the values in $\vec{X}_1$, leaving $\vec{y}$ and $\vec{X}_2$ unchanged. If we additionally have, say, $\vec{X}_3$ and $\vec{X}_4$, they are treated in the same way as $\vec{X}_2$, that is, unchanged. 
+		This is simply the loss of the prediction using the same data as original, but with values in the feature $\vec{x_1}$ split in half and the halves swapped, leaving the other features (here, $\vec{x_2}$) and the predicted variable $y$ unchanged. (If $N$ is even, the split in half can be performed exactly, and if $N$ is odd, the last observation in the dataset is not used and the split is then performed in the same way as if $N$ is even.) The extension to the case with more than two features is straightforward: when calculating Model Reliance of feature $\vec{x_1}$, we disturbed the values in $\vec{x}_1$, leaving $\vec{y}$ and $\vec{x_2}$ unchanged. If we additionally have, say, $\vec{x_3}$ and $\vec{x_4}$, they are treated in the same way as $\vec{x_2}$, that is, unchanged. 
 		
 		Finally, the sample estimate of Model Reliance on a given feature is: 
 		
