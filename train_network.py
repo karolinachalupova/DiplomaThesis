@@ -43,13 +43,14 @@ def create_model(args, learning_rate, l1):
     hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
     inputs = Input(shape=[Selected.N_FEATURES])
     hidden = inputs
-    for size in hidden_layers: 
-        hidden = Dense(
-            size,  
-            kernel_regularizer=L1L2(l1=l1), 
-            bias_regularizer=L1L2(l1=l1))(hidden)
-        hidden = BatchNormalization()(hidden)
-        hidden = ReLU()(hidden)
+    if hidden_layers != [-1]:
+        for size in hidden_layers: 
+            hidden = Dense(
+                size,  
+                kernel_regularizer=L1L2(l1=l1), 
+                bias_regularizer=L1L2(l1=l1))(hidden)
+            hidden = BatchNormalization()(hidden)
+            hidden = ReLU()(hidden)
     outputs = Dense(1)(hidden)
     model = Model(inputs=inputs, outputs=outputs)
     
