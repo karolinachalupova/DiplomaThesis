@@ -157,6 +157,17 @@ class Net():
         checkpoint_folder_name = [s for s in os.listdir(best_logdir) if s.startswith("checkpoint")][0]
         model.load_weights(os.path.join(best_logdir, checkpoint_folder_name, "model.h5"))
         return cls(model, args)
+    
+    @classmethod
+    def from_saved(cls, folder):
+        with open(os.path.join(folder, "args.pickle"), "rb") as f: 
+            args = argparse.Namespace(**pickle.load(f))  # loads dict and converts it to namespace
+        with open(os.path.join(folder,'model.json')) as f:
+            json_string = json.load(f)
+        model = tf.keras.models.model_from_json(json_string, custom_objects=None)
+        model.load_weights(os.path.join(folder, 'weights.h5'))
+        return cls(model, args)
+
 
     def __repr__(self):
         return "{}: {}".format(
@@ -282,7 +293,3 @@ if __name__ == "__main__":
     models.performance().to_csv(os.path.join(path, 'performance.csv'))
     models.model_reliance().to_csv(os.path.join(path, 'model_reliance.csv'))
     models.integrated_gradients_global().to_csv(os.path.join(path, 'integrated_gradients_global.csv'))
-    
-
-
-
