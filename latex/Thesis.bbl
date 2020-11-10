@@ -1,4 +1,4 @@
-\begin{thebibliography}{27}
+\begin{thebibliography}{31}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -8,6 +8,22 @@
   model.}
 \newblock \emph{Technical report}, Working Paper, Arizona State University and
   Sogang University.
+
+\bibitem[{Baehrens \emph{et~al.}(2010)Baehrens, Schroeter, Harmeling, Kawanabe,
+  Hansen, \& M{\"u}ller}]{baehrens2010explain}
+\textsc{Baehrens}, D., T.~\textsc{Schroeter}, S.~\textsc{Harmeling},
+  M.~\textsc{Kawanabe}, K.~\textsc{Hansen}, \& K.-R. \textsc{M{\"u}ller}
+  (2010): \enquote{How to explain individual classification decisions.}
+\newblock \emph{The Journal of Machine Learning Research} \textbf{11}: pp.
+  1803--1831.
+
+\bibitem[{Binder \emph{et~al.}(2016)Binder, Montavon, Lapuschkin, M{\"u}ller,
+  \& Samek}]{binder2016layer}
+\textsc{Binder}, A., G.~\textsc{Montavon}, S.~\textsc{Lapuschkin}, K.-R.
+  \textsc{M{\"u}ller}, \& W.~\textsc{Samek} (2016): \enquote{Layer-wise
+  relevance propagation for neural networks with local renormalization layers.}
+\newblock In \enquote{International Conference on Artificial Neural Networks,}
+  pp. 63--71. Springer.
 
 \bibitem[{Bryzgalova \emph{et~al.}(2019)Bryzgalova, Pelger, \&
   Zhu}]{bryzgalova2019forest}
@@ -128,6 +144,20 @@
 \textsc{Shapley}, L.~S. (1953): \enquote{A value for n-person games.}
 \newblock \emph{Contributions to the Theory of Games} \textbf{2(28)}: pp.
   307--317.
+
+\bibitem[{Shrikumar \emph{et~al.}(2017)Shrikumar, Greenside, \&
+  Kundaje}]{shrikumar2017learning}
+\textsc{Shrikumar}, A., P.~\textsc{Greenside}, \& A.~\textsc{Kundaje} (2017):
+  \enquote{Learning important features through propagating activation
+  differences.}
+\newblock \emph{arXiv preprint arXiv:1704.02685} .
+
+\bibitem[{Springenberg \emph{et~al.}(2014)Springenberg, Dosovitskiy, Brox, \&
+  Riedmiller}]{springenberg2014striving}
+\textsc{Springenberg}, J.~T., A.~\textsc{Dosovitskiy}, T.~\textsc{Brox}, \&
+  M.~\textsc{Riedmiller} (2014): \enquote{Striving for simplicity: The all
+  convolutional net.}
+\newblock \emph{arXiv preprint arXiv:1412.6806} .
 
 \bibitem[{{\v{S}}trumbelj \& Kononenko(2014)}]{vstrumbelj2014explaining}
 \textsc{{\v{S}}trumbelj}, E. \& I.~\textsc{Kononenko} (2014):
