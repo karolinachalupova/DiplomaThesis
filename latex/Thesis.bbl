@@ -1,4 +1,4 @@
-\begin{thebibliography}{31}
+\begin{thebibliography}{35}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -49,6 +49,13 @@
 \textsc{De~Prado}, M.~L. (2018): \emph{Advances in financial machine learning}.
 \newblock John Wiley \& Sons.
 
+\bibitem[{Di~Persio \& Honchar(2016)}]{di2016artificial}
+\textsc{Di~Persio}, L. \& O.~\textsc{Honchar} (2016): \enquote{Artificial
+  neural networks architectures for stock price prediction: Comparisons and
+  applications.}
+\newblock \emph{International journal of circuits, systems and signal
+  processing} \textbf{10(2016)}: pp. 403--413.
+
 \bibitem[{Dimopoulos \emph{et~al.}(1995)Dimopoulos, Bourret, \&
   Lek}]{dimopoulos1995use}
 \textsc{Dimopoulos}, Y., P.~\textsc{Bourret}, \& S.~\textsc{Lek} (1995):
@@ -78,6 +85,13 @@
 \newblock \emph{Journal of Machine Learning Research} \textbf{20(177)}: pp.
   1--81.
 
+\bibitem[{Giles \emph{et~al.}(1997)Giles, Lawrence, \& Tsoi}]{giles1997rule}
+\textsc{Giles}, C.~L., S.~\textsc{Lawrence}, \& A.~C. \textsc{Tsoi} (1997):
+  \enquote{Rule inference for financial prediction using recurrent neural
+  networks.}
+\newblock In \enquote{Proceedings of the IEEE/IAFE 1997 Computational
+  Intelligence for Financial Engineering (CIFEr),} pp. 253--259. IEEE.
+
 \bibitem[{Goodfellow \emph{et~al.}(2016)Goodfellow, Bengio, Courville, \&
   Bengio}]{goodfellow2016deep}
 \textsc{Goodfellow}, I., Y.~\textsc{Bengio}, A.~\textsc{Courville}, \&
@@ -105,6 +119,12 @@
   Accelerating deep network training by reducing internal covariate shift.}
 \newblock \emph{arXiv preprint arXiv:1502.03167} .
 
+\bibitem[{Karpathy \emph{et~al.}(2015)Karpathy, Johnson, \&
+  Fei-Fei}]{karpathy2015visualizing}
+\textsc{Karpathy}, A., J.~\textsc{Johnson}, \& L.~\textsc{Fei-Fei} (2015):
+  \enquote{Visualizing and understanding recurrent networks.}
+\newblock \emph{arXiv preprint arXiv:1506.02078} .
+
 \bibitem[{Kelly \emph{et~al.}(2019)Kelly, Pruitt, \&
   Su}]{kelly2019characteristics}
 \textsc{Kelly}, B.~T., S.~\textsc{Pruitt}, \& Y.~\textsc{Su} (2019):
@@ -130,6 +150,12 @@
 \textsc{Molnar}, C. (2020): \emph{Interpretable Machine Learning}.
 \newblock Lulu. com.
 
+\bibitem[{Olah \emph{et~al.}(2017)Olah, Mordvintsev, \&
+  Schubert}]{olah2017feature}
+\textsc{Olah}, C., A.~\textsc{Mordvintsev}, \& L.~\textsc{Schubert} (2017):
+  \enquote{Feature visualization.}
+\newblock \emph{Distill} \textbf{2(11)}: p.~e7.
+
 \bibitem[{Roll(1977)}]{roll1977critique}
 \textsc{Roll}, R. (1977): \enquote{A critique of the asset pricing theory's
   tests part i: On past and potential testability of the theory.}
@@ -140,10 +166,11 @@
   streams and the pricing of options.}
 \newblock \emph{The Bell Journal of Economics} pp. 407--425.
 
-\bibitem[{Shapley(1953)}]{shapley1953value}
-\textsc{Shapley}, L.~S. (1953): \enquote{A value for n-person games.}
-\newblock \emph{Contributions to the Theory of Games} \textbf{2(28)}: pp.
-  307--317.
+\bibitem[{Shapley \& Shubik(1971)}]{shapley1971assignment}
+\textsc{Shapley}, L.~S. \& M.~\textsc{Shubik} (1971): \enquote{The assignment
+  game i: The core.}
+\newblock \emph{International Journal of game theory} \textbf{1(1)}: pp.
+  111--130.
 
 \bibitem[{Shrikumar \emph{et~al.}(2017)Shrikumar, Greenside, \&
   Kundaje}]{shrikumar2017learning}

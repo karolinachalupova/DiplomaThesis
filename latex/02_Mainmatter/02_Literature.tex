@@ -11,7 +11,7 @@
  	
  	The literature review proceeds as follows. First, I review the economic theory behind asset prices and common attitudes to modeling them. Second, I present the statistician's view: the multidimensional challenge faced in modeling stock returns \citep{cochrane2011presidential} and show what different approaches have been used to answer the challenge. Third, I present the machine learning approaches to asset pricing. Fourth, I review ML interpretability methods. 
  	
- 	\section{Economist's Perspective}
+ 	\section{Economic Theory Behind Stock Returns Prediction}
  	
 	 	Valuing a stock amounts to putting a price tag on a stream of future payoffs. The field concerned with doing just that is called asset pricing. Consider the following basic asset-pricing equation \citep{cochrane2009asset}:
 	 	
@@ -210,90 +210,55 @@
 			
 			The first two equations are the same as in multiple-factor models, while the third shows instrumenting of the factor loadings with firm characteristics $\vec{z}'_{i,t}$. This approach is exemplified by \cite{kelly2019characteristics}. The key insight is that characteristics serve as proxies for \textit{exposure} to different sources of systematic risk. Once risk loadings are instrumented, the authors use them to estimate the corresponding factors.
 	
-		\subsection{Arbitrage Pricing Theory}
-		
-			[TODO add economic motivation for drivers of expected returns from APT.]
 	
-	\section{Statistician's Perspective} 
+	\section{Which Predictors Matter Empirically?} 
 		
-		\epigraph{We argue that most claimed research findings in financial economics are likely false. }{\cite{harvey2016and}}
+		\epigraph{We have a lot of questions to answer: First, which characteristics really provide independent information about average returns?}{\cite{cochrane2011presidential}}
 		
 		There are hundreds of published factors suggested as explanation of average stock returns. \cite{harvey2016and} count 313 variables, considering the top journals only and calling the count "surely too low". Indeed, \cite{cochrane2011presidential} refers to the state of asset pricing as a "zoo of factors". At the same time, 
-		the number of factors should be low in theory \citep{cochrane2011presidential} and empirically \citep{ahn2012determining} [TODO elaborate].
+		the number of factors should be low in theory \citep{cochrane2011presidential} and empirically \citep{ahn2012determining}.
 		
-		\cite[p.~1060]{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in asset pricing in his "multidimensional challenge": "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns? Why are subsumed by others? Second, does each new anomaly variable also correspond to a new factor formed on those same anomalies? (\ldots) Third, how many of these new factors are really important?"
+		The task of establishing which variables predict stock returns has proved treacherous to many researchers.  As \cite[p.~5]{harvey2016and} put it rather famously: "most claimed research findings in financial economics are likely false". And by financial economics, the authors mean explaining the cross-section of stock returns. Why is this? The main issue is that most published predictors of stock returns are found only controlling for 3 or 5 factors, typically factors from  \cite{fama1996multifactor} or \cite{fama2015five}, and not the rest of the published factors. But there are more issues. First and most obviously, some results are bound to be just false positives due to the typical confidence levels \citep{harvey2016and}. Second, as it is difficult to publish a non-result, the insignificant results remain in the drawer and the significant ones get published, artificially driving up the significance in an instance of publication bias \citep{harvey2016and}. Third, the published studies are often biased in themselves: the specification search bias (selection of the model based on model's result), the sample selection bias (selection of the data based on model's results) and the multiple hypothesis testing bias (conducting multiple tests of the same hypothesis) all result in artificially high significance of returns predictors \citep{mclean2016does}. The situation is worsened by the fact that there is only a limited amount of data in finance: CRSP and Compustat are limited resources, and researches use the same data over and over, resulting in collective over-fitting \citep{harvey2016and}. Finally, unlike in other fields, it is difficult to publish a replication study in finance, which leaves the spurious factors unnoticed \citep{harvey2016and}. 
 		
-		The main issue with the hundrends of factor models is that they find the studied factor significant controlling only for the effects of market return or 3 or five other factors, typically factors from  \cite{fama1996multifactor} or \cite{fama2015five}. To establish the significance of the variables, it is necessary to consider them jointly in a single model, allowing the factors to crowd each other out. 
+		Two post-hoc approaches have been taken to find out which of these findings are false: out-of-sample tests and rising the usual significance levels. \cite{mclean2016does} perform the out-of-sample tests, studying 82 variables. As much as 10 of them could not even be replicated in-sample. The rest are biased on average by 10\%. \cite{harvey2016and} take the multiple-testing approach. Out of 296 published significant factors, 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used \cite{harvey2016and}. 
 		
-		Moreover, there are numerous issues that severely diminish the reliability of these factors. First and most obviously, some results are bound to be just false positives due to the typical confidence levels \citep{harvey2016and}. Second, as it is difficult to publish a non-result, the insignificant results remain in the drawer and the significant ones get published, artificially driving up the significance in an instance of publication bias \citep{harvey2016and}. Third, the published studies are often biased in themselves: the specification search bias (selection of the model based on model's result), the sample selection bias (selection of the data based on model's results) and the multiple hypothesis testing bias (conducting multiple tests of the same hypothesis) all result in artificially high significance of returns predictors \citep{mclean2016does}. The situation is worsened by the fact that there is only a limited amount of data in finance: CRSP and Compustat are limited resources, and researches use the same data over and over, resulting in collective over-fitting \citep{harvey2016and}. Finally, unlike in other fields, it is difficult to publish a replication study in finance, which leaves the spurious factors unnoticed \citep{harvey2016and}. There are two ways to correct these biases ex post: out-of-sample tests  and using a framework that accounts for the multiple testing and rises the usual significance levels. \cite{mclean2016does} perform the out-of-sample tests, studying 82 variables. As much as 10 of them could not even be replicated in-sample. The rest are biased on average by 10\%. \cite{harvey2016and} take the multiple-testing approach. Out of 296 published significant factors, 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used \cite{harvey2016and}. 
+		\cite[p.~1060]{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in stock returns prediction in his "multidimensional challenge": "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns? Why are subsumed by others? Second, does each new anomaly variable also correspond to a new factor formed on those same anomalies? (\ldots) Third, how many of these new factors are really important?" 
 		
+		It is important to understand the distinction between characteristics and factors. Both are used as predictors in stock returns, although never in a single regression.  Characteristics are firm-specific variables, such as firm size, returns momentum or book-to-market ratio. The economic motivation behind using firm characteristics to predict stock returns is that they are proxies for underlying sources of risk. \cite{bryzgalova2019forest, kelly2019characteristics, gu2020empirical}. Thus, when studying the cross-section of returns using characteristics as predictors, all observations across time and across firms enter into a single regression. This approach is exemplified by \cite{kelly2019characteristics, gu2020empirical, bryzgalova2019forest}. Factors, on the other hand, are the underlying sources of risk themselves, common to all firms. An example of a factor would be the market return. When modeling the cross-section of returns using factors, each firm enters its own regression, where the predictors are the common factors and the estimated weights are the sensitivities of the firm's return on that factor, such as market beta. A classical example is \cite{fama1996multifactor, fama2015five}. Note that the sensitivites in the factor model can be used as predictors in the characteristics model, which is how the two approaches relate to each other. 
 		
-	
-	\section{Machine Learning Perspective}
-	
-		\epigraph{To adress [the multidimensional challenge] in the zoo of new variables, I suspect we will have to use different \textit{methods}.}{\cite{cochrane2011presidential}}
+		Current asset pricing literature is still looking for the solution to the first of Cochrane's challenges: which characteristics inform the prediction of stock returns. The most current answer that the literature offers is as follows. 
 		
-		A possible definition of ML is from  \cite[p.~2]{mitchell1997machine}: "A computer  program is  said to learn from experience E with respect to  some class of tasks T and performance  measure P, if  its performance at  tasks in T, as measured by P, improves with experience E." In the case of predicting stock returns, the task T is a regression, performance measure can be for example the mean-squared-error, and the experience E is the historical data. Using this definition, ML is a broad collection of methods, including the very simplest, like linear regression or principal components analysis, that are well-known to any economist.  
+		\cite{gu2020empirical} study 94 characteristics proposed by prior literature in various settings, starting with OLS without penalty, across penalized OLS, to random trees and neural networks. The authors find that all methods (with the exception of OLS) agree in the variables that have an important first-order impact on returns. These are, ordered by importance: recent price trends (such as momentum and long- and short-term reversal), liquidity measures (such as turnover), risk measures (such as return volatility and market beta), valuation ratios (such as earnings-to-price), and fundamental signals (such as asset growth). On annual frequency, recent price trends become less important, and industry emerges as an important predictor, but otherwise the results are similar to the monthly frequency. 
 		
-		ML offers many varied methods that are well-suited to the task of explaining stock returns and that have an advantage over the more traditional methods \citep{gu2020empirical}. First, ML methods can handle data with high dimensionality and correlation in predictors. If the hundreds of candidate factors are used in linear regression, $R^2$ becomes negative and no predictors are significant \citep{gu2020empirical} due to the high dimension and multicollinearity. Portfolio sorts, another traditional method in asset pricing, become unusable at around 5 predictors \cite{cochrane2011presidential, bryzgalova2019forest}. ML offers dimension reduction and variable selection methods to overcome this challenge. Second, it seems that the linear functional form for predictors is too restrictive: \cite{gu2020empirical} statistically reject the traditional linear models in favor of the non-linear ones. ML offers methods of choosing the right functional form systematically. Third, the model selection is ML is based on validation data, as opposed to in-sample (training) data. In traditional econometrics approach to stock returns, model is tuned by researcher based on in-sample fit, which results in spurious findings that are very often not replicable out-of-sample \citep{mclean2016does}. On the other hand, ML puts an emphasis on out-of-sample performance, which allows to select a robust model.   	
-	
-		\cite{gu2020empirical} apply a wide range of ML methods to the stock-returns prediction task. Their model is 
+		\cite{bryzgalova2019forest} study recent price trends (momentum and long- and short-term reversal), liquidity measures (such as turnover), investment, profitability, accruals and book-to-market ratio. [TODO find important, compare to Gu]. 		
 		
-		\begin{equation}
-		r_{i, t+1} = E_t(r_{i,t+1}) + \epsilon_{i,t+1}
-		\end{equation}
-		
-		where 
-		
-		\begin{equation}
-		E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = g(\vec{x}_t \otimes \vec{c}_{i,t})
-		\end{equation}
-		
-	
-		The function $g$ stands for any ML model and the variables $\vec{z}_{i,t}$ are 94 characteristics of stocks $ \vec{c}_{i,t}$ interacted with 8 macroeconomic predictors $\vec{x}_t$. The multiple-factor model \ref{ER_betalambda} is a special case of this specification, with $g$ linear: 
-		
-		\begin{equation}
-			E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = \vec{c}'_{i,t}\Theta_1'\Theta_2 \vec{x}_t = \vec{{\beta}}'_{i,t} \vec{\lambda}_{t}
-		\end{equation}
-		
-		
-		The authors make a horse race of several ML and traditional methods. First, they include methods to estimate linear $g$, both without regularization (linear regression with all variables (OLS), linear regression only with size, book-to market, and mometum (OLS-3)) and with regularization (partial least squares (PLS), principal components regression (PCR), elastic net (ENet)). Second, they include methods to estimate nonlinear $g$: generalized linear models (GLM), random forest, gradient-boosted regression trees, and neural networks of depths 1 to 5. They find that OLS performs badly, regularized linear models are an improvement, and, and nonlinear models are the best-performing, namely neural networks followed by random trees. 
-		
-		Interestingly, the authors find that all methods (with the exception of OLS) agree in the variables that have an important first-order impact on returns. These are, ordered by importance: recent price trends (such as momentum and long- and short-term reversal), liquidity measures (such as turnover), risk measures (such as return volatility and market beta), valuation ratios (such as earnings-to-price), and fundamental signals (such as asset growth). On annual frequency, recent price trends become less important, and industry emerges as an important predictor, but otherwise the results are similar to the monthly frequency.
-		
-		\cite{bryzgalova2019forest} use random trees to build the discount factor. They generalize portfolio-sorts to accommodate a large number of predictors. Similarly to \cite{kelly2019characteristics}, they consider factor loadings $\vec{\beta}_{i,t}$ as function of characteristics. Specifically, the characteristics include recent price trends (momentum and long- and short-term reversal), liquidity measures (such as turnover), investment, profitability, accruals and book-to-market ratio. Their approach leads to selection of a very sparse and readily interpretable set of basis assets that are used to construct the discount factor. This is done using a global approach to pruning a tree. Global pruning is necessary as the task is to use the tree's nodes to span the stochastic discount factor, which cannot be done using local decision criteria. The pruning method proceeds in the following steps. 	
-		
-		The intermediate and final nodes of the tree then serve as basis assets to construct the discount factors. This is done by optimally weighting the basis assets. The weights are found by finding the minimum variance weights for each expected return, solving the Markowitz problem with additional shrinkage of the weights using elastic net penalty, choosing the the optimum expected return and shrinkage parameters to maximize the Sharpe ratio on validation data. Specifically, the approach takes three steps: 
-		
-		First, for each node of the tree (including the first and intermediate nodes, i.e., not just the leaves), calculate the sample estimates of mean and covariance matrix of the excess returns, denote them $\hat{\vec{\mu}}$ and $\hat{\vec{\Sigma}}$ respectively.
-		
-		Second, find weights $\vec{w}$ of the nodes such that the resulting portfolio will have minimum variance, at least a given mean return, and such that the weights are small (elastic net shrinkage). That is, for given $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$, find weights $\vec{w}$ that solve 
-		
-		\begin{equation}
-		\begin{aligned}
-		\min_{\vec{w}} \quad 
-		& \frac{1}{2}\vec{w}^{T} \hat{\vec{\Sigma}} \vec{w} + \lambda_1 \norm{\vec{w}}_1 +  			\frac{1}{2} \lambda_2 \norm{\vec{w}}_2 \\
-		\textrm{subject to} \quad 
-		& \vec{w}^{T} \mathds{1} = \mathds{1} \\
-		& \vec{w}^{T}\hat{\vec{\mu}} \geq \mu_0   \\
-		\end{aligned}
-		\end{equation}
-		
-		Third, the parameters $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$ are selected on validation set such that the Sharpe ratio is maximized. 		
 				
-		\cite{bryzgalova2019forest} and \cite{gu2020empirical} agree that the ability to uncover non-linearities and interactions is the crucial driving force of the superior ML performance.  If a variable has a non-linear relationship with returns, the linear models can conclude there is no association, while in reality there is an important non-linear relationship. For example, in \cite{gu2020empirical}, linear models deem size and volatility unimportant predictors, while non-linear models find the contrary. A similar problem may arise if predictors are have zero association with return themselves, but not in interaction with other predictors. [TODO include examples]. 
-	
+		\section{Why use ML for Stock Returns Prediction?}
+				
+			
+			One of the reasons behind popularity of ML in stock returns prediction is that it offers superior performance. \cite{gu2020empirical} make a horse race of several ML and traditional methods. First, they include methods to estimate linear $g$, both without regularization (linear regression with all variables (OLS), linear regression only with size, book-to market, and mometum (OLS-3)) and with regularization (partial least squares (PLS), principal components regression (PCR), elastic net (ENet)). Second, they include methods to estimate nonlinear $g$: generalized linear models (GLM), random forest, gradient-boosted regression trees, and neural networks of depths 1 to 5. They find that OLS performs badly, regularized linear models are an improvement, and, and nonlinear models are the best-performing, namely neural networks followed by random trees. 
+			
+			Second, there is strong theoretical appeal to using ML as well. Additionally, prior research shows that linear models miss important information about stock returns by ignoring the interactions of the predictors. If a variable has a non-linear relationship with returns, the linear models can conclude there is no association, while in reality there is an important non-linear relationship. For example, in \cite{gu2020empirical}, linear models deem size and volatility unimportant predictors, while non-linear models find the contrary. A similar problem may arise if predictors are have zero association with return themselves, but not in interaction with other predictors. The nonlinearity seems to be a curcial aspect of stock return prediction: \cite{bryzgalova2019forest} and \cite{gu2020empirical} agree that the ability to uncover non-linearities and interactions is the crucial driving force of the superior ML performance and \cite{gu2020empirical} statistically reject linear models in favor of the non-linear ones as those with better performance. As there are so many possible forms in which the predictors can interact, it is unfeasible to search for the correct specification manually. ML offers methods of choosing the right functional form systematically. 
+			
+			Moreover, the model selection is ML is based on validation data, as opposed to in-sample (training) data. In traditional econometrics approach to stock returns, model is tuned by researcher based on in-sample fit, which results in spurious findings that are very often not replicable out-of-sample \citep{mclean2016does}. On the other hand, ML puts an emphasis on out-of-sample performance, which allows to select a robust model. 	
+			
+			Finally, ML methods are designed to handle data with high dimensionality and correlation in predictors. ML offers dimension reduction and variable selection methods to overcome this challenge, and thus presents a natural way of approaching Cochrane's multidimensional challenge \citep{cochrane2011presidential}. 	
+			
 	
 	\section{Interpretable Machine Learning Methods}
 	
-		ML interpretability methods can be grouped into into several categories \citep{molnar2020interpretable}. A first dictinction can be made between  \textit{intrinsically} interpretable models, that are intrepretable per se (linear and logistic regression, random tree), and \textit{post-hoc methods}, that can be applied to extract interpretable knowledge from the model ex-post, as in case of neural networks. A further distinction can be made as to the applicability of the interpretability methods: some methods are \textit{model-specific}, that is, can only be applied to some ML models others are \textit{model-agnostic}, applicable to all models from linear regressions to random trees and neural networks. Yet other distinction can be made between \textit{global} and \textit{local} ML interpretability methods: while the former assess sources of model performance across all observations, the latter can be used to interpret the drivers within a single observation. 
-		
-		Numerous aspects of a neural network can be studied in order to understand the model better. To give just a few  examples: First, which input features are important for the prediction (this notion is generally called \textit{feature importance}? Second, the values in hidden layers can be studied. Hidden layer's values is a linear combination of the previous layer, with then applied non-linear function. As such, hidden neurons capture the interactions effects of the neurons in the previous layer. If we start with features in the input layer, the first hidden layer captures interactions between all input features. From this perspective, the hidden neurons can be considered as features learned, or engineered, by the network. The hidden layers can be inspected ex post to answer the question of which \textit{interactions} between input features are important. For example, in the case of image recognition, it is possible to visualize that the network learns to recognize simple shapes in the first hidden layers, and then proceeds to learn more intricate shapes in the deeper layers. In the returns prediction task, it can be analogously studied, if, say, the value effect is important in itself, or in combination with other features.) Third, a \textit{surrogate model} can be devised: an intrinsically interpretable model, such as linear regression, which explains the model's \textit{predictions}, as opposed to explaining the target variable itself (here, such surrogate model would explain the model's returns predictions, as opposed to returns as such.) 
-		
-		This thesis focuses on feature importance, as the question of "which features are important" is likely the first one any model's user is interested in. It studies feature importance both globally and locally. The former approach aims to answer the question which features are important to the model \textit{overall}, while the latter studies a particular observation in isolation.
-		
-		
-		\subsection{Local Feature Importance Measures}
+		To explain how the methods employed in this thesis fit into the broader context of ML interpretability literature, it is useful to first categorize them following \cite{molnar2020interpretable}. A first dictinction can be made between \textit{intrinsically} interpretable models, which are intrepretable per se (linear and logistic regression, random trees), and \textit{post-hoc methods}, that can be applied to extract interpretable knowledge from more complex models, such as neural networks, which is the case of this thesis. A further distinction can be made as to the applicability of the interpretability methods: some methods are \textit{model-specific}, that is, can only be applied to some ML models, while others are \textit{model-agnostic}, applicable to all models from linear regressions to random trees and neural networks. For purposes of generality, the methods selected in this thesis are model-agnostic --- while they are well-suited to neural networks, they can also be used on any other model, such as linear regression. Yet other distinction can be made between \textit{global} and \textit{local} ML interpretability methods: while the former study how a model decides overall (across all observations), the latter can be used to interpret the drivers behind a single observation. Both approaches are taken in this thesis, as both global and local perspectives are important for model interpretability.
+			
+			
+		\subsection{Interpretable Machine Learning Methods and Stock Returns: What Has Been Done?}
+			\cite{bryzgalova2019forest} use an intrinsically interpretable model to study stock returns. Rather than predicting stock returns as do \cite{gu2020empirical} and this thesis, the ML model is used here to build the discount factor (see the section on Asset Pricing Theory for what is the discount factor). The model used is random tree. A random tree iteratively splits data into two parts, using a particular feature and its particular value to make each split. It starts with the entire dataset, performs the first split in two parts, the two parts are then split in two again etc. recursively, until a stopping criterion is met. The latest, unsplit groups of the dataset, called leaves, are then groups of the data that share the same prediction. \cite{bryzgalova2019forest} note that this is a generalization of the portfolio sorts, which is a method typically used in finance to arrive at the discount factor. The leaves of the tree are used as basis assets for forming the discount factor. Since the splits are not made by the researcher, but instead learned by the model itself, this presents a viable approach to forming discount factor from multi-dimensional data. This overcomes the issue with portfolio sorts, which break down when the dimensionality of the data, i.e., number of features, is large \citep{cochrane2011presidential, bryzgalova2019forest). The advantage of random trees is that they are quite easily interpretable: to understand how prediction is made for a single feature, it suffices to follow the path the feature takes through the tree from the root to the leaves, always classified into group A or B based on a single feature. 
+			
+			Random trees are also used for returns prediction. In this case, the resulting leaves are not used to form basis assets as in \cite{bryzgalova2019forest}, but the firms inside a leaf share the return prediction. [TODO find a paper, there must be something.]
+			
+			
+			
+				
+		\subsection{Choosing Local Feature Importance Measure}
 			Local feature importance measures aim to answer the question of why the model gives a particular prediction for a particular observation. For example, why does the model predict Apple's return in the following month to be 15\%? In particular, how do the individual features contribute in magnitude and sign to the prediction? In other words, how can the prediction be decomposed into (\textit{attributed to}) individual features? For this reason, the task is also called \textit{feature attribution}.  
 			
 			There are several properties that are naturally desirable for any attribution measure to have. First, we would like the measure to give a complete account of the prediction: if we sum the individual feature attributions, we would like to obtain the final prediction (called Completeness or Efficiency axiom in \cite{sundararajan2017axiomatic} and \cite{molnar2020interpretable} respectively). Second, the measure should give zero attribution score to any feature that is mathematically independent of the predicted variable (called Sensitivity(b) or Dummy axiom in \cite{sundararajan2017axiomatic} and \cite{molnar2020interpretable} respectively). A related desirable property is that if two observations differ in one feature and have different prediction, the attribution to the differing feature should be non-zero (called Sensitivity(a) axiom in \cite{sundararajan2017axiomatic}). Third, the measure should be additive: if a model is a linear combination of other models (such as an ensemble model), the attributions of the model should be the same linear combination of the attributions of the individual models (called Linearity or Additivity axiom in \cite{sundararajan2017axiomatic} and \cite{molnar2020interpretable} respectively). Fourth, if two models with different architectures produce the same predictions for the same set of inputs, the attributions of the two models should be identical (called Implementation Invariance axiom in \cite{sundararajan2017axiomatic}). As pointed out by \cite{sundararajan2017axiomatic}, it is particularly important in the case of neural networks that Implementation Invariance be upheld: a single functional form of the model can be attained using more than one set of weights due to many degrees of freedom. The training of the network can converge to any of these sets, depending, for instance, on random initialization of weights. However, if the function arrived at is effectively the same, it is desirable that the feature attribution be the same as well. Finally, symmetric features (i.e., such that $f(x,y) = f(y,x) \forall x, y$) should receive the same attributions if $x=y$ for a particular observation (called Symmetry axiom in \cite{shrikumar2017learning} and  \cite{molnar2020interpretable}. 
@@ -311,7 +276,7 @@
 			Integrated Gradients have one crucial practical advantage over Shapley Values. Even the approximate version of Shapley Value \citep{vstrumbelj2014explaining} is very computationally intensive: sampling a single random order of features then takes $K$ calls to the network --- a prediction is made \textit{each time} a feature "enters the room". So to calculate even the approximate Shapley Value for a single observation, the network must be called $K\cdot M$ times, where $M < K!$ is the number of steps in the approximation. On the other hand, the Integrated Gradients only take $M$ calls to the network. In case of many features and (or) many observations for which we wish to calculate local feature importance, and (or) long prediction times (note that all three are often the case in ML), the difference in computation times is crucial. Even though the number of features is only 30 in this thesis, the difference in computation times is already substantial. Moreover, much more features are to be expected in practice, so using a scalable measure seems vital. Therefore, this thesis uses Integrated Gradients as the local feature importance measure. The technical aspects of calculating Integrated Gradients are described in the Data and Methodology. 
 		
 		
-		\subsection{Global Feature Importance Measures} 
+		\subsection{Choosing Global Feature Importance Measure} 
 		
 			\paragraph{Mean Decreased Performance} proposed by \citep{fisher2019all}, also known as \textbf{Permutation Feature Importance} is a model-agnostic measure of feature importance, which measures how much of model's performance is lost when permuting a given feature. It compares the performance of a model fit on a set of features with the performance of the same model after permuting a given feature (randomly shuffling its features across examples, without re-fitting the model). If the particular feature is important, permuting it will decrease model's performance. There are several special cases depending on the measure the model's performance, e.g., \textbf{Model Reliance} \citep{fisher2019all} (mean squared error), or \textbf{Mean Decreased Accuracy} [TODO add citation] (accuracy). Since the measure depends on random permutation, its variance can be decreased by computing it several times and averaging the result. [TODO add alogorhitmic description.]	
 			
@@ -319,11 +284,23 @@
 			
 			\paragraph{Sum of Squared Derivatives} proposed by \cite{dimopoulos1995use} is the sum of squared partial derivatives of the model's prediction with respect to the given feature. The disadvantage of this measure that is its not model-agnostic, specifically it is unusable if derivatives cannot be taken such as in random trees. 
 			
-			\paragraph{Mean Decreased Impurity} proposed by [TODO find out] can be used for tree-based methods, unlike Sum of Squared Derivatives.   
+			\paragraph{Mean Decreased Impurity} proposed by [TODO find out] can be used for tree-based methods, unlike Sum of Squared Derivatives.  
+			
+		
+		\subsection{Other Neural Network Interpretability Methods}
+			Numerous aspects of a neural network can be studied in order to understand the model better. The focus of this thesis is feature importance, which investigates which input variables (features) are important for the prediction. This question is the natural starting point to neural network interpretability, which is why this thesis chooses it as the focal point. This subsection, however, discusses the alternative approaches to neural network interpretability and their applications in finance. 
+			
+			First, the values in hidden layers can be studied to uncover the feature interactions and patterns learned by the network. Hidden layer's values is a linear combination of the previous layer, with then applied non-linear function. As such, hidden neurons capture the interactions effects of the neurons in the previous layer. If we start with features in the input layer, the first hidden layer captures interactions between all input features. From this perspective, the hidden neurons can be considered as features learned, or engineered, by the network. The hidden layers can be inspected ex post to answer the question of which \textit{interactions} between input features are important. For example, in the case of image recognition, it is possible to see that the network learns to recognize simple shapes (such as straight lines and circles) in the first hidden layers, and then proceeds to learn more intricate patterns (such as flowers and shapes of animals) in the deeper layers \citep{olah2017feature}. In the returns prediction task, it can be analogously studied which feature combinations are important. However, there is no such paper to the best of my knowledge. 
+			
+			Interestingly, Recurrent Neural Networks (RNNs), can be analyzed in similar manner to uncover the abstract patterns learned by the network. RNNs are used for modeling data with important time dimension, such as voice, text and financial time-series. \cite{di2016artificial} employ RNNs to predict stock price, but without focusing on interpretability. RNN interpretability is demonstrated in \cite{karpathy2015visualizing} on a language model: the authors are able to identify hidden cells that have interpretable meaning, such as neurons that "specialize" in recognizing passages in quotes or brackets. In the financial domain, \cite{giles1997rule} find that RNNs learn well-known patterns in exchange rate movements, such as momentum and reversal. While this thesis views stock returns prediction from the cross-sectional perspective, so these methods are not applicable here, this literature offers promise.  
+			
+			Another approach to neural network interpretation is constructing a \textit{surrogate model}, an intrinsically interpretable model, such as linear regression, which explains the model's \textit{predictions}, as opposed to explaining the target variable itself (here, such surrogate model would explain the model's returns predictions, as opposed to returns as such.) [TODO expand] 
 		 
 
 	\section{Unused text}
 		
+					A possible definition of ML is from  \cite[p.~2]{mitchell1997machine}: "A computer  program is  said to learn from experience E with respect to  some class of tasks T and performance  measure P, if  its performance at  tasks in T, as measured by P, improves with experience E." In the case of predicting stock returns, the task T is a regression, performance measure can be for example the mean-squared-error, and the experience E is the historical data. Using this definition, ML is a broad collection of methods, including the very simplest, like linear regression or principal components analysis, that are well-known to any economist.  
+	   		
 	   		Of course, studying only the first-order impact of a characteristic provides only a very limited picture. For example, \cite{bryzgalova2019forest} find that the first-order impact of accruals on returns is flat (zero), but when controlling for size, the relationship turns out to be U-shaped. 
 	   		
 	   		
@@ -341,6 +318,46 @@
 	   		\end{equation}
 	   		
 	   		 In case of linear models, the order in which the features "vote" for the prediction is irrelevant (addition is commutative). This is not so in nonlinear models, and this is why the Shapley value takes account for all possible orders in which features can participate in the prediction: in a model with $K$ features, there are $2^K$ possible coalitions between them.
+	   		 
+	   		 This is done using a global approach to pruning a tree. Global pruning is necessary as the task is to use the tree's nodes to span the stochastic discount factor, which cannot be done using local decision criteria.
+	   		 The pruning method proceeds in the following steps. 	
+	   		 
+	   		 The intermediate and final nodes of the tree then serve as basis assets to construct the discount factors. This is done by optimally weighting the basis assets. The weights are found by finding the minimum variance weights for each expected return, solving the Markowitz problem with additional shrinkage of the weights using elastic net penalty, choosing the the optimum expected return and shrinkage parameters to maximize the Sharpe ratio on validation data. Specifically, the approach takes three steps: 
+	   		 
+	   		 First, for each node of the tree (including the first and intermediate nodes, i.e., not just the leaves), calculate the sample estimates of mean and covariance matrix of the excess returns, denote them $\hat{\vec{\mu}}$ and $\hat{\vec{\Sigma}}$ respectively.
+	   		 
+	   		 Second, find weights $\vec{w}$ of the nodes such that the resulting portfolio will have minimum variance, at least a given mean return, and such that the weights are small (elastic net shrinkage). That is, for given $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$, find weights $\vec{w}$ that solve 
+	   		 
+	   		 \begin{equation}
+	   		 \begin{aligned}
+	   		 \min_{\vec{w}} \quad 
+	   		 & \frac{1}{2}\vec{w}^{T} \hat{\vec{\Sigma}} \vec{w} + \lambda_1 \norm{\vec{w}}_1 +  			\frac{1}{2} \lambda_2 \norm{\vec{w}}_2 \\
+	   		 \textrm{subject to} \quad 
+	   		 & \vec{w}^{T} \mathds{1} = \mathds{1} \\
+	   		 & \vec{w}^{T}\hat{\vec{\mu}} \geq \mu_0   \\
+	   		 \end{aligned}
+	   		 \end{equation}
+	   		 
+	   		 Third, the parameters $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$ are selected on validation set such that the Sharpe ratio is maximized. 
+	   		 
+	   		 \cite{gu2020empirical} apply a wide range of ML methods to the stock-returns prediction task. Their model is 
+	   		 
+	   		 \begin{equation}
+	   		 r_{i, t+1} = E_t(r_{i,t+1}) + \epsilon_{i,t+1}
+	   		 \end{equation}
+	   		 
+	   		 where 
+	   		 
+	   		 \begin{equation}
+	   		 E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = g(\vec{x}_t \otimes \vec{c}_{i,t})
+	   		 \end{equation}
+	   		 
+	   		 
+	   		 The function $g$ stands for any ML model and the variables $\vec{z}_{i,t}$ are 94 characteristics of stocks $ \vec{c}_{i,t}$ interacted with 8 macroeconomic predictors $\vec{x}_t$. The multiple-factor model \ref{ER_betalambda} is a special case of this specification, with $g$ linear: 
+	   		 
+	   		 \begin{equation}
+	   		 E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = \vec{c}'_{i,t}\Theta_1'\Theta_2 \vec{x}_t = \vec{{\beta}}'_{i,t} \vec{\lambda}_{t}
+	   		 \end{equation}
 	
 
 
