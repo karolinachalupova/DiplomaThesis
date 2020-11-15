@@ -23,7 +23,7 @@ from tensorflow import reduce_sum, square, subtract, reduce_mean, divide, cast, 
 from ray import tune
 import ray
 
-from data import Selected
+from data import Selected, Simulated
 
 class RSquare(Metric):
     def __init__(self, name="r_square", **kwargs):
@@ -282,8 +282,15 @@ if __name__ == "__main__":
     parser.add_argument("--threads", default=1, type=int, help="Maximum number of threads to use.")
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
     parser.add_argument("--optimizer", default="adam", type=str, help="Optimizer for gradient descent. Gu: adam")
+
+    parser.add_argument("--dataset", default="selected", type=str, help="Which dataset class from data.py to use")
     
     args = parser.parse_args([] if "__file__" not in globals() else None)
+
+    dataset_name_map = {
+        "selected":Selected,
+        "simulated":Simulated
+    }
 
     # Fix random seeds and threads
     np.random.seed(args.seed)
@@ -297,7 +304,7 @@ if __name__ == "__main__":
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
     # Create logdir name
-    args.logdir = os.path.join("logs", "{}-{}-{}".format(
+    args.logdir = os.path.join("logs_{}".format(args.dataset), "{}-{}-{}".format(
         os.path.basename(globals().get("__file__", "notebook")),
         datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S"),
         ",".join(("{}={}".format(re.sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(vars(args).items())))
@@ -309,7 +316,8 @@ if __name__ == "__main__":
     ray.init()
 
     # Load data
-    dataset = Selected()
+    C = dataset_name_map.get(args.dataset)
+    dataset = C()
     dataset.load()
     # I use pin_in_object_store so that data is not 
     # reloaded to memory for each trial
