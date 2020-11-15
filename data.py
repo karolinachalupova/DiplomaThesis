@@ -9,30 +9,10 @@ import pickle
 import scipy
 import sklearn 
 import os
+import argparse
+from scipy.stats import rankdata
 
 directory = os.path.dirname(os.path.abspath(__file__))
-
-def run_pipeline(nrow=None):
-    """
-    Starts with raw data and applies the following changes: 
-        1) filters them, 
-        2) subsets them (only does something if `nrow` is not `None`)
-        3) cleans them.
-    Saves all the intermediate datasets and 
-    finally loads the cleaned data into memory.
-    """
-    filtered = Filtered()
-    filtered.calculate()
-    subset = Subset()
-    subset.calculate(nrow=nrow)
-    cleaned = Cleaned()
-    cleaned.calculate()
-    selected = Selected() 
-    selected.calculate()
-    return selected
-
-if __name__ == "__main__":
-    run_pipeline()
 
 
 class Data():
@@ -198,6 +178,106 @@ class Selected(Data):
         self.save()
 
 
+class Simulated(Data):
+    PATHS = {
+            "features":  os.path.join(directory, 'data/simulated/features.pkl'),
+            "targets":  os.path.join(directory, 'data/simulated/targets.pkl')
+        }
+    N_FEATURES = 30
+    def __init__(self, paths= PATHS):
+        self.paths = paths
+
+    def calculate(self, ancestor_paths = None):
+        R, C = self.simulate_data()
+
+        # Convert array R into  pd.DataFrame: targets
+        N,T = R.shape
+        out_array = np.column_stack((np.repeat(np.arange(N),T),R.reshape(N*T,-1)))
+        targets = pd.DataFrame(out_array)
+        targets.columns = ["DTID","r"]
+        targets["date"] = [t for t in range(1,T+1)]*N
+        targets.set_index(["DTID", "date"],inplace=True)
+
+        # Convert array C into pd.DataFrame: features
+        N, T, Pc = C.shape
+        out_arr = np.column_stack((np.repeat(np.arange(N),T),C.reshape(N*T,-1)))
+        features = pd.DataFrame(out_arr)
+        features.columns = ["DTID"]+["C{}".format(i) for i in range(1,Pc+1)]
+        features["date"] = [t for t in range(1,T+1)]*N
+        features.set_index(["DTID", "date"],inplace=True)
+        
+        self.targets = targets
+        self.features = features 
+        self.save()
+    
+    @staticmethod
+    def simulate_data(N=200,T=180,Pc=30):
+        """
+        Simulates matrix of returns R with shape (N,T) and matrix of features C with shape (N,T,Pc).
+        
+        The simulation follows excactly Internet Appendix A of Gu et al., 2018.
+        """
+        def crank(array):
+            """
+            Transforms array to its ranks. 
+            Cross-Sectional Rank Function from Gu et al., 2018.  
+            """
+            b = np.empty(array.shape, dtype=int)
+            for k, row in enumerate(array):
+                b[k] = rankdata(-row, method='dense') - 1
+            return b
+        
+        # Simulate factors V with shape T x 3
+        V = np.random.normal(0,0.05**2, size=(T, 3)) 
+
+        # Simulate all error terms 
+        VAREPSILON = np.random.standard_t(5, size=(N,T))*0.05**2 # N x T
+        U = np.random.normal(0,1-0.95**2, size=T) #T x 1
+        RHO = np.random.uniform(0.9,1, size=Pc) #Pc x 1
+        EPSILONS = np.zeros(shape=(N, T, Pc)) # N x T x Pc 
+        for j in range(Pc):
+            EPSILONS[:,:,j] = np.random.normal(0,1-RHO[j]**2, size=(N,T))
+
+        # Simulate timeseries X with shape T x 1
+        X = np.zeros(shape=(T)) 
+        for t in range(1, len(X)):
+            X[t] = 0.95*X[t-1] + U[t]
+
+        # Simulate characteristics C with shape N x T x Pc 
+        Cbar = np.zeros(shape=(N, T, Pc))
+        for j in range(Pc):
+            for t in range(1,T):
+                Cbar[:,t,j] = RHO[j]*Cbar[:,t-1,j]  + EPSILONS[:,t,j]
+        C = np.zeros(shape=(N, T, Pc)) # N x T x Pc         
+        for i in range(N):        
+            C[i,:,:] = 2/(N+1) * crank(Cbar[i,:,:]) - 1 
+
+        # Simulate features G with shape N x T
+        THETA = np.array([0.04,0.03,0.012])
+        G = np.zeros(shape=(N,T))
+        for i in range(N):
+            for t in range(T):
+                CH = np.array([
+                    C[i,t,1]**2,
+                    C[i,t,1]*C[i,t,2],
+                    np.sign(C[i,t,3]*X[t])])
+                G[i,t] = np.dot(CH,THETA)
+
+        # Simulate noise E with shape N x T 
+        E = np.zeros(shape=(N,T))
+        for i in range(N):
+            for t in range(1,T):
+                E[i,t] = np.dot(np.array([C[i,t-1,1],C[i,t-1,2],C[i,t-1,3]]),V[t]) + VAREPSILON[i,t]
+
+        # Simulate returns R with shape N x T
+        R = np.zeros(shape=(N,T))
+        for i in range(N):
+            for t in range(1,T):
+                R[i,t] = G[i,t-1] + E[i,t]
+
+        return R, C
+
+
 class Meta():
     PATHS = {
         "all":  os.path.join(directory, 'data/meta_KCHnotes.xlsx')
@@ -233,3 +313,31 @@ class Meta():
     @property 
     def sc_to_latex(self):
         return dict(zip(self.signals.name_sc, self.signals.name_tex))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--calculate", default="simulated", type=str, help="Which dataset to (re)calculate.")
+    args = parser.parse_args([] if "__file__" not in globals() else None)
+
+    name_map = {
+        "filtered": Filtered,
+        "subset": Subset, 
+        "cleaned": Cleaned, 
+        "selected": Selected,
+        "simulated": Simulated 
+    }
+
+    if args.calculate == "all":
+        filtered = Filtered()
+        filtered.calculate()
+        subset = Subset()
+        subset.calculate()
+        cleaned = Cleaned()
+        cleaned.calculate()
+        selected = Selected() 
+        selected.calculate()
+    else: 
+        C = name_map.get(args.calculate)
+        c = C()
+        c.calculate()
