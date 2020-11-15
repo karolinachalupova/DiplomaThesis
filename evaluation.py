@@ -19,7 +19,7 @@ from train_network import create_model, NetData, create_ensemble
 from interpretation import ModelReliance
 from alibi.explainers import IntegratedGradients
 
-from data import Selected
+from data import Selected, Simulated
 
 
 def delete_unfinished_logdirs(logs):
@@ -229,13 +229,13 @@ class Net():
         return loc, glob
     
     @property 
-    def path(self):
-        return os.path.join("models", "{}".format("individual" if self.n_models == 0 else "ensembles"),self.__repr__().split(": ")[1])
+    def folder_name(self):
+        return self.__repr__().split(": ")[1]
 
 
-    def save(self):
+    def save(self, directory_path):
         # make sure folder exists, if not create
-        path = self.path
+        path = os.path.join(directory_path,self.folder_name)
         if not os.path.exists(path):
             os.makedirs(path)
         
@@ -266,12 +266,26 @@ class Net():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs", type=str, help="Path to logdir.")
-    parser.add_argument("--ensemble", default=False, action="store_true", help="Use ensembles instead of individual models.")
+    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_simulated", type=str, help="Path to logdir.")
+    parser.add_argument("--ensemble", default=True, action="store_true", help="Use ensembles instead of individual models.")
+    parser.add_argument("--dataset", default="simulated", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument("--fix_folder_names", default=False, type=bool, help="Fix names of Training folders.")
 
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
-    dataset=Selected()
+    dataset_name_map = {
+        "selected":Selected,
+        "simulated":Simulated
+    }
+
+    if args.fix_folder_names:
+        # Rename all Training folders from Training-some-date-here to Training
+        # So that ray tune has no problem retreiving logs
+        for p in [os.path.join(args.logdir, f) for f in os.listdir(args.logdir)]: 
+            os.rename([f for f in os.listdir(p) if f.startswith('Training')][0], 'Training')
+
+    C = dataset_name_map.get(args.dataset)
+    dataset = C()
     dataset.load()
     nets = Nets.from_logs(args.logdir)
     
@@ -281,15 +295,23 @@ if __name__ == "__main__":
         models = nets
 
     [net.set_dataset(dataset, ytest=1) for net in models.nets]
-
-    for net in models.nets: 
-        net.save()
     
-    path =os.path.join("results","{}".format("ensembles" if args.ensemble else "individual"))
-    if not os.path.exists(path):
-            os.makedirs(path)
+    path_generic =os.path.join("{}".format(args.dataset),"{}".format("ensembles" if args.ensemble else "individual"))
+    path_results = os.path.join("results", path_generic)
+    path_models = os.path.join("models", path_generic)
+    if not os.path.exists(path_results):
+            os.makedirs(path_results)
+    if not os.path.exists(path_models):
+            os.makedirs(path_models)
+    
+    for net in models.nets: 
+        net.save(directory_path=path_models)
+    
+    for net in models.nets:
+            loc, glob = net.integrated_gradients()
+            loc.to_csv(os.path.join(path_models, net.folder_name, 'integrated_gradients.csv'))
 
-    models.dataframe.to_csv(os.path.join(path, 'args.csv'))
-    models.performance().to_csv(os.path.join(path, 'performance.csv'))
-    models.model_reliance().to_csv(os.path.join(path, 'model_reliance.csv'))
-    models.integrated_gradients_global().to_csv(os.path.join(path, 'integrated_gradients_global.csv'))
+    models.dataframe.to_csv(os.path.join(path_results, 'args.csv'))
+    models.performance().to_csv(os.path.join(path_results, 'performance.csv'))
+    models.model_reliance().to_csv(os.path.join(path_results, 'model_reliance.csv'))
+    models.integrated_gradients_global().to_csv(os.path.join(path_results, 'integrated_gradients_global.csv'))
