@@ -228,6 +228,8 @@
 		
 		Current asset pricing literature is still looking for the solution to the first of Cochrane's challenges: which characteristics inform the prediction of stock returns. The most current answer that the literature offers is as follows. 
 		
+		The characteristics 
+		
 		\cite{gu2020empirical} study 94 characteristics proposed by prior literature in various settings, starting with OLS without penalty, across penalized OLS, to random trees and neural networks. The authors find that all methods (with the exception of OLS) agree in the variables that have an important first-order impact on returns. These are, ordered by importance: recent price trends (such as momentum and long- and short-term reversal), liquidity measures (such as turnover), risk measures (such as return volatility and market beta), valuation ratios (such as earnings-to-price), and fundamental signals (such as asset growth). On annual frequency, recent price trends become less important, and industry emerges as an important predictor, but otherwise the results are similar to the monthly frequency. 
 		
 		\cite{bryzgalova2019forest} study recent price trends (momentum and long- and short-term reversal), liquidity measures (such as turnover), investment, profitability, accruals and book-to-market ratio. [TODO find important, compare to Gu]. 		
@@ -255,6 +257,8 @@
 			
 			Random trees are also used for returns prediction. In this case, the resulting leaves are not used to form basis assets as in \cite{bryzgalova2019forest}, but the firms inside a leaf share the return prediction. [TODO find a paper, there must be something.]
 			
+			\cite{gu2020empirical} 
+			
 			
 			
 				
@@ -276,7 +280,7 @@
 			Integrated Gradients have one crucial practical advantage over Shapley Values. Even the approximate version of Shapley Value \citep{vstrumbelj2014explaining} is very computationally intensive: sampling a single random order of features then takes $K$ calls to the network --- a prediction is made \textit{each time} a feature "enters the room". So to calculate even the approximate Shapley Value for a single observation, the network must be called $K\cdot M$ times, where $M < K!$ is the number of steps in the approximation. On the other hand, the Integrated Gradients only take $M$ calls to the network. In case of many features and (or) many observations for which we wish to calculate local feature importance, and (or) long prediction times (note that all three are often the case in ML), the difference in computation times is crucial. Even though the number of features is only 30 in this thesis, the difference in computation times is already substantial. Moreover, much more features are to be expected in practice, so using a scalable measure seems vital. Therefore, this thesis uses Integrated Gradients as the local feature importance measure. The technical aspects of calculating Integrated Gradients are described in the Data and Methodology. 
 		
 		
-		\subsection{Choosing Global Feature Importance Measure} 
+		\subsection{Global Feature Importance Measure} 
 		
 			\paragraph{Mean Decreased Performance} proposed by \citep{fisher2019all}, also known as \textbf{Permutation Feature Importance} is a model-agnostic measure of feature importance, which measures how much of model's performance is lost when permuting a given feature. It compares the performance of a model fit on a set of features with the performance of the same model after permuting a given feature (randomly shuffling its features across examples, without re-fitting the model). If the particular feature is important, permuting it will decrease model's performance. There are several special cases depending on the measure the model's performance, e.g., \textbf{Model Reliance} \citep{fisher2019all} (mean squared error), or \textbf{Mean Decreased Accuracy} [TODO add citation] (accuracy). Since the measure depends on random permutation, its variance can be decreased by computing it several times and averaging the result. [TODO add alogorhitmic description.]	
 			
