@@ -11,6 +11,8 @@ import sklearn
 import os
 import argparse
 from scipy.stats import rankdata
+import random
+from datetime import date 
 
 directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -190,12 +192,22 @@ class Simulated(Data):
     def calculate(self, ancestor_paths = None):
         R, C = self.simulate_data()
 
+        # Create time index
+        sdate = date(1990,1,1)
+        edate = date(2018,12,31) 
+        daterange = list(pd.date_range(sdate,edate,freq='m'))
+        N,T = R.shape
+        time_index = []
+        for _ in range(N):
+            s=random.sample(range(len(daterange)-T),1)[0]
+            time_index = time_index + daterange[s:s+T]
+        
         # Convert array R into  pd.DataFrame: targets
         N,T = R.shape
         out_array = np.column_stack((np.repeat(np.arange(N),T),R.reshape(N*T,-1)))
         targets = pd.DataFrame(out_array)
         targets.columns = ["DTID","r"]
-        targets["date"] = [t for t in range(1,T+1)]*N
+        targets["date"] = time_index
         targets.set_index(["DTID", "date"],inplace=True)
 
         # Convert array C into pd.DataFrame: features
@@ -203,7 +215,7 @@ class Simulated(Data):
         out_arr = np.column_stack((np.repeat(np.arange(N),T),C.reshape(N*T,-1)))
         features = pd.DataFrame(out_arr)
         features.columns = ["DTID"]+["C{}".format(i) for i in range(1,Pc+1)]
-        features["date"] = [t for t in range(1,T+1)]*N
+        features["date"] = time_index
         features.set_index(["DTID", "date"],inplace=True)
         
         self.targets = targets
