@@ -3,7 +3,6 @@ Model performance evaluation
 """
 import re
 import itertools
-import shutil
 import json
 import numpy as np
 import os
@@ -13,38 +12,56 @@ import tensorflow as tf
 import pandas as pd
 
 from ray import tune
-
-from train_network import create_model, NetData, create_ensemble
-
-from interpretation import ModelReliance
 from alibi.explainers import IntegratedGradients
 
+from train_network import create_model, NetData, create_ensemble
 from data import Selected, Simulated
+from utils import fix_folder_names
 
 
-def delete_unfinished_logdirs(logs):
-    logdirs = [os.path.join(logs, x) for x in os.listdir(logs)]
-    finished = [os.path.isfile(os.path.join(logdir, "args.pickle")) for logdir in logdirs]
-    unfinished_logdirs = [logdir for f, logdir in zip(finished, logdirs) if not f]
-    # ask for confirmation
-    if len(unfinished_logdirs) > 0:
-        answer = ""
-        while answer not in ["y", "n"]:
-            answer = input("OK to delete {} folders in {} [Y/N]? ".format(
-                len(unfinished_logdirs), logs)).lower()
-        if answer == "y":
-            print("Deleting...")
-            for logdir in unfinished_logdirs: 
-                try:
-                    shutil.rmtree(logdir)
-                except OSError as e:
-                    print("Error: %s : %s" % (logdir, e.strerror))
-            print("Finished.")
-        else:
-            print("Aborted. No deletion performed.")
-    else: 
-        print("There are no unfinished logdirs in {}.".format(logs))
-   
+
+class ModelReliance():
+    def __init__(self, loss):
+        """
+        Arguments: 
+            loss: a tf.keras.losses object (class, not instance)
+        """
+        self.loss = loss()
+    
+    def _e_orig(self, f, x, y):
+        # Fisher eq. 3.2
+        return self.loss(y,f.predict(x)).numpy()
+    
+    def _e_div(self, f, x, y, index):
+        # Fisher eq. 3.4,3.5
+        adjustment = 1
+        n = x.shape[0]
+        if n % 2 == 1: 
+            x = x[0:-1,:]
+            y = y[0:-1]
+            adjustment = n * (1/(2*((n-1)/2)))
+        feature = x[:,index]
+        halves = np.split(feature,2)
+        perturbed = np.concatenate((halves[1], halves[0]))
+        x = np.concatenate((x[:,0:index], perturbed[:,None], x[:,index+1:]),axis=1)
+        return adjustment * self.loss(y, f.predict(x)).numpy()
+    
+    def fit_single_feature(self, f, x, y, index):
+        """
+        Calculates model reliance on a single feature (at position `index`.)
+
+        Arguments: 
+            f: tf.keras.Model instance
+            x (np.array): inputs to the model
+            y (np.array): true labels of the model
+        """
+        e_orig = self._e_orig(f, x, y)
+        e_div = self._e_div(f, x, y, index)
+        return e_div/e_orig
+    
+    def fit(self, f, x, y):
+        return np.array([self.fit_single_feature(f, x, y, index) for index in range(x.shape[1])])
+
 
 class Nets():
     def __init__(self, nets):
@@ -72,11 +89,11 @@ class Nets():
     def performance(self):
         return pd.concat([net.performance() for net in self.nets])
     
-    def model_reliance(self):
-        return pd.concat([net.model_reliance() for net in self.nets])
+    def model_reliance(self, on="test"):
+        return pd.concat([net.model_reliance(on=on) for net in self.nets])
     
-    def integrated_gradients_global(self):
-        return pd.concat([net.integrated_gradients()[1] for net in self.nets])
+    def integrated_gradients_global(self, on="test"):
+        return pd.concat([net.integrated_gradients(on=on)[1] for net in self.nets])
     
     def create_ensembles(self, common_args=["hidden_layers", "ytrain", "yvalid", "ytest"]):
         """
@@ -199,28 +216,42 @@ class Net():
             index = [s+"_"+n for s, n in itertools.product(["train", "valid", "test"],names)],
             columns=[self.__repr__()]).transpose()
     
-    def model_reliance(self):
+    def model_reliance(self, on="test"):
+        data_select = {
+            "test": self.netdata.test,
+            "train": self.netdata.train,
+            "valid": self.netdata.valid
+        }
+        dataset = data_select.get(on)
+        data = dataset.data
+
         loss = tf.keras.losses.MeanSquaredError if self.model.loss == "mse" else self.model.loss
         mr = ModelReliance(loss=loss)
-        array = mr.fit(self.model, x=self.netdata.test.data["features"], y=self.netdata.test.data["targets"])
+        array = mr.fit(self.model, x=data["features"], y=data["targets"])
         return pd.DataFrame(
             array, 
-            index = self.netdata.test.columns['features'],
+            index = data.columns['features'],
             columns=[self.__repr__()]).transpose()
     
-    def integrated_gradients(self):
+    def integrated_gradients(self, on="test"):
+        data_select = {
+            "test": self.netdata.test,
+            "train": self.netdata.train,
+            "valid": self.netdata.valid
+        }
+        dataset = data_select.get(on)
         explainer  = IntegratedGradients(self.model,
                           layer=None,
                           method="gausslegendre",
                           n_steps=50,
                           internal_batch_size=10000)
-        explanation = explainer.explain(self.netdata.test.data["features"])
+        explanation = explainer.explain(dataset.data["features"])
         attributions = explanation.attributions
 
         loc = pd.DataFrame(
             attributions, 
-            columns=self.netdata.test.columns["features"], 
-            index=self.netdata.test.index)
+            columns=dataset.columns["features"], 
+            index=dataset.index)
         
         # We need to take absolute value so that features that have both positive 
         # and negative impact do not seem unimportant 
@@ -269,7 +300,8 @@ if __name__ == "__main__":
     parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_simulated", type=str, help="Path to logdir.")
     parser.add_argument("--ensemble", default=False, action="store_true", help="Use ensembles instead of individual models.")
     parser.add_argument("--dataset", default="simulated", type=str, help="Which dataset class from data.py to use")
-    parser.add_argument("--fix_folder_names", default=True, type=bool, help="Fix names of Training folders.")
+    parser.add_argument("--fix_folder_names", default=False, type=bool, help="Fix names of Training folders.")
+    parser.add_argument('--calculate_on', default="train", type=str, help="Where to calculate interpretability measures. test, train or valid")
 
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
@@ -279,13 +311,7 @@ if __name__ == "__main__":
     }
 
     if args.fix_folder_names:
-        cwd = os.getcwd()
-        # Rename all Training folders from Training-some-date-here to Training
-        # So that ray tune has no problem retreiving logs
-        for p in [os.path.join(args.logdir, f) for f in os.listdir(args.logdir)]:
-            os.chdir(p) 
-            os.rename([f for f in os.listdir(p) if f.startswith('Training')][0], 'Training')
-        os.chdir(cwd)
+        fix_folder_names(args.logdir)
 
     C = dataset_name_map.get(args.dataset)
     dataset = C()
@@ -311,10 +337,10 @@ if __name__ == "__main__":
         net.save(directory_path=path_models)
     
     for net in models.nets:
-            loc, glob = net.integrated_gradients()
-            loc.to_csv(os.path.join(path_models, net.folder_name, 'integrated_gradients.csv'))
+        loc, glob = net.integrated_gradients(on=args.calculate_on)
+        loc.to_csv(os.path.join(path_models, net.folder_name, 'integrated_gradients_{}.csv'.format(args.calculate_on)))
 
     models.dataframe.to_csv(os.path.join(path_results, 'args.csv'))
     models.performance().to_csv(os.path.join(path_results, 'performance.csv'))
-    models.model_reliance().to_csv(os.path.join(path_results, 'model_reliance.csv'))
-    models.integrated_gradients_global().to_csv(os.path.join(path_results, 'integrated_gradients_global.csv'))
+    models.model_reliance(on=args.calculate_on).to_csv(os.path.join(path_results, 'model_reliance_{}.csv'.format(args.calculate_on)))
+    models.integrated_gradients_global(on=args.calculate_on).to_csv(os.path.join(path_results, 'integrated_gradients_global_{}.csv'.format(args.calculate_on)))

@@ -52,14 +52,14 @@ class Results():
         """
         self.path = path
     
-    def load(self, sort_features = True):
+    def load(self, sort_features = True, suffix=""):
         """
         Models are in columns, features are in rows
         """
         self.ar = pd.read_csv(os.path.join(self.path, "args.csv"), index_col=0)
         self.pe = pd.read_csv(os.path.join(self.path, "performance.csv"), index_col=0)
-        self.ig = pd.read_csv(os.path.join(self.path, "integrated_gradients_global.csv"), index_col=0)
-        self.mr = pd.read_csv(os.path.join(self.path, "model_reliance.csv"), index_col=0)
+        self.ig = pd.read_csv(os.path.join(self.path, "integrated_gradients_global{}.csv".format(suffix)), index_col=0)
+        self.mr = pd.read_csv(os.path.join(self.path, "model_reliance{}.csv".format(suffix)), index_col=0)
 
         self.ar["nn_name"] = self.ar[["hidden_layers"]].replace(NN_DICT)
         self.ar["nn_name_short"] = [s[-1:] for s in self.ar.nn_name]
