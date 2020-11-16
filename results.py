@@ -230,7 +230,7 @@ class Net():
         array = mr.fit(self.model, x=data["features"], y=data["targets"])
         return pd.DataFrame(
             array, 
-            index = data.columns['features'],
+            index = dataset.columns['features'],
             columns=[self.__repr__()]).transpose()
     
     def integrated_gradients(self, on="test"):
@@ -298,7 +298,7 @@ class Net():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_simulated", type=str, help="Path to logdir.")
-    parser.add_argument("--ensemble", default=False, action="store_true", help="Use ensembles instead of individual models.")
+    parser.add_argument("--ensemble", default=True, action="store_true", help="Use ensembles instead of individual models.")
     parser.add_argument("--dataset", default="simulated", type=str, help="Which dataset class from data.py to use")
     parser.add_argument("--fix_folder_names", default=False, type=bool, help="Fix names of Training folders.")
     parser.add_argument('--calculate_on', default="train", type=str, help="Where to calculate interpretability measures. test, train or valid")
