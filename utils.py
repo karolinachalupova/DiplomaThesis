@@ -30,6 +30,16 @@ def delete_unfinished_logdirs(logs):
     else: 
         print("There are no unfinished logdirs in {}.".format(logs))
 
+def fix_folder_names(logs):
+    cwd = os.getcwd()
+    # Rename all Training folders from Training-some-date-here to Training
+    # So that ray tune has no problem retreiving logs
+    for p in [os.path.join(logs, f) for f in os.listdir(logs)]:
+        os.chdir(p) 
+        os.rename([f for f in os.listdir(p) if f.startswith('Training')][0], 'Training')
+    os.chdir(cwd)
+
+
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
