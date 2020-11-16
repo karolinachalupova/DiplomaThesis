@@ -267,9 +267,9 @@ class Net():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_simulated", type=str, help="Path to logdir.")
-    parser.add_argument("--ensemble", default=True, action="store_true", help="Use ensembles instead of individual models.")
+    parser.add_argument("--ensemble", default=False, action="store_true", help="Use ensembles instead of individual models.")
     parser.add_argument("--dataset", default="simulated", type=str, help="Which dataset class from data.py to use")
-    parser.add_argument("--fix_folder_names", default=False, type=bool, help="Fix names of Training folders.")
+    parser.add_argument("--fix_folder_names", default=True, type=bool, help="Fix names of Training folders.")
 
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
@@ -279,10 +279,13 @@ if __name__ == "__main__":
     }
 
     if args.fix_folder_names:
+        cwd = os.getcwd()
         # Rename all Training folders from Training-some-date-here to Training
         # So that ray tune has no problem retreiving logs
-        for p in [os.path.join(args.logdir, f) for f in os.listdir(args.logdir)]: 
+        for p in [os.path.join(args.logdir, f) for f in os.listdir(args.logdir)]:
+            os.chdir(p) 
             os.rename([f for f in os.listdir(p) if f.startswith('Training')][0], 'Training')
+        os.chdir(cwd)
 
     C = dataset_name_map.get(args.dataset)
     dataset = C()
