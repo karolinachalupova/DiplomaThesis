@@ -78,6 +78,12 @@ class Nets():
         nets = [Net.from_logdir(logdir) for logdir in logdirs]
         return cls(nets)
     
+    @classmethod 
+    def from_saved(cls, path_to_models):
+        dirs = [os.path.join(path_to_models, x) for x in os.listdir(path_to_models)]
+        nets = [Net.from_saved(d) for d in dirs]
+        return cls(nets)
+    
     @property 
     def dataframe(self):
         """
@@ -216,6 +222,12 @@ class Net():
             index = [s+"_"+n for s, n in itertools.product(["train", "valid", "test"],names)],
             columns=[self.__repr__()]).transpose()
     
+    def backtest(self):
+        prediction = self.model.predict(x=self.netdata.test.data["features"])
+        backtest = pd.DataFrame(prediction, index=net.netdata.test.index, columns=['prediction'])
+        backtest["actual"] = net.netdata.test.data["targets"]
+        return backtest
+    
     def model_reliance(self, on="test"):
         data_select = {
             "test": self.netdata.test,
@@ -297,34 +309,16 @@ class Net():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_simulated", type=str, help="Path to logdir.")
+    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs", type=str, help="Path to logdir.")
     parser.add_argument("--ensemble", default=True, action="store_true", help="Use ensembles instead of individual models.")
-    parser.add_argument("--dataset", default="simulated", type=str, help="Which dataset class from data.py to use")
-    parser.add_argument("--fix_folder_names", default=False, type=bool, help="Fix names of Training folders.")
-    parser.add_argument('--calculate_on', default="train", type=str, help="Where to calculate interpretability measures. test, train or valid")
+    parser.add_argument("--dataset", default="selected", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument('--calculate_on', default="test", type=str, help="Where to calculate interpretability measures. test, train or valid")
+    parser.add_argument('--from_saved', default=True, action="store_true", help= "Whether to initialize nets from saved model or from logdir")
 
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
-    dataset_name_map = {
-        "selected":Selected,
-        "simulated":Simulated
-    }
-
-    if args.fix_folder_names:
-        fix_folder_names(args.logdir)
-
-    C = dataset_name_map.get(args.dataset)
-    dataset = C()
-    dataset.load()
-    nets = Nets.from_logs(args.logdir)
-    
-    if args.ensemble:
-        models = Nets(nets.create_ensembles())
-    else: 
-        models = nets
-
-    [net.set_dataset(dataset, ytest=1) for net in models.nets]
-    
+    ########################## MUST RUN AT ALL TIMES  ################################
+     # Set paths for results and models, create if necessary 
     path_generic =os.path.join("{}".format(args.dataset),"{}".format("ensembles" if args.ensemble else "individual"))
     path_results = os.path.join("results", path_generic)
     path_models = os.path.join("models", path_generic)
@@ -332,15 +326,50 @@ if __name__ == "__main__":
             os.makedirs(path_results)
     if not os.path.exists(path_models):
             os.makedirs(path_models)
-    
-    for net in models.nets: 
-        net.save(directory_path=path_models)
-    
-    for net in models.nets:
-        loc, glob = net.integrated_gradients(on=args.calculate_on)
-        loc.to_csv(os.path.join(path_models, net.folder_name, 'integrated_gradients_{}.csv'.format(args.calculate_on)))
 
-    models.dataframe.to_csv(os.path.join(path_results, 'args.csv'))
-    models.performance().to_csv(os.path.join(path_results, 'performance.csv'))
-    models.model_reliance(on=args.calculate_on).to_csv(os.path.join(path_results, 'model_reliance_{}.csv'.format(args.calculate_on)))
-    models.integrated_gradients_global(on=args.calculate_on).to_csv(os.path.join(path_results, 'integrated_gradients_global_{}.csv'.format(args.calculate_on)))
+    # Load necessary datasets
+    dataset_name_map = {
+        "selected":Selected,
+        "simulated":Simulated
+    }
+    C = dataset_name_map.get(args.dataset)
+    dataset = C()
+    dataset.load()
+
+    # Create models 
+    if args.from_saved:
+        # Create models from saved
+        models = Nets.from_saved(path_models)
+    else: 
+        # Create models from logdir 
+        fix_folder_names(args.logdir)
+        nets = Nets.from_logs(args.logdir)
+        if args.ensemble:
+            models = Nets(nets.create_ensembles())
+        else: 
+            models = nets
+    
+    # Set datasets
+    [net.set_dataset(dataset, ytest=1) for net in models.nets]
+   
+    
+    ################################# OPTIONAL ##############################################
+    # Save the models
+    #for net in models.nets: 
+    #    net.save(directory_path=path_models)
+    
+    # Calculate local integrated gradients
+    #for net in models.nets:
+    #    loc, glob = net.integrated_gradients(on=args.calculate_on)
+    #    loc.to_csv(os.path.join(path_models, net.folder_name, 'integrated_gradients_{}.csv'.format(args.calculate_on)))
+    
+    # Calculate backtest
+    for net in models.nets: 
+        backtest = net.backtest()
+        backtest.to_csv(os.path.join(path_models, net.folder_name, 'backtest.csv'))
+
+    # Calculate all other 
+    #models.dataframe.to_csv(os.path.join(path_results, 'args.csv'))
+    #models.performance().to_csv(os.path.join(path_results, 'performance.csv'))
+    #models.model_reliance(on=args.calculate_on).to_csv(os.path.join(path_results, 'model_reliance_{}.csv'.format(args.calculate_on)))
+    #models.integrated_gradients_global(on=args.calculate_on).to_csv(os.path.join(path_results, 'integrated_gradients_global_{}.csv'.format(args.calculate_on)))
