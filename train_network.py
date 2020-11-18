@@ -23,7 +23,7 @@ from tensorflow import reduce_sum, square, subtract, reduce_mean, divide, cast, 
 from ray import tune
 import ray
 
-from data import Selected, Simulated
+from data import Cleaned, Simulated, N_FEATURES
 
 class RSquare(Metric):
     def __init__(self, name="r_square", **kwargs):
@@ -41,7 +41,7 @@ class RSquare(Metric):
 
 def create_model(args, learning_rate, l1):
     hidden_layers = [int(n) for n in args.hidden_layers.split(',')]
-    inputs = Input(shape=[Selected.N_FEATURES])
+    inputs = Input(shape=[N_FEATURES])
     hidden = inputs
     if hidden_layers != [-1]:
         for size in hidden_layers: 
@@ -75,7 +75,7 @@ def create_ensemble(models):
     if len(models) == 1:
         return models[0]
     else: 
-        inputs = Input(shape=[Selected.N_FEATURES])
+        inputs = Input(shape=[N_FEATURES])
         predictions = [model(inputs) for model in models]
         outputs = average(predictions)
         model = Model(inputs=inputs, outputs=outputs)
@@ -222,7 +222,7 @@ class NetData():
             ytrain (int): number of years in training set
             yvalid (int): number of years in validation set
             ytest (int): number of years in test set
-            dataset (instance of loaded data.Selected) 
+            dataset (instance of loaded data.Cleaned or data.Simulated) 
                 dataset has attributes `targets` and `features`, each is a pd.DataFrame.
         
         Examples: 
@@ -237,7 +237,7 @@ class NetData():
         self.ytest = ytest
 
         # Number of features per example 
-        assert dataset.features.shape[1] == Selected.N_FEATURES, "Number of selected features does not match number of columns"
+        assert dataset.features.shape[1] == 30
 
         # Create organizing masks 
         idx_year = dataset.targets.index.get_level_values('date').year
@@ -283,12 +283,12 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
     parser.add_argument("--optimizer", default="adam", type=str, help="Optimizer for gradient descent. Gu: adam")
 
-    parser.add_argument("--dataset", default="selected", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument("--dataset", default="cleaned", type=str, help="Which dataset class from data.py to use")
     
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
     dataset_name_map = {
-        "selected":Selected,
+        "cleaned":Cleaned,
         "simulated":Simulated
     }
 
