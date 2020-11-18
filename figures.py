@@ -46,6 +46,39 @@ NN_NAMES = list(NN_DICT.values())
 SEED_NAMES = [str(i) for i in list(range(1,N_SEEDS+1))]
 
 
+class LocalIG():
+    def __init__(self, path_to_models):
+        self.path_to_models = path_to_models 
+    
+    def load(self, model_name, sort_features=True, suffix=""):
+        df = pd.read_csv(os.path.join(self.path_to_models, model_name, "integrated_gradients{}.csv".format(suffix)), index_col=[0,1])
+        if sort_features: 
+            df = df[SORTING]
+        self.df = df 
+    
+    def plot(self, nobs=100):
+        df = self.df.iloc[:nobs]
+        df_melted = pd.DataFrame([(colname, df[colname].iloc[i]) for i in range(len(df)) for colname in df.columns], 
+                 columns=['col', 'values'])
+        
+        # Plot
+        fig, axis = plt.subplots(1,1)
+        axis = sns.stripplot(x = 'values', y='col', data=df_melted)
+
+        # Axis Labels
+        axis.set_ylabel("")
+        axis.set_xlabel("Integrated Gradient")
+
+        # Y ticks 
+        labels = [meta.sc_to_latex.get(label) for label in list(df.columns)]
+        axis.set_yticklabels(labels)
+
+        # Convert to LatexFigure to change font and figsize
+        fig = LatexFigure(plt.gcf())
+        fig.fit(scale=2)
+        plt.show()
+
+
 class Results():
     def __init__(self, path):
         """
@@ -128,8 +161,10 @@ class Styling():
 
         transforms = {
             'heatmap': self.heatmap,
-            'top': self.top,
-            'bottom': self.bottom, 
+            'top10': self.top10,
+            'bottom10': self.bottom10,
+            'top5': self.top5,
+            'bottom5': self.bottom5, 
             'identity': self.identity  
         }
         self.transform = transforms.get(transform)
@@ -139,12 +174,20 @@ class Styling():
         return df.apply(lambda x: get_parts(x,6), axis=0)
     
     @staticmethod
-    def top(df):
+    def top10(df):
         return (df.apply(lambda x: get_orders(x), axis=0)>=20)
     
     @staticmethod
-    def bottom(df):
+    def bottom10(df):
         return (df.apply(lambda x: get_orders(x), axis=0)<=10)
+    
+    @staticmethod
+    def top5(df):
+        return (df.apply(lambda x: get_orders(x), axis=0)>=25)
+    
+    @staticmethod
+    def bottom5(df):
+        return (df.apply(lambda x: get_orders(x), axis=0)<=5)
     
     @staticmethod
     def identity(df):
@@ -158,8 +201,12 @@ class Mode():
 def style_plot_df(df, styling, mode, vmin=None):
     stylings = {
         'heatmap':Styling("heatmap", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
-        'top':Styling("top", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-        'bottom':Styling("bottom", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+        'top':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+        'bottom':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+        'top10':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+        'bottom10':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+        'top5':Styling("top5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+        'bottom5':Styling("bottom5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
         'blues':Styling("identity", plt.cm.Blues, show_cbar=True, flip_cbar=False)
     }
     modes = {
