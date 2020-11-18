@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from utils import chunks, get_parts, get_orders
-from data import Meta
+from data import Meta, FEATURES
 
 meta = Meta()
 meta.load()
@@ -31,12 +31,7 @@ NN_DICT = {
         "32,16,8,4,2":"NN5"
         }
 N_SEEDS = 9
-SORTING = [
-    '52WH', 'STR', 'IdioRisk', 'VolTrend', 'CVoST', 'Max', 'WWI',
-    'Coskew', 'OPoA', 'MomLag', 'LB5', 'RDoMV', 'Seas6t10A',
-    'Seas11t15N', 'Seas2t5N', 'MomRev', 'Amihud', 'NOA', 'Seas6t10N', 
-    'Seas', 'Seas2t5A', 'Accr', 'DurE', 'dCE', 'PM', 'LB3', 'LiqShck',
-    'LCoBP', 'EPred','EFoP']
+SORTING = FEATURES
 YTRAIN_NAMES = ["12","13","14", "15", "16"]
 
 
@@ -44,6 +39,7 @@ N_YTRAIN = len(YTRAIN_NAMES)
 HIDDEN_LAYERS = list(NN_DICT.keys())
 NN_NAMES = list(NN_DICT.values())
 SEED_NAMES = [str(i) for i in list(range(1,N_SEEDS+1))]
+SORTING_LATEX = [meta.sc_to_latex.get(s) for s in SORTING]
 
 
 class LocalIG():
@@ -54,29 +50,33 @@ class LocalIG():
         df = pd.read_csv(os.path.join(self.path_to_models, model_name, "integrated_gradients{}.csv".format(suffix)), index_col=[0,1])
         if sort_features: 
             df = df[SORTING]
-        self.df = df 
+        self.df = df
     
     def plot(self, nobs=100):
         df = self.df.iloc[:nobs]
-        df_melted = pd.DataFrame([(colname, df[colname].iloc[i]) for i in range(len(df)) for colname in df.columns], 
-                 columns=['col', 'values'])
-        
-        # Plot
-        fig, axis = plt.subplots(1,1)
-        axis = sns.stripplot(x = 'values', y='col', data=df_melted)
+        plot_all_observations(df, xlabel="Integrated Gradient")
 
-        # Axis Labels
-        axis.set_ylabel("")
-        axis.set_xlabel("Integrated Gradient")
 
-        # Y ticks 
-        labels = [meta.sc_to_latex.get(label) for label in list(df.columns)]
-        axis.set_yticklabels(labels)
+def plot_all_observations(df, xlabel):
+    df_melted = pd.DataFrame([(colname, df[colname].iloc[i]) for i in range(len(df)) for colname in df.columns], 
+                columns=['col', 'values'])
+    
+    # Plot
+    fig, axis = plt.subplots(1,1)
+    axis = sns.stripplot(x = 'values', y='col', data=df_melted)
 
-        # Convert to LatexFigure to change font and figsize
-        fig = LatexFigure(plt.gcf())
-        fig.fit(scale=2)
-        plt.show()
+    # Axis Labels
+    axis.set_ylabel("")
+    axis.set_xlabel(xlabel)
+
+    # Y ticks 
+    labels = [meta.sc_to_latex.get(label) for label in list(df.columns)]
+    axis.set_yticklabels(labels)
+
+    # Convert to LatexFigure to change font and figsize
+    fig = LatexFigure(plt.gcf())
+    fig.fit(scale=2)
+    plt.show()
 
 
 class Results():
