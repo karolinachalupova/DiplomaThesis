@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import scipy
-import sklearn 
+from sklearn import preprocessing, impute
 import os
 import argparse
 from scipy.stats import rankdata
@@ -16,6 +16,16 @@ from datetime import date
 
 directory = os.path.dirname(os.path.abspath(__file__))
 
+
+# Select 30 most important features based on liquid universe in
+# Tobek and Hronec, 2020, JFM: Does it pay to follow anomalies research? 
+FEATURES = [
+    '52WH', 'STR', 'IdioRisk', 'VolMV', 'CVoST', 'Max', 'WWI',
+    'Coskew', 'OPoA', 'MomLag', 'LB5', 'RDoMV', 'Seas6t10A',
+    'Seas11t15N', 'Seas2t5N', 'MomRev', 'Amihud', 'NOA', 'Seas6t10N', 
+    'Seas', 'Seas2t5A', 'Accr', 'DurE', 'dCE', 'PM', 'LB3', 'LiqShck',
+    'LCoBP', 'EPred','EFoP']
+N_FEATURES = len(FEATURES)
 
 class Data():
 
@@ -30,6 +40,12 @@ class Data():
         """
         Saves features and targets as pickles to paths. 
         """
+        p = self.paths.get("features")
+        if not os.path.exists(os.path.dirname(p)):
+            os.makedirs(os.path.dirname(p))
+        p = self.paths.get("targets")
+        if not os.path.exists(os.path.dirname(p)):
+            os.makedirs(os.path.dirname(p))
         print("Saving to {} and {}".format(self.paths.get("features"), self.paths.get("targets")))
         for dataset, path in zip(
                 [self.features, self.targets], 
@@ -95,9 +111,8 @@ class Subset(Data):
     def calculate(self, ancestor_paths=Filtered.PATHS, nrow=None):
         ancestor = Filtered(paths=ancestor_paths)
         ancestor.load()
-        nrow = nrow if nrow is not None else len(ancestor.features)
-        self.features = ancestor.features.take(nrow)
-        self.targets = ancestor.targets.take(nrow)
+        self.features = ancestor.features[FEATURES]
+        self.targets = ancestor.targets
         self.save()
 
 
@@ -109,10 +124,10 @@ class Cleaned(Data):
     def __init__(self, paths= PATHS):
         self.paths = paths
 
-    def calculate(self, ancestor_paths = Subset.PATHS, freq="Y"):
+    def calculate(self, ancestor_paths = Subset.PATHS):
         ancestor = Subset(paths = ancestor_paths)
         ancestor.load()
-        self.features = self.groupby_clean(ancestor.features, freq=freq)
+        self.features = self.clean(ancestor.features)
         self.targets = ancestor.targets
         self.save()
     
@@ -121,64 +136,43 @@ class Cleaned(Data):
         return df.replace([np.inf, -np.inf], np.nan)
 
     @staticmethod
+    def mask_outliers(df):
+        # Replaces all outside 2 stds by nan 
+        return df.mask(df.sub(df.mean()).div(df.std()).abs().gt(2))
+    
+    @staticmethod
     def winsorize(df):
-        t = scipy.stats.mstats.winsorize(df, axis=0, limits=(0.01,0.01))
-        return pd.DataFrame(t, columns=df.columns, index=df.index)
+        return df.apply(scipy.stats.mstats.winsorize, axis=0, limits=(0.01,0.05))
 
     @staticmethod
     def center(df):
         """
         removes the mean of the data, columnwise
         """
-        scaler = sklearn.preprocessing.StandardScaler(with_std=False)
+        scaler = preprocessing.StandardScaler(with_std=False)
         t = scaler.fit_transform(df)
         return pd.DataFrame(t, columns=df.columns, index=df.index)
         
     @staticmethod
     def normalize(df):
-        max_abs_scaler = sklearn.preprocessing.MaxAbsScaler()
+        max_abs_scaler = preprocessing.MaxAbsScaler()
         t = max_abs_scaler.fit_transform(df)
         return pd.DataFrame(t, columns=df.columns, index=df.index)
 
     @staticmethod
     def impute_nan(df):
-        imputer = sklearn.impute.SimpleImputer(missing_values=np.nan, strategy="constant", fill_value=0)
+        imputer = impute.SimpleImputer(missing_values=np.nan, strategy="constant", fill_value=0)
         t = imputer.fit_transform(df)
         return pd.DataFrame(t, columns=df.columns, index=df.index)
 
     def clean(self, df):
-        return self.impute_nan(self.normalize(self.center(self.winsorize(self.replace_inf(df)))))
-
-    def groupby_clean(self, df, freq = "Y"):
-        # Clean data using yearly cross-sections
-        df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.clean)
-        return df.sort_index()
-
-
-class Selected(Data):
-    PATHS = {
-            "features":  os.path.join(directory, 'data/selected/features.pkl'),
-            "targets":  os.path.join(directory, 'data/selected/targets.pkl')
-        }
-    N_FEATURES = 30
-    def __init__(self, paths= PATHS):
-        self.paths = paths
-
-    def calculate(self, ancestor_paths = Cleaned.PATHS):
-        ancestor = Cleaned(paths = ancestor_paths)
-        ancestor.load()
-
-        meta = Meta()
-        meta.load()
-
-        # Select N_FEATURES most important features based on 
-        # Tobek and Hronec, 2020, JFM: Does it pay to follow anomalies research? 
-        selected_cols = meta.signals[meta.signals["important_otmh_global_liquid"]<=self.N_FEATURES].sc.tolist()
-        assert len(selected_cols) == self.N_FEATURES, "Number of selected features does not match number of columns"
-
-        self.features = ancestor.features[selected_cols]
-        self.targets = ancestor.targets
-        self.save()
+        df = self.replace_inf(df)
+        df =  df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.mask_outliers)
+        df = self.impute_nan(df)
+        df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.winsorize)
+        df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.center)
+        df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.normalize)
+        return df
 
 
 class Simulated(Data):
@@ -186,16 +180,15 @@ class Simulated(Data):
             "features":  os.path.join(directory, 'data/simulated/features.pkl'),
             "targets":  os.path.join(directory, 'data/simulated/targets.pkl')
         }
-    N_FEATURES = 30
     N = 4600
     T = 190
     def __init__(self, paths= PATHS):
         self.paths = paths
 
     def calculate(self, ancestor_paths = None):
-        print("Simulating data with N={}, T={}, Pc={}...".format(self.N, self.T, self.N_FEATURES))
-        R, C = self.simulate_data(N=self.N, T=self.T, Pc=self.N_FEATURES)
-        N, T, Pc = self.N, self.T, self.N_FEATURES
+        print("Simulating data with N={}, T={}, Pc={}...".format(self.N, self.T, N_FEATURES))
+        R, C = self.simulate_data(N=self.N, T=self.T, Pc=N_FEATURES)
+        N, T, Pc = self.N, self.T, N_FEATURES
         assert N == R.shape[0]
         assert T == R.shape[1]
         assert N == C.shape[0]
@@ -340,14 +333,13 @@ class Meta():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--calculate", default="simulated", type=str, help="Which dataset to (re)calculate.")
+    parser.add_argument("--calculate", default="cleaned", type=str, help="Which dataset to (re)calculate.")
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
     name_map = {
         "filtered": Filtered,
         "subset": Subset, 
-        "cleaned": Cleaned, 
-        "selected": Selected,
+        "cleaned": Cleaned,
         "simulated": Simulated 
     }
 
@@ -358,8 +350,6 @@ if __name__ == "__main__":
         subset.calculate()
         cleaned = Cleaned()
         cleaned.calculate()
-        selected = Selected() 
-        selected.calculate()
     else: 
         C = name_map.get(args.calculate)
         c = C()
