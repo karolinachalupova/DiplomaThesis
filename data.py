@@ -30,6 +30,7 @@ class Data():
         """
         Saves features and targets as pickles to paths. 
         """
+        print("Saving to {} and {}".format(self.paths.get("features"), self.paths.get("targets")))
         for dataset, path in zip(
                 [self.features, self.targets], 
                 [self.paths.get("features"), self.paths.get("targets")]): 
@@ -186,17 +187,26 @@ class Simulated(Data):
             "targets":  os.path.join(directory, 'data/simulated/targets.pkl')
         }
     N_FEATURES = 30
+    N = 4600
+    T = 190
     def __init__(self, paths= PATHS):
         self.paths = paths
 
     def calculate(self, ancestor_paths = None):
-        R, C = self.simulate_data()
+        print("Simulating data with N={}, T={}, Pc={}...".format(self.N, self.T, self.N_FEATURES))
+        R, C = self.simulate_data(N=self.N, T=self.T, Pc=self.N_FEATURES)
+        N, T, Pc = self.N, self.T, self.N_FEATURES
+        assert N == R.shape[0]
+        assert T == R.shape[1]
+        assert N == C.shape[0]
+        assert T == C.shape[1]
+        assert Pc == C.shape[2]
 
         # Create time index
         sdate = date(1990,1,1)
         edate = date(2018,12,31) 
         daterange = list(pd.date_range(sdate,edate,freq='m'))
-        N,T = R.shape
+        
         time_index = []
         for _ in range(N):
             s=random.sample(range(len(daterange)-T),1)[0]
@@ -211,6 +221,7 @@ class Simulated(Data):
         targets.set_index(["DTID", "date"],inplace=True)
 
         # Convert array C into pd.DataFrame: features
+        
         N, T, Pc = C.shape
         out_arr = np.column_stack((np.repeat(np.arange(N),T),C.reshape(N*T,-1)))
         features = pd.DataFrame(out_arr)
@@ -223,7 +234,7 @@ class Simulated(Data):
         self.save()
     
     @staticmethod
-    def simulate_data(N=200,T=180,Pc=30):
+    def simulate_data(N, T, Pc):
         """
         Simulates matrix of returns R with shape (N,T) and matrix of features C with shape (N,T,Pc).
         
