@@ -15,7 +15,7 @@ from ray import tune
 from alibi.explainers import IntegratedGradients
 
 from train_network import create_model, NetData, create_ensemble
-from data import Selected, Simulated
+from data import Cleaned, Simulated
 from utils import fix_folder_names
 
 
@@ -164,7 +164,7 @@ class Net():
         used to choose optimum hyperparameters. 
         
         Arguments: 
-            dataset: instance of data.Selected
+            dataset: instance of data.Cleaned or data.Simulated
             logdir(str): path to the logging folder of the model. 
                 The logging folder of a trained model contains:
                 1) folder "Training", witch contains logdirs 
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs", type=str, help="Path to logdir.")
     parser.add_argument("--ensemble", default=True, action="store_true", help="Use ensembles instead of individual models.")
-    parser.add_argument("--dataset", default="selected", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument("--dataset", default="cleaned", type=str, help="Which dataset class from data.py to use")
     parser.add_argument('--calculate_on', default="test", type=str, help="Where to calculate interpretability measures. test, train or valid")
     parser.add_argument('--from_saved', default=True, action="store_true", help= "Whether to initialize nets from saved model or from logdir")
 
@@ -329,7 +329,7 @@ if __name__ == "__main__":
 
     # Load necessary datasets
     dataset_name_map = {
-        "selected":Selected,
+        "cleaned":Cleaned,
         "simulated":Simulated
     }
     C = dataset_name_map.get(args.dataset)
@@ -341,27 +341,25 @@ if __name__ == "__main__":
         # Create models from saved
         models = Nets.from_saved(path_models)
     else: 
-        # Create models from logdir 
+        # Create models from logdir and save the models
         fix_folder_names(args.logdir)
         nets = Nets.from_logs(args.logdir)
         if args.ensemble:
             models = Nets(nets.create_ensembles())
         else: 
             models = nets
+        for net in models.nets: 
+            net.save(directory_path=path_models)
     
     # Set datasets
     [net.set_dataset(dataset, ytest=1) for net in models.nets]
    
     
     ################################# OPTIONAL ##############################################
-    # Save the models
-    #for net in models.nets: 
-    #    net.save(directory_path=path_models)
-    
     # Calculate local integrated gradients
-    #for net in models.nets:
-    #    loc, glob = net.integrated_gradients(on=args.calculate_on)
-    #    loc.to_csv(os.path.join(path_models, net.folder_name, 'integrated_gradients_{}.csv'.format(args.calculate_on)))
+    for net in models.nets:
+        loc, glob = net.integrated_gradients(on=args.calculate_on)
+        loc.to_csv(os.path.join(path_models, net.folder_name, 'integrated_gradients_{}.csv'.format(args.calculate_on)))
     
     # Calculate backtest
     for net in models.nets: 
@@ -369,7 +367,7 @@ if __name__ == "__main__":
         backtest.to_csv(os.path.join(path_models, net.folder_name, 'backtest.csv'))
 
     # Calculate all other 
-    #models.dataframe.to_csv(os.path.join(path_results, 'args.csv'))
-    #models.performance().to_csv(os.path.join(path_results, 'performance.csv'))
-    #models.model_reliance(on=args.calculate_on).to_csv(os.path.join(path_results, 'model_reliance_{}.csv'.format(args.calculate_on)))
-    #models.integrated_gradients_global(on=args.calculate_on).to_csv(os.path.join(path_results, 'integrated_gradients_global_{}.csv'.format(args.calculate_on)))
+    models.dataframe.to_csv(os.path.join(path_results, 'args.csv'))
+    models.performance().to_csv(os.path.join(path_results, 'performance.csv'))
+    models.model_reliance(on=args.calculate_on).to_csv(os.path.join(path_results, 'model_reliance_{}.csv'.format(args.calculate_on)))
+    models.integrated_gradients_global(on=args.calculate_on).to_csv(os.path.join(path_results, 'integrated_gradients_global_{}.csv'.format(args.calculate_on)))
