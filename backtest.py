@@ -12,20 +12,7 @@ from scipy.stats import skew, kurtosis
 
 from matplotlib.ticker import MaxNLocator
 
-from figures import LatexFigure
-
-
-YTRAIN_NAMES = ["12","13","14", "15", "16"]
-NN_DICT = {
-        "-1":"LR",
-        "32":"NN1",
-        "32,16":"NN2",
-        "32,16,8":"NN3",
-        "32,16,8,4":"NN4",
-        "32,16,8,4,2":"NN5"
-        }
-HIDDEN_LAYERS = list(NN_DICT.keys())
-NN_NAMES = list(NN_DICT.values())
+from figures import LatexFigure, YTRAIN_NAMES, NN_DICT, HIDDEN_LAYERS, NN_NAMES
 
 
 def returns_histogram(returns):
