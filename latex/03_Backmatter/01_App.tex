@@ -1,4 +1,25 @@
-\chapter{Title of Appendix A}
+\chapter{Additional Figures}
+\label{chap:additional_figures} 
  
+\begin{table}
+	\resizebox{\textwidth}{!}{\input{Tables/descriptives.tex}}
+	\caption{Descriptive Statistics of the Features}
+	\label{tab:descriptives}
+\end{table} 
+ 
+\begin{sidewaystable}
+	\begin{adjustbox}{scale=0.4,center}
+		\input{Tables/correlation_matrix.tex}
+	\end{adjustbox}
+	\caption{Features Correlation Matrix}
+	\label{tab:correlation_matrix}
+\end{sidewaystable}
 
 
+\begin{center}
+	\begin{figure}
+		\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/histograms.pdf}
+		\caption{Histograms of All Features}
+		\label{fig:histograms}
+	\end{figure}
+\end{center}

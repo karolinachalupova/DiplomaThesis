@@ -15,22 +15,47 @@
 		
 		The correct treatment of the outliers depends on whether the outlier value is a valid observation or not. In the former case, we should keep the observation, but clip the value so that it does not disturb the normalization, while in the latter case we should treat the value as missing, since it is likely due to errors in the data. Of course, the two cases are impossible to tell from each other from certainty, so the approach here is to declare values outside 2 standard deviations from the mean as erroneous and treat them as missing, and subsequently winsorize the data at 1\% bottom and 5\% top. Winsorization preserves the observation being treated, but clips it to the value of the corresponding percentile (1\% and 95\%). This approach to treating outliers was selected by inspecting the histograms of all variables with the aim that the normalization preserves the data distribution as well as possible.    
 		
-		Lastly, since all data fed to the neural network must be real numbers, missing observations must be imputed. Here, the missing data are replaced by 0, which is suitable, since the normalization between $-1$ and $1$ allows to interpret the value of $0$ as "no signal".
+		Lastly, since all data fed to the neural network must be real numbers, missing observations must be imputed. Here, the missing data are replaced by 0, which is suitable, since the normalization between $-1$ and $1$ allows to interpret the value of $0$ as "no signal". The predictors vary considerably as to the percentage of missing data, as documented in Figure \ref{fig:missing_observations}. This is important, as the predictors with many missing values are likely to be less informative, as they offer less space for learning. The variables calculated directly from past returns, such as 52-Week High, Short-Term Reversal, Idiosyncratic Risk and Maximum, have almost no missing values. On the other hand, the ratio of research and development expenses to market value (RD / Market Equity) has more than 60\% of values missing, as some firms do not report research and development in their accounts. Other variables with many missing values are Earnings Predictability and Earnings Forecast-to-Price (around 50\% and 40\%). These are calculated based on analysts' forecasts, that are sometimes unavailable. The rest of variables have typically between 5\% and 20\% of missing values.  
 		
-		These operations must come in a suitable order, which is: masking most extreme outliers as missing, imputing missing values by $0$, winsorizing, centering and normalizing. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years.  
+		\begin{center}
+			\begin{figure}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/missing_observations.pdf}
+				\caption{Amount of Missing Values in Individual Features}
+				\label{fig:missing_observations}
+			\end{figure}
+		\end{center}
+		
+		These data-cleaning operations must be employed in a suitable order, which is: masking most extreme outliers as missing, imputing missing values by $0$, winsorizing, centering and normalizing. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years.  
 	
 	\subsection{Data Descriptives}   	
 	
-		Table \ref{tab:descr} shows descriptive statistics of the anomalies data after these transformations.
-			
-		Figure \ref{fig:correlation_matrix} shows the visual representation of the correlations of all features. The same matrix is also presented as a table in the Appendix. Figure \ref{fig:correlation_matrix_highest} shows a smaller part of this matrix, subset so that the 10 most correlated feature pairs are shown. The correlation coefficients of these pairs are listed in Table \ref{tab:most_correlated_pairs}.
+		This subsection describes basic statistical properties of individual predictors (features) after cleaning, which is precisely the data entering the neural network. (The terms \textit{predictors}, \textit{variables} and \textit{features} are used interchangeably.) 
+		 
+		Since all the features are normalized to have 0 mean and to fit into the interval $-1$ and $1$, possibly the most important statistic to describe their distribution is standard deviation, plotted in Figure \ref{fig:standard_deviation}. It typically ranges between 0.2 and 0.5, with most features having standard deviation around 0.35. This is relatively high, meaning that the values are well-distributed in their $[-1,1]$ interval. Having high enough standard deviation is an important aspect of an informative feature: since the values are very different across observations, there is room for the model to learn from these differences. Three features have standard deviation below 0.2: Liquidity Shocks, Leverage Component of Book/Price and Profit Margin. On the other hand, three features have notably high standard deviations (above 0.5): Whited-Wu Index, Liquidity Beta 5 and Net Operating Assets. 
+		
+		\begin{center}
+			\begin{figure}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/standard_deviation.pdf}
+				\caption{Standard Deviation of the Features}
+				\label{fig:standard_deviation}
+			\end{figure}
+		\end{center}
+		
+		Other aspects of the unconditional features distributions are shown in the Appendix \ref{chap:additional_figures}. Specifically, Table \ref{tab:descriptives} gives mean, minimum, maximum, and 25th, 50th and 75th percentile of all features. The distributions are also summarized visually using histograms in Figure \ref{fig:histograms}.  
 	
-		The task is to predict the return of given stock in month $t+1$ given that stock's anomalies as of the time $t$. (Two technical notes: first, the dataset is organized so that this shift is taken care of, i.e., the features corresponding to the given target have the same index. Second, the anomalies as of the time $t-1$ can be (and often are) calculated from raw data based on several preceding time periods, e.g., $t$, $t-1$, $t-2$ and therefore the time index  represents the entire information set rather than financial or accounting information being \textit{published} at that time index. For example, a single observation at a given time index $t$ consists of the target (stock's return in $t+1$), and anomalies calculated as of $t$, such as average return in the last six months ($t$, $t-1$, $t-2$, $t-3$, $t-4$, $t-5$))
+			
+		Figure \ref{fig:correlation_matrix} shows the correlations of all features. The correlation matrix is also presented in a table form in the Appendix \ref{chap:additional_figures}.
 		
-		Figure \ref{fig:hist_returns} shows histogram of the targets (monthly returns). 
+		\begin{center}
+			\begin{figure}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix.pdf}
+				\caption{Features Correlation Matrix}
+				\label{fig:correlation_matrix}
+			\end{figure}
+		\end{center}
 		
-		
-		
+		 Figure \ref{fig:correlation_matrix_highest} shows a smaller part of this matrix, subset so that the 10 most correlated feature pairs are shown. The correlation coefficients of these pairs are listed in Table \ref{tab:most_correlated_pairs}.
+		 
 		% Correlation matrix and table showing 10 most correlated pairs
 		\afterpage{%    % defer execution until the next page break occurs anyway
 			\begin{center}
@@ -47,29 +72,19 @@
 				\label{tab:most_correlated_pairs}
 			\end{table}
 		} % end of argument of `\afterpage` command
-	
-		\begin{table}
-			\resizebox{\textwidth}{!}{\input{Tables/descr.tex}}
-			\caption{Descriptive Statistics of the Features}
-			\label{tab:descr}
-		\end{table}
-	
-		\begin{sidewaystable}
-			\begin{adjustbox}{scale=0.4,center}
-				\input{Tables/correlation_matrix.tex}
-			\end{adjustbox}
-			\caption{Features Correlation Matrix}
-			\label{tab:correlation_matrix}
-		\end{sidewaystable}
-	
-		\begin{center}
-			\begin{figure}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix.pdf}
-				\caption{Features Correlation Matrix}
-				\label{fig:correlation_matrix}
-			\end{figure}
-		\end{center}
 		
+		
+		Figure \ref{fig:hist_returns} shows histogram of monthly returns, which is the target (predicted) variable.
+		
+		
+		
+
+	
+		
+	
+
+	
+
 		
 		
 		\begin{center}
