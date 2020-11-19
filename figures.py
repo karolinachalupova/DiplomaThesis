@@ -9,12 +9,13 @@ import matplotlib as mpl
 import pickle 
 import os 
 import itertools
+import argparse
 
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from utils import chunks, get_parts, get_orders
-from data import Meta, FEATURES
+from data import Cleaned, Subset, Meta, FEATURES
 
 meta = Meta()
 meta.load()
@@ -40,6 +41,96 @@ HIDDEN_LAYERS = list(NN_DICT.keys())
 NN_NAMES = list(NN_DICT.values())
 SEED_NAMES = [str(i) for i in list(range(1,N_SEEDS+1))]
 SORTING_LATEX = [meta.sc_to_latex.get(s) for s in SORTING]
+
+
+def plot_dummy(p=None):
+    plt.plot([1, 2, 3, 4])
+    plt.ylabel('Some Numbers')
+    fig = LatexFigure(plt.gcf())
+    fig.fit(square=True)
+    plt.show()
+    if p is not None: 
+        fig.save(p)
+
+#==========================================================================================
+#                                     On not cleaned data 
+#==========================================================================================
+def plot_missing_observations(df, p=None):
+    nas = (df.isna().sum()/df.isna().count())*100
+    fig, axis = plt.subplots(figsize=(8,8))
+    plt.plot(nas, np.arange(len(nas)), 'o')
+    
+    # Y Ticks
+    labels = [meta.sc_to_latex.get(s) for s in nas.index.values.tolist()]
+    plt.yticks(np.arange(0, len(nas.index), 1), labels=labels)
+    axis.invert_yaxis()
+    
+    # X label 
+    axis.set_xlabel("Percentage of Missing Observations")
+    
+    fig = LatexFigure(plt.gcf())
+    fig.fit(square=True)
+    plt.show()
+    if p is not None: 
+        fig.save(p)
+
+#==========================================================================================
+#                                     On cleaned data 
+#==========================================================================================
+def plot_histograms(df, p=None):
+    df.columns = [meta.sc_to_latex.get(s) for s in df.columns.tolist()]
+    df.hist(sharex=True)
+    fig = LatexFigure(plt.gcf())
+    fig.fit(scale=5)
+    if p is not None: 
+        fig.save(p)
+
+def plot_correlation_matrix(df, p=None):
+    corr = df.corr()
+    corr.rename(index=meta.sc_to_latex, inplace=True)
+    corr.columns = corr.index.values
+    _corrplot(corr, size_scale=30, legend=True)
+    fig = LatexFigure(plt.gcf())
+    fig.fit(square=True)
+    if p is not None: 
+        fig.save(p)
+
+def plot_correlation_matrix_highest(df, p=None):
+    corr = df.corr()
+    corr.rename(index=meta.sc_to_latex, inplace=True)
+    corr.columns = corr.index.values
+    so = corr.unstack().abs().sort_values()
+    hi = so[so!=1].iloc[::2].tail(10).sort_values(ascending=False)
+    highest = list(set(hi.index.get_level_values(0)).union(set(hi.index.get_level_values(1))))
+    df = corr.loc[highest,highest]
+    ordered_index = [s for s in SORTING_LATEX if s in list(df.columns)]
+    df.columns = ordered_index
+    df.index = ordered_index
+    _corrplot(df, size_scale=250, legend=True)
+    fig = LatexFigure(plt.gcf())
+    fig.fit(square=True)
+    if p is not None: 
+        fig.save(p)
+    
+def tabulate_correlation_matrix(df, p=None):
+    corr = df.corr()
+    corr.rename(index=meta.sc_to_latex, inplace=True)
+    corr.columns = corr.index.values
+    corr = corr.round(3)
+    tab = corr.to_latex()
+
+    # Rotate header 
+    break_one, break_two = "\\toprule\n{} &", "\\\\\n\\midrule"
+    first, second = tab.split(break_one)
+    second, third = second.split(break_two)
+    second = "&".join(["\\rot{" +s + "}" for s in second.split("&")])
+    tab = first +  break_one + second + break_two + third
+    
+    if p is not None: 
+        with open(p,'w') as tf:
+            tf.write(tab)
+    return corr
+    
 
 
 class LocalIG():
@@ -283,7 +374,7 @@ def plot_df(
     plt.show()
 
 
-def corrplot(data, size_scale=500, marker='s', legend=True):
+def _corrplot(data, size_scale=500, marker='s', legend=True):
     """
     Args:
         data (pd.DataFrame): df as output of pd.DataFrame.corr
@@ -318,6 +409,7 @@ class LatexFigure():
         self.fig.set_size_inches(self._figsize(scale,square=square))
     
     def save(self, path:str):
+        print("Saving figure to {}".format(path))
         self.fig.savefig(path, bbox_inches='tight')
     
 
@@ -475,6 +567,40 @@ def _heatmap(x, y, legend, **kwargs):
             ax.yaxis.tick_right() # Show vertical ticks on the right 
 
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path_figures", default="latex/Figures", type=str, help="Folder where to save the figures.")
+    parser.add_argument("--path_tables", default="latex/Tables", type=str, help="Folder where to save the figures.")
 
+    args = parser.parse_args([] if "__file__" not in globals() else None)
+
+    mpl.use('pgf')
+    sns.set()
+
+    plot_dummy(save_path=os.path.join(args.path_figures,"dummy.pdf"))
+
+    
+    #==========================================================================================
+    #                                     On not cleaned data 
+    #==========================================================================================
+    dt = Subset()
+    dt.load()
+    df = dt.features[SORTING]
+    plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
+
+    #==========================================================================================
+    #                                     On cleaned data 
+    #==========================================================================================
+    dt = Cleaned()
+    dt.load()
+    df = dt.features[SORTING]
+    
+    # Figures
+    plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
+    plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
+    plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
+    
+    # Tables
+    tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
 
 
