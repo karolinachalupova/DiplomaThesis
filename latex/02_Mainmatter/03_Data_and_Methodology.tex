@@ -3,64 +3,82 @@
 
 \section{Data}
 
-	I obtain the dataset from \cite{tobek2020does}. The dataset comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. I use the liquid universe, which contains 8,350 companies,  totaling 1,607,117 observations. 
+	The dataset, sourced at Reuters Datastream, comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 1,607,117 observations. An average firms is present for 16 years (192 observations). The data are rather evenly distributed in time, with 4,618 observations (firms) in an average month. It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues. The liquidity filter is obtained from \cite{tobek2020does}.  
 	
-	This thesis uses 30 anomalies that were identified as strongest predictors of equity returns in the \cite{tobek2020does} paper. The authors compute 153  anomalies, firm-level characteristics that have been put forward by leading financial and accounting journals as predictors of equity returns. The authors then use the 153 anomalies in a single model, which allows individual effects to crowd each other out, and results in ordering of the predictors from the strongest to the weakest. This thesis takes 30 predictors identified as strongest on liquid global universe of stocks (Figure 8 in \cite{tobek2020does}).
+	This thesis studies 30 variables that were identified as strongest predictors of equity returns by \cite{tobek2020does}. The authors compute 153  firm-level characteristics that have been put forward by leading financial and accounting journals as predictors of equity returns. The authors then use the 153 anomalies in a single model, which allows individual effects to crowd each other out, and results in ordering of the predictors from the strongest to the weakest. This thesis considers 30 predictors identified as strongest on liquid global universe of stocks (Figure 8 in \cite{tobek2020does}).
 	
 	Table [TODO add summary table] shows the 30 anomalies studied. 
 	
-	I preprocess all predictors in the following manner (in line with \cite{gu2020empirical}). First, I winsorize bottom and top 1\% of each variable to mitigate the impact of observations with implausibly large or small values. Second, I center each variable so that its mean is 0 and subsequently normalize so that the resulting values lie between -1 and 1. This is done because neural networks work better with data on the same scale. Finally, I impute missing values by mean (that is, 0), as all values entering a neural network must be numerical and the value 0 can be interpreted as "no information". I perform all these operations on data grouped by year, that is, first split the data into groups by year, then apply the transformations and finally combine back into single dataset. The main motivation for this is to prevent information from getting from test sets to training and validation sets.    	
+	\subsection{Data Cleaning}
 	
-	Table \ref{tab:descr} shows descriptive statistics of the anomalies data after these transformations.
+		Before feeding the data to the neural network, it is crucial to suitably clean them so that they are as informative as possible. As neural networks work best when the values of all features are on the same scale, the data are centered (by subtracting the mean) and then normalized so that all features range between the values $-1$ and $1$, as in \cite{gu2020empirical}. However, this operation would be highly problematic in the presence of outliers: if a feature has observations several times as high (or as small) as the rest of the data, normalization between $-1$ and $1$ would set the outliers' values close to $1$ (or $-1$), while setting the remaining majority of the values close to 0, thus rendering the data completely uninformative. To avoid this, the outliers are treated before normalization.
 		
-	Table \ref{tab:correlation_matrix} shows the correlations of all features. The same matrix is visualized in Figure \ref{fig:correlation_matrix}. 
-
-	The task is to predict the return of given stock in month $t+1$ given that stock's anomalies as of the time $t$. (Two technical notes: first, the dataset is organized so that this shift is taken care of, i.e., the features corresponding to the given target have the same index. Second, the anomalies as of the time $t-1$ can be (and often are) calculated from raw data based on several preceding time periods, e.g., $t$, $t-1$, $t-2$ and therefore the time index  represents the entire information set rather than financial or accounting information being \textit{published} at that time index. For example, a single observation at a given time index $t$ consists of the target (stock's return in $t+1$), and anomalies calculated as of $t$, such as average return in the last six months ($t$, $t-1$, $t-2$, $t-3$, $t-4$, $t-5$))
+		The correct treatment of the outliers depends on whether the outlier value is a valid observation or not. In the former case, we should keep the observation, but clip the value so that it does not disturb the normalization, while in the latter case we should treat the value as missing, since it is likely due to errors in the data. Of course, the two cases are impossible to tell from each other from certainty, so the approach here is to declare values outside 2 standard deviations from the mean as erroneous and treat them as missing, and subsequently winsorize the data at 1\% bottom and 5\% top. Winsorization preserves the observation being treated, but clips it to the value of the corresponding percentile (1\% and 95\%). This approach to treating outliers was selected by inspecting the histograms of all variables with the aim that the normalization preserves the data distribution as well as possible.    
+		
+		Lastly, since all data fed to the neural network must be real numbers, missing observations must be imputed. Here, the missing data are replaced by 0, which is suitable, since the normalization between $-1$ and $1$ allows to interpret the value of $0$ as "no signal".
+		
+		These operations must come in a suitable order, which is: masking most extreme outliers as missing, imputing missing values by $0$, winsorizing, centering and normalizing. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years.  
 	
-	Figure \ref{fig:hist_returns} shows histogram of the targets (monthly returns). 
+	\subsection{Data Descriptives}   	
 	
+		Table \ref{tab:descr} shows descriptive statistics of the anomalies data after these transformations.
+			
+		Figure \ref{fig:correlation_matrix} shows the visual representation of the correlations of all features. The same matrix is also presented as a table in the Appendix. Figure \ref{fig:correlation_matrix_highest} shows a smaller part of this matrix, subset so that the 10 most correlated feature pairs are shown. The correlation coefficients of these pairs are listed in Table \ref{tab:most_correlated_pairs}.
 	
+		The task is to predict the return of given stock in month $t+1$ given that stock's anomalies as of the time $t$. (Two technical notes: first, the dataset is organized so that this shift is taken care of, i.e., the features corresponding to the given target have the same index. Second, the anomalies as of the time $t-1$ can be (and often are) calculated from raw data based on several preceding time periods, e.g., $t$, $t-1$, $t-2$ and therefore the time index  represents the entire information set rather than financial or accounting information being \textit{published} at that time index. For example, a single observation at a given time index $t$ consists of the target (stock's return in $t+1$), and anomalies calculated as of $t$, such as average return in the last six months ($t$, $t-1$, $t-2$, $t-3$, $t-4$, $t-5$))
+		
+		Figure \ref{fig:hist_returns} shows histogram of the targets (monthly returns). 
+		
+		
+		
+		% Correlation matrix and table showing 10 most correlated pairs
+		\afterpage{%    % defer execution until the next page break occurs anyway
+			\begin{center}
+				\begin{figure}
+					\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix_highest.pdf}
+					\caption{Features Correlation Matrix (Subset to Show 10 Most Correlated Pairs)}
+					\label{fig:correlation_matrix_highest}
+				\end{figure}
+			\end{center}
+			
+			\begin{table}
+				\resizebox{\textwidth}{!}{\input{Tables/most_correlated_pairs.tex}}
+				\caption{10 Most Correlated Pairs of Features}
+				\label{tab:most_correlated_pairs}
+			\end{table}
+		} % end of argument of `\afterpage` command
 	
-
-	%\input{Tables/descr.tex}
+		\begin{table}
+			\resizebox{\textwidth}{!}{\input{Tables/descr.tex}}
+			\caption{Descriptive Statistics of the Features}
+			\label{tab:descr}
+		\end{table}
 	
-	\begin{table}
-		\resizebox{\textwidth}{!}{\input{Tables/descr.tex}}
-		\caption{Descriptive Statistics of the Features}
-		\label{tab:descr}
-	\end{table}
-
-	\begin{sidewaystable}
-		\begin{adjustbox}{scale=0.4,center}
-			\input{Tables/correlation_matrix.tex}
-		\end{adjustbox}
-		\caption{Features Correlation Matrix}
-		\label{tab:correlation_matrix}
-	\end{sidewaystable}
-
-	\begin{center}
-		\begin{figure}
-			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix.pdf}
+		\begin{sidewaystable}
+			\begin{adjustbox}{scale=0.4,center}
+				\input{Tables/correlation_matrix.tex}
+			\end{adjustbox}
 			\caption{Features Correlation Matrix}
-			\label{fig:correlation_matrix}
-		\end{figure}
-	\end{center}
+			\label{tab:correlation_matrix}
+		\end{sidewaystable}
 	
-	\begin{center}
-		\begin{figure}
-			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix_highest.pdf}
-			\caption{Features Correlation Matrix (Subset to Show 10 Most Correlated Pairs)}
-			\label{fig:correlation_matrix_highest}
-		\end{figure}
-	\end{center}
-	
-	\begin{center}
-		\begin{figure}
-			\includegraphics{Figures/hist_returns.pdf}
-			\caption{Histogram of Monthly Returns}
-			\label{fig:hist_returns}
-		\end{figure}
-	\end{center}
+		\begin{center}
+			\begin{figure}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix.pdf}
+				\caption{Features Correlation Matrix}
+				\label{fig:correlation_matrix}
+			\end{figure}
+		\end{center}
+		
+		
+		
+		\begin{center}
+			\begin{figure}
+				\includegraphics{Figures/hist_returns.pdf}
+				\caption{Histogram of Monthly Returns}
+				\label{fig:hist_returns}
+			\end{figure}
+		\end{center}
 
 
 \section{Methodology}
