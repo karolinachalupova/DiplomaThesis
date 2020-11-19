@@ -48,7 +48,6 @@ def plot_dummy(p=None):
     plt.ylabel('Some Numbers')
     fig = LatexFigure(plt.gcf())
     fig.fit(square=True)
-    plt.show()
     if p is not None: 
         fig.save(p)
 
@@ -66,11 +65,10 @@ def plot_missing_observations(df, p=None):
     axis.invert_yaxis()
     
     # X label 
-    axis.set_xlabel("Percentage of Missing Observations")
+    axis.set_xlabel("Percentage of Missing Values")
     
     fig = LatexFigure(plt.gcf())
     fig.fit(square=True)
-    plt.show()
     if p is not None: 
         fig.save(p)
 
@@ -90,6 +88,19 @@ def plot_correlation_matrix(df, p=None):
     corr.rename(index=meta.sc_to_latex, inplace=True)
     corr.columns = corr.index.values
     _corrplot(corr, size_scale=30, legend=True)
+    fig = LatexFigure(plt.gcf())
+    fig.fit(square=True)
+    if p is not None: 
+        fig.save(p)
+
+def plot_standard_deviation(df,p=None):
+    std = df.std()
+    std.rename(index=meta.sc_to_latex, inplace=True)
+    std.columns = std.index.values
+    fig, axis = plt.subplots(figsize=(8,8))
+    plt.plot(std, np.arange(len(std)), 'o')
+    plt.yticks(np.arange(0, len(std.index), 1), std.index.values.tolist())
+    axis.invert_yaxis()
     fig = LatexFigure(plt.gcf())
     fig.fit(square=True)
     if p is not None: 
@@ -130,8 +141,33 @@ def tabulate_correlation_matrix(df, p=None):
         with open(p,'w') as tf:
             tf.write(tab)
     return corr
-    
 
+def tabulate_most_correlated_pairs(df, p=None):
+    corr = df.corr()
+    corr.rename(index=meta.sc_to_latex, inplace=True)
+    corr.columns = corr.index.values
+    so = corr.unstack().abs().sort_values()
+    hi = so[so!=1].iloc[::2].tail(10).sort_values(ascending=False)
+    highest = list(set(hi.index.get_level_values(0)).union(set(hi.index.get_level_values(1))))
+    so = corr.loc[highest,highest].unstack().sort_values()
+    most = so[so!=1].iloc[::2].abs().sort_values(ascending=False).head(10).round(3).index
+    df = pd.DataFrame(so.loc[most].round(3))
+    df.columns = ["Correlation Coefficient"]
+    tab = df.to_latex()
+    if p is not None: 
+        with open(p,'w') as tf:
+            tf.write(tab)
+    return df 
+
+def tabulate_descriptives(df, p=None):
+    df = df.describe().transpose().round(4)
+    df.rename(index=meta.sc_to_latex, inplace=True)
+    df = df[df.columns.tolist()[1:]] # Omit count
+    df.columns = ["Mean", "Std", "Min", "25%", "50%", "75%", "Max"]
+    if p is not None: 
+        with open(p,'w') as tf:
+            tf.write(df.to_latex())
+    return df
 
 class LocalIG():
     def __init__(self, path_to_models):
@@ -409,8 +445,8 @@ class LatexFigure():
         self.fig.set_size_inches(self._figsize(scale,square=square))
     
     def save(self, path:str):
-        print("Saving figure to {}".format(path))
         self.fig.savefig(path, bbox_inches='tight')
+        print("Figure saved to {}".format(path))
     
 
     @staticmethod
@@ -577,7 +613,7 @@ if __name__ == "__main__":
     mpl.use('pgf')
     sns.set()
 
-    plot_dummy(save_path=os.path.join(args.path_figures,"dummy.pdf"))
+    plot_dummy(p=os.path.join(args.path_figures,"dummy.pdf"))
 
     
     #==========================================================================================
@@ -586,7 +622,7 @@ if __name__ == "__main__":
     dt = Subset()
     dt.load()
     df = dt.features[SORTING]
-    plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
+    #plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
 
     #==========================================================================================
     #                                     On cleaned data 
@@ -596,11 +632,14 @@ if __name__ == "__main__":
     df = dt.features[SORTING]
     
     # Figures
-    plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
-    plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
-    plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
+    #plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
+    #plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
+    #plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
+    #plot_standard_deviation(df,p=os.path.join(args.path_figures,"standard_deviation.pdf"))
     
     # Tables
-    tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
+    #tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
+    #tabulate_most_correlated_pairs(df, p=os.path.join(args.path_tables,"most_correlated_pairs.tex"))
+    tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
 
 
