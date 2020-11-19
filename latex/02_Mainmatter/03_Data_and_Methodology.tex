@@ -13,7 +13,7 @@
 	
 	Table \ref{tab:descr} shows descriptive statistics of the anomalies data after these transformations.
 		
-	Figure \ref{fig:corrplot}, shows plot of the correlation matrix of the anomalies.
+	Table \ref{tab:correlation_matrix} shows the correlations of all features. The same matrix is visualized in Figure \ref{fig:correlation_matrix}. 
 
 	The task is to predict the return of given stock in month $t+1$ given that stock's anomalies as of the time $t$. (Two technical notes: first, the dataset is organized so that this shift is taken care of, i.e., the features corresponding to the given target have the same index. Second, the anomalies as of the time $t-1$ can be (and often are) calculated from raw data based on several preceding time periods, e.g., $t$, $t-1$, $t-2$ and therefore the time index  represents the entire information set rather than financial or accounting information being \textit{published} at that time index. For example, a single observation at a given time index $t$ consists of the target (stock's return in $t+1$), and anomalies calculated as of $t$, such as average return in the last six months ($t$, $t-1$, $t-2$, $t-3$, $t-4$, $t-5$))
 	
@@ -26,19 +26,33 @@
 	
 	\begin{table}
 		\resizebox{\textwidth}{!}{\input{Tables/descr.tex}}
-		\caption{Descriptive Statistics of the Anomalies}
+		\caption{Descriptive Statistics of the Features}
 		\label{tab:descr}
 	\end{table}
 
+	\begin{sidewaystable}
+		\begin{adjustbox}{scale=0.4,center}
+			\input{Tables/correlation_matrix.tex}
+		\end{adjustbox}
+		\caption{Features Correlation Matrix}
+		\label{tab:correlation_matrix}
+	\end{sidewaystable}
 
 	\begin{center}
 		\begin{figure}
-			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/corrplot.pdf}
-			\caption{Correlation Matrix of the Anomalies}
-			\label{fig:corrplot}
+			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix.pdf}
+			\caption{Features Correlation Matrix}
+			\label{fig:correlation_matrix}
 		\end{figure}
 	\end{center}
 	
+	\begin{center}
+		\begin{figure}
+			\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix_highest.pdf}
+			\caption{Features Correlation Matrix (Subset to Show 10 Most Correlated Pairs)}
+			\label{fig:correlation_matrix_highest}
+		\end{figure}
+	\end{center}
 	
 	\begin{center}
 		\begin{figure}

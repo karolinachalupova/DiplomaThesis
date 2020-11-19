@@ -13,7 +13,18 @@
 \usepackage{bm}
 \usepackage{dsfont}
 \usepackage{longtable}
+\usepackage{rotating} % rotating tables using sidewaystable
 
+\usepackage{adjustbox}
+\usepackage{array}
+
+\newcolumntype{R}[2]{%
+	>{\adjustbox{angle=#1,lap=\width-(#2)}\bgroup}%
+	l%
+	<{\egroup}%
+}
+
+\newcommand*\rot{\multicolumn{1}{R{45}{1em}}} % command for rotating column headers in tabular
 \renewcommand{\vec}[1]{\bm{#1}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 
