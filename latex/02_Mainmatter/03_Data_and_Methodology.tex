@@ -3,11 +3,19 @@
 
 \section{Data}
 
-	The dataset, sourced at Reuters Datastream, comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 1,607,117 observations. An average firms is present for 16 years (192 observations). The data are rather evenly distributed in time, with 4,618 observations (firms) in an average month. It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues. The liquidity filter is obtained from \cite{tobek2020does}.  
+	\subsection{Universe of Stocks}
+		The dataset, sourced at Reuters Datastream, comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 1,607,117 observations. An average firms is present for 16 years (192 observations). The data are rather evenly distributed in time, with 4,618 observations (firms) in an average month. 
+		
+		It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues. The liquidity filter is obtained from \cite{tobek2020does}.  
 	
-	This thesis studies 30 variables that were identified as strongest predictors of equity returns by \cite{tobek2020does}. The authors compute 153  firm-level characteristics that have been put forward by leading financial and accounting journals as predictors of equity returns. The authors then use the 153 anomalies in a single model, which allows individual effects to crowd each other out, and results in ordering of the predictors from the strongest to the weakest. This thesis considers 30 predictors identified as strongest on liquid global universe of stocks (Figure 8 in \cite{tobek2020does}).
-	
-	Table [TODO add summary table] shows the 30 anomalies studied. 
+	\subsection{Predictors as Distillation of Prior Literature}
+		Table \ref{tab:meta} shows all 30 return predictors studied in this thesis. According to \cite{tobek2020does}, these variables are the best predictors of equity returns out of 153  candidate variables from leading financial and accounting journals (Figure 8 in \cite{tobek2020does}, global liquid universe of stocks). For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, as well as the publishing journal. Column Category presents the categorization of the features by the underlying data based on which the variable is calculated. Column Subcategory further discriminates the features based on the broad economic motivation for the feature as a return predictor. Finally, column Frequency shows the frequency (yearly or monthly) with which the feature changes values (is updated as new underlying data becomes available). [TODO make citations work, better classify the features into subcategories].   
+	 
+		\begin{table}
+			\resizebox{\textwidth}{!}{\input{Tables/meta.tex}}
+			\caption{Categorization of the Features}
+			\label{tab:meta}
+		\end{table}
 	
 	\subsection{Data Cleaning}
 	
@@ -27,7 +35,7 @@
 		
 		These data-cleaning operations must be employed in a suitable order, which is: masking most extreme outliers as missing, imputing missing values by $0$, winsorizing, centering and normalizing. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years.  
 	
-	\subsection{Data Descriptives}   	
+	\subsection{Predictor Descriptives}   	
 	
 		This subsection describes basic statistical properties of individual predictors (features) after cleaning, which is precisely the data entering the neural network. (The terms \textit{predictors}, \textit{variables} and \textit{features} are used interchangeably.) 
 		 
@@ -74,19 +82,12 @@
 		} % end of argument of `\afterpage` command
 		
 		
-		Figure \ref{fig:hist_returns} shows histogram of monthly returns, which is the target (predicted) variable.
 		
+	\subsection{Descriptives of Predicted Variable}
+		The predicted variable is the return of stock $i$ in month $t$. The prediction is based on the predictors as available at the end of the previous month. (Borrowing from ML terminology, this thesis also uses the term \textit{target} to refer to the predicted variable.) 
 		
-		
-
-	
-		
-	
-
-	
-
-		
-		
+		Figure \ref{fig:hist_returns} shows histogram of monthly returns. 
+			
 		\begin{center}
 			\begin{figure}
 				\includegraphics{Figures/hist_returns.pdf}
@@ -102,7 +103,7 @@
 	
 	\subsection{Architecture of the Neural Networks}
 	
-	The prediction task is a regression of a stocks' returns in the following month on a set of the stocks' charasteristics calculated as of the current month. My neural networks' architecture follows closely \cite{gu2020empirical}, which studies the very same prediction task. A reader who is already well-versed in neural network design can easily skip to the next subsection, as the architecture employed in this thesis is very standard and quite simple. In summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 5 different depths are used, with 1, 2, 3, 4, and 5 hidden layers consisting of 32, 16, 8, 4, and 2 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
+	The prediction task is a regression of a stocks' returns in the following month on a set of the stocks' charasteristics calculated as of the current month. My neural networks' architecture follows closely \cite{gu2020empirical}, which studies the very same prediction task. In brief summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 5 different depths are used, with 1, 2, 3, 4, and 5 hidden layers consisting of 32, 16, 8, 4, and 2 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
 	
 	First, let us describe a feed-forward neural network in general terms (e.g., \cite{goodfellow2016deep}). A feed-forward neural network can be represented as directed graph, consisting of several \textit{layers}. The input layer consists of several \textit{neurons} (nodes in the graph). This layer is connected to the next layer of neurons (the first hidden layer) by edges going from each input neuron to each hidden layer neuron. When each neuron of a layer is connected to each neuron in the next layer, we say that the two layers are fully connected. Each edge connecting two neurons is parametrized by a single trainable weight. More hidden layers can be connected to the previous hidden layer in the same fashion. Finally, the last hidden layer is connected, again, fully, to the output layer, which is the final prediction.
 	
@@ -140,9 +141,86 @@
 		o = \sum_{j}v_{j} h_j.
 	\end{equation}
 	
-	Obviously, in the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract information from them. This information then enters the next hidden layer and the information is made yet more concentrated. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 5 hidden layers, where the most abstract or high-level information is extracted. 
+	In the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract information from them. This information then enters the next hidden layer and the information is made yet more concentrated. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 5 hidden layers, where the most abstract or high-level information is extracted.
 	
-	In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point, dimension of the input layer) and propagates it through the series of hidden layers to produce the return prediction.	A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is not necessary, as reaching the best possible performance is not the goal of this thesis. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons as they: I train models of 5 different depths (1, 2, 3, 4, and 5 hidden layers), with 32 neurons in the first layer, 16 in the second layer, 8 in the third, 4 in the fourth and 2 in the fifth. Note that the decreasing number of neurons is why we say the information is becoming more and more concentrated the deeper the hidden layer.
+	In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point, dimension of the input layer) and propagates it through the series of hidden layers to produce the return prediction.	A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is not necessary, as reaching the best possible performance is not the goal of this thesis. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons as they, adapted to reflect my smaller size of input layer. I train models of 4 different depths: 1, 2, 3, and 4 hidden layers. The first hidden layer comprises of 16 neurons. Subsequent layers, if used, contains 8, 4 and 2 neurons for the second, third and fourth layer respectively. Note that the decreasing number of neurons is why we say the information is becoming more and more concentrated the deeper the hidden layer. Throughout the thesis, these 4 distinct neural networks are referred to as NN1, NN2, NN3 and NN4, the number standing for the respective number of hidden layers in the network.
+	
+	One of the neural networks used in this thesis, particularly, NN2 (the network with two hidden layers), is visualized here: 
+	
+	\tikzset{%
+		every neuron/.style={
+			circle,
+			draw,
+			minimum size=1cm
+		},
+		neuron missing/.style={
+			draw=none, 
+			scale=4,
+			text height=0.333cm,
+			execute at begin node=\color{black}$\vdots$
+		},
+	}
+	
+	\begin{center}
+		\begin{figure}
+			\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+			% draw nodes in input layer
+			\foreach \m/\l [count=\y] in {1,2,3,missing,4}
+			\node [every neuron/.try, neuron \m/.try] (input-\m) at (0,2.5-\y) {};
+			
+			% draw nodes in hidden layers
+			\foreach \m [count=\y] in {1,missing,2}
+			\node [every neuron/.try, neuron \m/.try ] (hidden1-\m) at (2,2-\y*1.25) {};
+			
+			% draw nodes in hidden layers
+			\foreach \m [count=\y] in {1,missing,2}
+			\node [every neuron/.try, neuron \m/.try ] (hidden2-\m) at (4,2-\y*1.25) {};
+			
+			% draw nodes in output layer
+			\foreach \m [count=\y] in {1}
+			\node [every neuron/.try, neuron \m/.try ] (output-\m) at (6,0) {};
+			
+			% Annotate input neurons, draw input arrows
+			\foreach \l [count=\i] in {1,2,3,30}
+			\draw [<-] (input-\i) -- ++(-1,0)
+			node [above, midway] {$x_{\l}$};
+			
+			% Annotate hidden neurons
+			\foreach \l [count=\i] in {1,16}
+			\node [above] at (hidden1-\i.north) {$h_{\l}$};
+			
+			% Annotate hidden neurons
+			\foreach \l [count=\i] in {1,8}
+			\node [above] at (hidden2-\i.north) {$l_{\l}$};
+			
+			% Annotate output neurons, draw output arrows
+			\foreach \l [count=\i] in {1}
+			\draw [->] (output-\i) -- ++(1,0)
+			node [above, midway] {$o$};
+			
+			% Draw arrows between input and hidden
+			\foreach \i in {1,...,4}
+			\foreach \j in {1,...,2}
+			\draw [->] (input-\i) -- (hidden1-\j);
+			
+			% Draw arrows between hidden and hidden
+			\foreach \i in {1,...,2}
+			\foreach \j in {1,...,2}
+			\draw [->] (hidden1-\i) -- (hidden2-\j);
+			
+			% Draw arrows between hidden and output
+			\foreach \i in {1,...,2}
+			\foreach \j in {1}
+			\draw [->] (hidden2-\i) -- (output-\j);
+			
+			% Annotate layers
+			\foreach \l [count=\x from 0] in {Input, First Hidden , Second Hidden, Ouput}
+			\node [align=center, above] at (\x*2,2) {\l \\ Layer};
+			\end{tikzpicture}
+			\caption{Computation Graph of the Neural Network NN2}
+			\label{fig:computation_graph}
+		\end{figure}
+	\end{center}
 	
 	In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer, again in line with  \cite{gu2020empirical}. This changes the above formula for hidden layer values to: 
 	
