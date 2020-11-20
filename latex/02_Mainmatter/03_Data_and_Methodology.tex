@@ -86,38 +86,39 @@
 	\subsection{Descriptives of Predicted Variable}
 		The predicted variable is the return of stock $i$ in month $t$. The prediction is based on the predictors as available at the end of the previous month. (Borrowing from ML terminology, this thesis also uses the term \textit{target} to refer to the predicted variable.) 
 		
-		Figure \ref{fig:hist_returns} shows histogram of monthly returns. 
+		Figure \ref{fig:returns_histogram} shows histogram of monthly returns. 
 			
 		\begin{center}
 			\begin{figure}
-				\includegraphics{Figures/hist_returns.pdf}
+				\includegraphics{Figures/returns_histogram.pdf}
 				\caption{Histogram of Monthly Returns}
-				\label{fig:hist_returns}
+				\label{fig:returns_histogram}
 			\end{figure}
 		\end{center}
 
 
 \section{Methodology}
 
-	I train 5 distinct feed-forward neural networks, each with 9 different random seeds. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and investigate whether this interpretability is robust across different random seeds. I also investigate whether the interpretation of the model is stable in time. This  section describes the methodological issues related, in this order, to the model's architecture, training, performance evaluation and interpretation of the neural networks employed in this thesis.
+	I train 4 distinct feed-forward neural networks, each with 9 different random seeds. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and investigate whether this interpretability is robust across different random seeds. I also investigate whether the interpretation of the model is stable in time. This  section describes the methodological issues related, in this order, to the model's architecture, training, performance evaluation and interpretation of the neural networks employed in this thesis.
 	
 	\subsection{Architecture of the Neural Networks}
 	
-	The prediction task is a regression of a stocks' returns in the following month on a set of the stocks' charasteristics calculated as of the current month. My neural networks' architecture follows closely \cite{gu2020empirical}, which studies the very same prediction task. In brief summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 5 different depths are used, with 1, 2, 3, 4, and 5 hidden layers consisting of 32, 16, 8, 4, and 2 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
+	The prediction task is a regression of a stocks' returns in the following month on a set of the stocks' charasteristics calculated as of the current month. My neural networks' architecture follows closely \cite{gu2020empirical}, which studies the very same prediction task. In brief summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 4 different depths are used, with 1, 2, 3, and hidden layers consisting of 16, 8, 4, and 2 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
 	
 	First, let us describe a feed-forward neural network in general terms (e.g., \cite{goodfellow2016deep}). A feed-forward neural network can be represented as directed graph, consisting of several \textit{layers}. The input layer consists of several \textit{neurons} (nodes in the graph). This layer is connected to the next layer of neurons (the first hidden layer) by edges going from each input neuron to each hidden layer neuron. When each neuron of a layer is connected to each neuron in the next layer, we say that the two layers are fully connected. Each edge connecting two neurons is parametrized by a single trainable weight. More hidden layers can be connected to the previous hidden layer in the same fashion. Finally, the last hidden layer is connected, again, fully, to the output layer, which is the final prediction.
 	
 	This directed graph is a representation of the computation performed by the neural network to get from the input to the output. The values of a given hidden layer, \vec{h}, are computed using the previous layer's values $\vec{x}$, and the matrix of weights on the edges $\vec{W}$ using sum of products: 
 	
 	\begin{equation}
-		\vec{h} = f(\vec{W}\vec{x})
+		\label{eqn:hidden_layer}
+		\vec{h} = f(\vec{W}\vec{x}),
 	\end{equation}
 	
 	or written element-wise, the value of neuron $h_i$ in the hidden layer is computed as 
 	
-	\begin{equation}
-		h_i = f \left( \sum_{j}w_{i,j}x_j \right)
-	\end{equation}
+	\begin{equation*}
+		h_i = f \left( \sum_{j}w_{i,j}x_j \right),
+	\end{equation*}
 	
 	where the function $f$ is a non-linear activation function, such as the rectified linear unit (ReLU):
 	
@@ -127,13 +128,14 @@
 				1 & \text{if } z \geq 0\\
 				0 & \text{otherwise}
 			\end{cases}.
-	\]
+	\]. 
+	
 	
 	The output layer is computed using the last hidden layer in the same manner, except there is no activation function (in case of a regression problem at least). That is, denoting $\vec{V}$ the weights on the last edges and $\vec{h}$ the output of the last hidden layer, the output of the neural network $\vec{o}$ has the elements: 
 	
-	\begin{equation}
+	\begin{equation*}
 		o_i = \sum_{j}v_{i,j} h_j.
-	\end{equation}
+	\end{equation*}
 	
 	In this thesis, the output is a scalar, so this further simplifies to 
 	
@@ -141,28 +143,30 @@
 		o = \sum_{j}v_{j} h_j.
 	\end{equation}
 	
-	In the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract information from them. This information then enters the next hidden layer and the information is made yet more concentrated. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 5 hidden layers, where the most abstract or high-level information is extracted.
+	In the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract information from them. This information then enters the next hidden layer and the information is made yet more concentrated. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 4 hidden layers, where the most abstract or high-level information is extracted.
 	
 	In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point, dimension of the input layer) and propagates it through the series of hidden layers to produce the return prediction.	A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is not necessary, as reaching the best possible performance is not the goal of this thesis. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons as they, adapted to reflect my smaller size of input layer. I train models of 4 different depths: 1, 2, 3, and 4 hidden layers. The first hidden layer comprises of 16 neurons. Subsequent layers, if used, contains 8, 4 and 2 neurons for the second, third and fourth layer respectively. Note that the decreasing number of neurons is why we say the information is becoming more and more concentrated the deeper the hidden layer. Throughout the thesis, these 4 distinct neural networks are referred to as NN1, NN2, NN3 and NN4, the number standing for the respective number of hidden layers in the network.
 	
 	One of the neural networks used in this thesis, particularly, NN2 (the network with two hidden layers), is visualized here: 
 	
-	\tikzset{%
-		every neuron/.style={
-			circle,
-			draw,
-			minimum size=1cm
-		},
-		neuron missing/.style={
-			draw=none, 
-			scale=4,
-			text height=0.333cm,
-			execute at begin node=\color{black}$\vdots$
-		},
-	}
+
 	
 	\begin{center}
 		\begin{figure}
+			\tikzset{%
+				every neuron/.style={
+					circle,
+					draw,
+					minimum size=1cm
+				},
+				neuron missing/.style={
+					draw=none, 
+					scale=4,
+					text height=0.333cm,
+					execute at begin node=\color{black}$\vdots$
+				},
+			}
+			
 			\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
 			% draw nodes in input layer
 			\foreach \m/\l [count=\y] in {1,2,3,missing,4}
@@ -178,7 +182,7 @@
 			
 			% draw nodes in output layer
 			\foreach \m [count=\y] in {1}
-			\node [every neuron/.try, neuron \m/.try ] (output-\m) at (6,0) {};
+			\node [every neuron/.try, neuron \m/.try ] (output-\m) at (6,-0.25) {};
 			
 			% Annotate input neurons, draw input arrows
 			\foreach \l [count=\i] in {1,2,3,30}
@@ -222,7 +226,7 @@
 		\end{figure}
 	\end{center}
 	
-	In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer, again in line with  \cite{gu2020empirical}. This changes the above formula for hidden layer values to: 
+	In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer, again in line with  \cite{gu2020empirical}. This changes the formula for hidden layer values from \ref{eqn:hidden_layer} to to: 
 	
 	\begin{equation}
 		\vec{h} = \text{ReLU}(\text{BN}(\vec{W}\vec{x}))
@@ -259,25 +263,25 @@
 	
 	$R^2$ is here defined slightly differently than usual:
 	
-	\begin{equation}
+	\begin{equation*}
 		R^2_{OOS} = 1 - \frac{ \sum_{(i,t)\in T_3} \left(r_{i,t+1}-	\hat{r}_{i, t+1}\right) ^2}{\sum_{(i,t)\in T_3} r_{i,t+1}^2}, 		
-	\end{equation}
+	\end{equation*}
 	
 	where $T_3$ indicates the testing sample. This is also the definition of $R^2$ used by \cite{gu2020empirical}. As the usual $R^2$, it measures how much of the variance in the predicted variable (here, return) is explained by the model, but it is distinct from the usual $R^2$ in that there is no demeaning in the denominator. This means that instead of comparing the forecasts to the naive forecast of average return, the metric compares predictions to the naive forecast of zero returns. This is because in the task of predicting individual stock returns, forecasts using global average often underperfom those using just zero, so using the usual $R^2$ definition would be too low a hurdle \citep{gu2020empirical}. 
 	
 	The RMSE is defined in the usual manner:   
 	
-	\begin{equation}
+	\begin{equation*}
 		RMSE_{OOS} = \sqrt{ \frac{1}{|T_3|} \sum_{(i,t)\in T_3} \left(r_{i,t+1}-	\hat{r}_{i, t+1}\right) ^2},	
-	\end{equation}
+	\end{equation*}
 	
 	and represents the average squared error of the prediction after taking a root of it, which is done so that the final measure is directly comparable in scale to the original returns. Note that it is very similar to the numerator of $R^2$.
 	
 	The MAE is defined as usual as well: 
 	
-	\begin{equation}
+	\begin{equation*}
 		MAE_{OOS} = \frac{1}{|T_3|} \sum_{(i,t)\in T_3} |r_{i,t+1}-	\hat{r}_{i, t+1}|
-	\end{equation}
+	\end{equation*}
 	
 	and differs from RMSE just in taking absolute value of the error instead of square, which gives same weight to large errors as to the small ones, as opposed to RMSE where large errors have larger weights (rising with their square). 
 	
@@ -289,55 +293,55 @@
 	\subsubsection{Model Reliance}
 		Model Reliance \citep{fisher2019all} is a global measure of feature importance. It is based on the idea that if a feature is important for making prediction, then distorting the feature by adding noise to it will damage prediction performance. Vice versa, if distorting a feature leaves the prediction performance relatively intact, that feature can be considered unimportant for the prediction. Thus, denoting  the prediction function (such as an ML model) $f$, Model Reliance of  $f$ on random variable $X$ can be \textit{informally} defined as
 		
-		\begin{equation}
+		\begin{equation*}
 			MR(f):=\frac{\text{Expected loss of \textit{f} under noise}}{\text{Expected loss of \textit{f} without noise}},
-		\end{equation}
+		\end{equation*}
 		
 		where the noise renders the random variable $X$ completely uninformative of the predicted variable while it at the same time does \textit{not} change the marginal distribution of $X$. More specifically, denote the predicted random variable as $Y$ and consider $X_1$ and $X_2$ as two explanatory random variables. The expected loss of $f$ can be then denoted as 
 		
-		\begin{equation}
+		\begin{equation*}
 			e_{\text{orig}}(f):= \mathbb{E} L(f,(Y,X_1, X_2)).
-		\end{equation} 
+		\end{equation*} 
 		
 		Further denote $X_1^s$ as random variable following the same marginal distribution as $X_1$, but independent of $Y$. 
 		
 		Then the expected loss of $f$ under noise, which distorts $X_1$ to $X_1^s$, can be denoted as 
 		
-		\begin{equation}
+		\begin{equation*}
 			e_{\text{switch}}(f):= \mathbb{E} L(f,(Y,X_1^s, X_2)).
-		\end{equation} 
+		\end{equation*} 
 		
 		Finally, Model Reliance can be \textit{formally} defined as 
 		
-		\begin{equation}
-			MR(f):=\frac{e_{\text{switch}}(f)}{e_{\text{orig}}(f)}
-		\end{equation}
+		\begin{equation*}
+			MR(f):=\frac{e_{\text{switch}}(f)}{e_{\text{orig}}(f)}.
+		\end{equation*}
 		
 		To see the intuition behind this formula, consider first the case that $X$ is very informative of $Y$. Then, 	$e_{\text{switch}}$ is much larger than $e_{\text{orig}}$ and Model Reliance is larger than 1. The more $X$ is informative of $Y$, the larger the  Model Reliance of $f$ on $X$ --- the more the model \textit{relies} on the feature to make the prediction. In the case when Model Reliance is exactly 1, the feature can be considered unimportant, as completely distorting it does not change the model's loss. Model Reliance can also be less than one, in the case that the distorted feature actually perform better than the original feature.
 				
 		The sample estimate of $e_{\text{orig}}(f)$ is the loss used in the model's training. Denote the target as $\vec{y} \in \mathbb{R}^N$ and consider two features $\vec{x_1}, \vec{x_2} \in \mathbb{R}^{N}$:
 		
-		\begin{equation}
-			\hat{e}_{\text{orig}}(f):= \frac{1}{N} \sum_{i=1}^{N} L\left(f, (y_i, x_{1_i}, x_{2_i}) \right)
-		\end{equation} 
+		\begin{equation*}
+			\hat{e}_{\text{orig}}(f):= \frac{1}{N} \sum_{i=1}^{N} L\left(f, (y_i, x_{1_i}, x_{2_i}) \right).
+		\end{equation*} 
 		
 		The sample estimate of $e_{\text{switch}}(f)$ can be done in two different ways, either by randomly permuting the values of the given feature or by dividing the feature's values in halves and the switching the halves. This thesis uses the latter, as it is computationally less demanding. (In both cases, the rest of the features and the predicted variables are intact.) It follows that the sample estimate of $e_{\text{switch}}(f)$ can be calculated as
 		
 		
-		\begin{equation}
+		\begin{equation*}
 			\begin{split}
 				\hat{e}_{\text{switch}}(f):= & \frac{1}{2 \lfloor N/2 \rfloor} \sum_{i=1}^{\lfloor N/2 \rfloor} L \left(f, \left( y_i, x_{1_{i+\lfloor N/2 \rfloor}}, x_{2_{i}} \right) \right) + \\ 
 				& + L \left( f, \left(y_{i+\lfloor N/2 \rfloor}, x_{1_{i}}, x_{2_{i+\lfloor N/2 \rfloor}} \right) \right). 
 			\end{split}
-		\end{equation}
+		\end{equation*}
 		
 		This is simply the loss of the prediction using the same data as original, but with values in the feature $\vec{x_1}$ split in half and the halves swapped, leaving the other features (here, $\vec{x_2}$) and the predicted variable $y$ unchanged. (If $N$ is even, the split in half can be performed exactly, and if $N$ is odd, the last observation in the dataset is not used and the split is then performed in the same way as if $N$ is even.) The extension to the case with more than two features is straightforward: when calculating Model Reliance of feature $\vec{x_1}$, we disturbed the values in $\vec{x}_1$, leaving $\vec{y}$ and $\vec{x_2}$ unchanged. If we additionally have, say, $\vec{x_3}$ and $\vec{x_4}$, they are treated in the same way as $\vec{x_2}$, that is, unchanged. 
 		
 		Finally, the sample estimate of Model Reliance on a given feature is: 
 		
-		\begin{equation}
+		\begin{equation*}
 			\widehat{MR}(f):=\frac{\hat{e}_{\text{switch}}(f)}{\hat{e}_{\text{orig}}(f)}.
-		\end{equation}
+		\end{equation*}
 			
 		That is, when calculating reliance of the model on a given feature, two predictions are made using the model: one is the usual one, with all features as well as the target undisturbed, the other is almost the same, except that we have disturbed the given feature (and the given feature only) by swapping halves of its values. The loss of both predictions is then computed as usual. Model Reliance is then the ratio of these two losses, the disturbed loss divided by the undisturbed one.   
 		
@@ -351,20 +355,62 @@
 		
 		For simplicity of the notation, assume that $f: \mathbb{R}^k \rightarrow [0,1]$. The Integrated Gradient of $i^{th}$ feature of the input $\vec{z}$ is defined as 
 		
-		\begin{equation}
+		\begin{equation*}
 			IG_i(\vec{z}) := (z_i - z_i') \int_{\alpha=0}^{1} \frac{\partial f(\vec{z'} + \alpha(\vec{z}-\vec{z'}))}{\partial z_i}d\alpha,
-		\end{equation}
+		\end{equation*}
 		
 		where $\frac{\partial f(\vec{z})}{\partial z_i}$ stands for the gradient of $f(\vec{z})$ along the $i^{th}$ dimension. This means that the measure considers a straight path in $\mathbb{R}^k$ from the baseline input ${\vec{z}'}$ to the given input ${\vec{z}}$ and calculates the gradient of prediction at all points along that path. The Integrated Gradient measure cumulates these gradients by taking the integral across the path.  
 		
 		To calculate the Integrated Gradient of $i^{th}$ feature of the input $\vec{z}$ empirically, it is necessary to approximate the integral by summation across several points along the straightline path  \citep{sundararajan2017axiomatic}. That is:  
 		
-		\begin{equation}
+		\begin{equation*}
 			IG_i^{\text{approx}}(\vec{z}) := (z_i - z_i') \sum_{k=1}^{m} \frac{\partial f(\vec{z'} + \frac{k}{m}(\vec{z}-\vec{z'}))}{\partial z_i}\frac{1}{m},
-		\end{equation} 
+		\end{equation*} 
 
 		where $m$, called the \textit{step size}, is the number of the steps in the Reimman approximation of the integral, here, the number of points along the straightline path at which evaluate the gradient. 
 		
-		Two implementation decisions must be made when calculating the Integrated Gradients: first, choosing the right baseline input, and second, choosing the right the step size. First, the baseline input should be chosen such that it can be interpreted as "no signal". In this thesis, there are two possible baselines: random noise and all-zero input. The latter was chosen, as it lends itself well to the "no signal" interpretation: all the features are normalized between -1 and 1 and have a mean of 0, thus, an all-zero input can be considered a natural point of departure. Additionally, the authors recommend to check that the model's prediction at baseline is around zero. This is important because it allows to use Integrated Gradient to explain the prediction as a function of the input, and not as of the input and the baseline. Indeed, the predictions for the all-zero input are around zero, which confirms that the all-zero input is the correct baseline here. Second, the step size should be chosen such that the approximation is good enough: the authors recommend to check that the attributions approximately sum up to the difference between the prediction at $\vec{z}$ and at $\vec{z'}$. Given that the latter is around zero, it remains to check that the attributions for $\vec{z}$ sum up to the prediction at $\vec{z}$. (Note that this is a verification of passing the Completness Axiom, see Literature Review.) This thesis uses the step size of 50, which passes this summation check comfortably [TODO verify].  
+		Two implementation decisions must be made when calculating the Integrated Gradients: first, choosing the right baseline input, and second, choosing the right the step size. First, the baseline input should be chosen such that it can be interpreted as "no signal". In this thesis, there are two possible baselines: random noise and all-zero input. The latter was chosen, as it lends itself well to the "no signal" interpretation: all the features are normalized between -1 and 1 and have a mean of 0, thus, an all-zero input can be considered a natural point of departure. Additionally, the authors recommend to check that the model's prediction at baseline is around zero. This is important because it allows to use Integrated Gradient to explain the prediction as a function of the input, and not as of the input and the baseline. Indeed, the predictions for the all-zero input are around zero, which confirms that the all-zero input is the correct baseline here. Second, the step size should be chosen such that the approximation is good enough: the authors recommend to check that the attributions approximately sum up to the difference between the prediction at $\vec{z}$ and at $\vec{z'}$. Given that the latter is around zero, it remains to check that the attributions for $\vec{z}$ sum up to the prediction at $\vec{z}$. (Note that this is a verification of passing the Completness Axiom, see Literature Review.) This thesis uses the step size of 50, which passes this summation check comfortably.  
 		
-		$\epsilon$, $\xi$
+	\subsection{Simulations}
+		All the results in this thesis are calculated twice: once on real data, and once on simulated data. There are several benefits of replicating the calculations on simulated data, as it allows for complete control of the data-generating process. Most notably, the true relationship between the returns and predictors is known, i.e., we know which variables have a relationship to returns, as well as the precise functional form of this relationship. In real data, on the other hand, the data generating process is unknown, and therefore it is impossible to know with certainty if the methods used to uncover the data generating process (model selection, interpretability measures) are appropriate or accurate enough. Calculating the results on simulated data, where the data generating process is fully known, is therefore is a suitable way to see whether the models and metrics used are appropriate. This, of course, is true only to the extent to which the simulation is faithful to the reality, namely, the amount of noise and the variances of the data should correspond to the real world. This section discloses how the simulations are calculated and also how the faithfulness of the simulation is achieved. 
+		
+		The simulations are performed exactly following \cite{gu2020empirical}, who study the identical prediction task and a very similar dataset. The simulation is adjusted to fit this thesis data by changing the number of simulated variables to 30 (as in the real data), the number of simulated firms to $N=4600$ (4618 in average month in real data) and the number of observations per firm to  $T=190$ (192 in average month in the real data). Other than that, the simulation follows exactly \cite{gu2020empirical} (see their Internet Appendix A for details). For each firm in $i=1, 2\dots,N$ and for each month $t=1, 2, \dots,T$, 30 predictive variables $c_ij,t$ are simulated, out of which 3 then determine the return in the next month:
+		
+		\begin{equation*}
+			r_{i,{t+1}} = g(z_{i,t}) + e_{i,t+1}.
+		\end{equation*}
+		
+		Specifically, the functional form $g$ is 
+		
+		\begin{equation*}
+			g(z_{i,t}) = \begin{pmatrix}
+			c_{i1,t}^2 & c_{i1,t}\cdot c_{i2,t} & \text{sgn}(c_{i1,t}\cdot x_t)
+			\end{pmatrix} \begin{pmatrix}
+			\theta_1 \\ \theta_2 \\ \theta_3
+			\end{pmatrix}, 
+		\end{equation*}
+		
+		where $\vec{\theta}$ is a vector of 3 scalars and $\vec{x}$ is a highly auto-correlated univariate time-series, which is used to introduce persistence to one of the simulated variables.   
+		
+		The noise terms $e_{i,t+1}$ are simulated using 
+		
+		\begin{equation*}
+			e_{i,t+1} = \begin{pmatrix} c_{i1,t} & c_{i2,t} & c_{i3,t} \end{pmatrix} \begin{pmatrix} v_{1,t+1} \\ v_{2,t+1} \\ v_{3,t+1}  \end{pmatrix} + \varepsilon_{i,t+1},
+		\end{equation*}  
+		
+		where $\vec{v_t}$ is vector of underlying risk factors, which are common to all firms. To achieve behavior similar to the real data, the values $\vec{\theta}$ as well as the parameters of the data-generating distributions are calibrated such that the noisiness of the data as given by $R^2$ (both in time and in cross-section) as well as volatility of returns reflects those in the real world. For example, $\vec{\theta}$ is calibrated to $(0.004, 0.03, 0.012)'$. For more technical details, particularly concerning the distributions used to draw the values $c_{i,j,t}$, $x_t$  and all the error terms, please refer to the Internet Appendix A of \cite{gu2020empirical}. 
+		  
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

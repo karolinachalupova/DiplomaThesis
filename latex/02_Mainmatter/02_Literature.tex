@@ -321,28 +321,8 @@
 	   		\psi_j(\hat{f}) = \beta_jx_j - \beta_jE(X_j)
 	   		\end{equation}
 	   		
-	   		 In case of linear models, the order in which the features "vote" for the prediction is irrelevant (addition is commutative). This is not so in nonlinear models, and this is why the Shapley value takes account for all possible orders in which features can participate in the prediction: in a model with $K$ features, there are $2^K$ possible coalitions between them.
+	   		 In case of linear models, the order in which the features "vote" for the prediction is irrelevant (addition is commutative). This is not so in nonlinear models, and this is why the Shapley value takes account for all possible orders in which features can participate in the prediction: in a model with $K$ features, there are $2^K$ possible coalitions between them.	   
 	   		 
-	   		 This is done using a global approach to pruning a tree. Global pruning is necessary as the task is to use the tree's nodes to span the stochastic discount factor, which cannot be done using local decision criteria.
-	   		 The pruning method proceeds in the following steps. 	
-	   		 
-	   		 The intermediate and final nodes of the tree then serve as basis assets to construct the discount factors. This is done by optimally weighting the basis assets. The weights are found by finding the minimum variance weights for each expected return, solving the Markowitz problem with additional shrinkage of the weights using elastic net penalty, choosing the the optimum expected return and shrinkage parameters to maximize the Sharpe ratio on validation data. Specifically, the approach takes three steps: 
-	   		 
-	   		 First, for each node of the tree (including the first and intermediate nodes, i.e., not just the leaves), calculate the sample estimates of mean and covariance matrix of the excess returns, denote them $\hat{\vec{\mu}}$ and $\hat{\vec{\Sigma}}$ respectively.
-	   		 
-	   		 Second, find weights $\vec{w}$ of the nodes such that the resulting portfolio will have minimum variance, at least a given mean return, and such that the weights are small (elastic net shrinkage). That is, for given $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$, find weights $\vec{w}$ that solve 
-	   		 
-	   		 \begin{equation}
-	   		 \begin{aligned}
-	   		 \min_{\vec{w}} \quad 
-	   		 & \frac{1}{2}\vec{w}^{T} \hat{\vec{\Sigma}} \vec{w} + \lambda_1 \norm{\vec{w}}_1 +  			\frac{1}{2} \lambda_2 \norm{\vec{w}}_2 \\
-	   		 \textrm{subject to} \quad 
-	   		 & \vec{w}^{T} \mathds{1} = \mathds{1} \\
-	   		 & \vec{w}^{T}\hat{\vec{\mu}} \geq \mu_0   \\
-	   		 \end{aligned}
-	   		 \end{equation}
-	   		 
-	   		 Third, the parameters $\mu_0$, and shrinkage parameters $\lambda_1$, $\lambda_2$ are selected on validation set such that the Sharpe ratio is maximized. 
 	   		 
 	   		 \cite{gu2020empirical} apply a wide range of ML methods to the stock-returns prediction task. Their model is 
 	   		 
