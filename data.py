@@ -180,15 +180,12 @@ class Simulated(Data):
             "features":  os.path.join(directory, 'data/simulated/features.pkl'),
             "targets":  os.path.join(directory, 'data/simulated/targets.pkl')
         }
-    N = 4600
-    T = 190
     def __init__(self, paths= PATHS):
         self.paths = paths
 
-    def calculate(self, ancestor_paths = None):
-        print("Simulating data with N={}, T={}, Pc={}...".format(self.N, self.T, N_FEATURES))
-        R, C = self.simulate_data(N=self.N, T=self.T, Pc=N_FEATURES)
-        N, T, Pc = self.N, self.T, N_FEATURES
+    def calculate(self, ancestor_paths = None, N=4600, T=190, Pc=N_FEATURES, save=True):
+        print("Simulating data with N={}, T={}, Pc={}...".format(N, T, Pc))
+        R, C = self.simulate_data(N=N, T=T, Pc=Pc)
         assert N == R.shape[0]
         assert T == R.shape[1]
         assert N == C.shape[0]
@@ -224,7 +221,8 @@ class Simulated(Data):
         
         self.targets = targets
         self.features = features 
-        self.save()
+        if save: 
+            self.save()
     
     @staticmethod
     def simulate_data(N, T, Pc):
