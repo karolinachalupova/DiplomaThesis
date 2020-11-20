@@ -201,6 +201,58 @@ def tabulate_descriptives(df, p=None):
             tf.write(df.to_latex())
     return df
 
+
+#==========================================================================================
+#                                     On cleaned returns
+#==========================================================================================
+
+def plot_returns_histogram(r, p=None):
+    r_without_outliers = r[np.abs((r - r.mean())/r.std(ddof=0)<8)] # zscore more than 8 is considered outlier
+    r_without_outliers.plot.hist(grid=True, bins=100, rwidth=0.9)
+    plt.xlabel('Monthly Return')
+    plt.ylabel('Number of Observations')
+    fig = LatexFigure(plt.gcf())
+    fig.fit()
+    if p is not None:
+        fig.save(p)
+
+#==========================================================================================
+#                                     On cleaned and simulated returns
+#==========================================================================================
+
+def plot_returns_histogram_simulation(r, r_sim, p=None):
+    r_crop = r[np.abs((r - r.mean())/r.std(ddof=0)<8)]  # consider z score > 8 an outlier
+    r_sim_crop = r_sim[np.abs((r_sim - r_sim.mean())/r_sim.std(ddof=0)<8)]
+
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=False)
+    r_crop.plot.hist(grid=True, bins=50, rwidth=0.9, range=[-1, 1], label="True", ax=axes[0])
+    r_sim_crop.plot.hist(grid=True, bins=50, rwidth=0.9, range=[-1, 1], label="Simulated", ax=axes[1])
+    
+    axes[0].set_ylabel("Frequency")
+    axes[1].set_ylabel("Frequency")
+    axes[1].set_xlabel("Monthly Return")
+    axes[0].legend(loc="upper right")
+    axes[1].legend(loc="upper right")
+    fig = LatexFigure(plt.gcf())
+    fig.fit()
+
+def tabulate_returns_simulation(r, r_sim, p=None):
+    df = pd.DataFrame({"True": r.describe().round(3), "Simulated": r_sim.describe().round(3)})
+
+    # Average annualized volatility 
+    """
+    print("vol_true")
+    vol_true = r.groupby(pd.Grouper(level=0)).apply(lambda group: group.std()*np.sqrt(12)).mean() 
+    print(vol_true)
+
+    print("vol_simul")
+    vol_simul = r_sim.groupby(pd.Grouper(level=0)).apply(lambda group: group.std()*np.sqrt(12)).mean() 
+    print(vol_simul)
+    """
+    return df
+
+
+
 class LocalIG():
     def __init__(self, path_to_models):
         self.path_to_models = path_to_models 
@@ -667,6 +719,7 @@ if __name__ == "__main__":
     dt = Cleaned()
     dt.load()
     df = dt.features[SORTING]
+    r = dt.targets["r"]
     
     # Figures
     #plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
@@ -678,6 +731,9 @@ if __name__ == "__main__":
     #tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
     #tabulate_most_correlated_pairs(df, p=os.path.join(args.path_tables,"most_correlated_pairs.tex"))
     #tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
+
+    # Figures of Returns 
+    plot_returns_histogram(r, p=os.path.join(args.path_figures,"returns_histogram.pdf"))
     
 
 
