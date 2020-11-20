@@ -52,7 +52,39 @@ def plot_dummy(p=None):
         fig.save(p)
 
 #==========================================================================================
-#                                     On not cleaned data 
+#                                     On Meta
+#==========================================================================================
+def tabulate_meta(p=None):
+    df = meta.signals[~meta.signals.important_otmh_global_liquid.isna()]
+    df = df[["name_tex", "class", "class2", "tex_cite", "journal", "freq"]]
+    df.set_index('name_tex', inplace=True)
+    df.index.name = "Feature"
+    df = df.loc[SORTING_LATEX]
+
+    class_dict = {"frictions":"Market", "fund":"Accounting","IBES":"Analyst Forecasts"}
+    class2_dict = {"other":"Other"}
+    freq_dict = {"monthly":"M", "annual_july":"Y"}
+    tex_cite_dict = {old: "\cite{" + old + "}" for old in list(df.tex_cite.values)}
+    df.replace({"class": class_dict, "freq":freq_dict, "class2":class2_dict, "tex_cite":tex_cite_dict}, inplace=True)
+
+    cdict = {
+        'name_tex':"Feature", 
+        "tex_cite":"Author", 
+        "journal":"Journal", 
+        "freq":"Frequency", 
+        "class":"Category", 
+        "class2":"Subcategory"}
+    df = df.rename(columns = cdict)
+
+    tab = df.to_latex(escape=False)
+    if p is not None: 
+        with open(p,'w') as tf:
+            tf.write(tab)
+    return df
+
+
+#==========================================================================================
+#                                     On not cleaned data
 #==========================================================================================
 def plot_missing_observations(df, p=None):
     nas = (df.isna().sum()/df.isna().count())*100
@@ -617,6 +649,11 @@ if __name__ == "__main__":
 
     
     #==========================================================================================
+    #                                     On Meta data
+    #==========================================================================================
+    tabulate_meta(p=os.path.join(args.path_tables,"meta.tex"))
+    
+    #==========================================================================================
     #                                     On not cleaned data 
     #==========================================================================================
     dt = Subset()
@@ -640,6 +677,7 @@ if __name__ == "__main__":
     # Tables
     #tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
     #tabulate_most_correlated_pairs(df, p=os.path.join(args.path_tables,"most_correlated_pairs.tex"))
-    tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
+    #tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
+    
 
 
