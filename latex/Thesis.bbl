@@ -1,6 +1,11 @@
-\begin{thebibliography}{35}
+\begin{thebibliography}{59}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Acharya \& Pedersen(2005)}]{acharya2005asset}
+\textsc{Acharya}, V.~V. \& L.~H. \textsc{Pedersen} (2005): \enquote{Asset
+  pricing with liquidity risk.}
+\newblock \emph{Journal of financial Economics} \textbf{77(2)}: pp. 375--410.
 
 \bibitem[{Ahn \emph{et~al.}(2012)Ahn, Horenstein, \& Wang}]{ahn2012determining}
 \textsc{Ahn}, S.~C., A.~R. \textsc{Horenstein}, \& N.~\textsc{Wang} (2012):
@@ -9,6 +14,17 @@
 \newblock \emph{Technical report}, Working Paper, Arizona State University and
   Sogang University.
 
+\bibitem[{Amihud(2002)}]{amihud2002illiquidity}
+\textsc{Amihud}, Y. (2002): \enquote{Illiquidity and stock returns:
+  cross-section and time-series effects.}
+\newblock \emph{Journal of financial markets} \textbf{5(1)}: pp. 31--56.
+
+\bibitem[{Ang \emph{et~al.}(2006)Ang, Hodrick, Xing, \& Zhang}]{ang2006cross}
+\textsc{Ang}, A., R.~J. \textsc{Hodrick}, Y.~\textsc{Xing}, \&
+  X.~\textsc{Zhang} (2006): \enquote{The cross-section of volatility and
+  expected returns.}
+\newblock \emph{The Journal of Finance} \textbf{61(1)}: pp. 259--299.
+
 \bibitem[{Baehrens \emph{et~al.}(2010)Baehrens, Schroeter, Harmeling, Kawanabe,
   Hansen, \& M{\"u}ller}]{baehrens2010explain}
 \textsc{Baehrens}, D., T.~\textsc{Schroeter}, S.~\textsc{Harmeling},
@@ -16,6 +32,26 @@
   (2010): \enquote{How to explain individual classification decisions.}
 \newblock \emph{The Journal of Machine Learning Research} \textbf{11}: pp.
   1803--1831.
+
+\bibitem[{Bali \emph{et~al.}(2011)Bali, Cakici, \& Whitelaw}]{bali2011maxing}
+\textsc{Bali}, T.~G., N.~\textsc{Cakici}, \& R.~F. \textsc{Whitelaw} (2011):
+  \enquote{Maxing out: Stocks as lotteries and the cross-section of expected
+  returns.}
+\newblock \emph{Journal of Financial Economics} \textbf{99(2)}: pp. 427--446.
+
+\bibitem[{Bali \emph{et~al.}(2013)Bali, Peng, Shen, \&
+  Tang}]{bali2013liquidity}
+\textsc{Bali}, T.~G., L.~\textsc{Peng}, Y.~\textsc{Shen}, \& Y.~\textsc{Tang}
+  (2013): \enquote{Liquidity shocks and stock market reactions.}
+\newblock \emph{The Review of Financial Studies} \textbf{27(5)}: pp.
+  1434--1485.
+
+\bibitem[{Ball \emph{et~al.}(2016)Ball, Gerakos, Linnainmaa, \&
+  Nikolaev}]{ball2016accruals}
+\textsc{Ball}, R., J.~\textsc{Gerakos}, J.~T. \textsc{Linnainmaa}, \&
+  V.~\textsc{Nikolaev} (2016): \enquote{Accruals, cash flows, and operating
+  profitability in the cross section of stock returns.}
+\newblock \emph{Journal of Financial Economics} \textbf{121(1)}: pp. 28--45.
 
 \bibitem[{Binder \emph{et~al.}(2016)Binder, Montavon, Lapuschkin, M{\"u}ller,
   \& Samek}]{binder2016layer}
@@ -30,6 +66,19 @@
 \textsc{Bryzgalova}, S., M.~\textsc{Pelger}, \& J.~\textsc{Zhu} (2019):
   \enquote{Forest through the trees: Building cross-sections of stock returns.}
 \newblock \emph{Available at SSRN 3493458} .
+
+\bibitem[{Chan \emph{et~al.}(2001)Chan, Lakonishok, \&
+  Sougiannis}]{chan2001stock}
+\textsc{Chan}, L.~K., J.~\textsc{Lakonishok}, \& T.~\textsc{Sougiannis} (2001):
+  \enquote{The stock market valuation of research and development
+  expenditures.}
+\newblock \emph{The Journal of Finance} \textbf{56(6)}: pp. 2431--2456.
+
+\bibitem[{Chordia \emph{et~al.}(2001)Chordia, Subrahmanyam, \&
+  Anshuman}]{chordia2001trading}
+\textsc{Chordia}, T., A.~\textsc{Subrahmanyam}, \& V.~R. \textsc{Anshuman}
+  (2001): \enquote{Trading activity and expected stock returns.}
+\newblock \emph{Journal of financial Economics} \textbf{59(1)}: pp. 3--32.
 
 \bibitem[{Cochrane(1996)}]{cochrane1996cross}
 \textsc{Cochrane}, J.~H. (1996): \enquote{A cross-sectional test of an
@@ -49,6 +98,12 @@
 \textsc{De~Prado}, M.~L. (2018): \emph{Advances in financial machine learning}.
 \newblock John Wiley \& Sons.
 
+\bibitem[{Dechow \emph{et~al.}(2004)Dechow, Sloan, \&
+  Soliman}]{dechow2004implied}
+\textsc{Dechow}, P.~M., R.~G. \textsc{Sloan}, \& M.~T. \textsc{Soliman} (2004):
+  \enquote{Implied equity duration: A new measure of equity risk.}
+\newblock \emph{Review of Accounting Studies} \textbf{9(2-3)}: pp. 197--228.
+
 \bibitem[{Di~Persio \& Honchar(2016)}]{di2016artificial}
 \textsc{Di~Persio}, L. \& O.~\textsc{Honchar} (2016): \enquote{Artificial
   neural networks architectures for stock price prediction: Comparisons and
@@ -62,6 +117,13 @@
   \enquote{Use of some sensitivity criteria for choosing networks with good
   generalization ability.}
 \newblock \emph{Neural Processing Letters} \textbf{2(6)}: pp. 1--4.
+
+\bibitem[{Elgers \emph{et~al.}(2001)Elgers, Lo, \&
+  Pfeiffer~Jr}]{elgers2001delayed}
+\textsc{Elgers}, P.~T., M.~H. \textsc{Lo}, \& R.~J. \textsc{Pfeiffer~Jr}
+  (2001): \enquote{Delayed security price adjustments to financial analysts'
+  forecasts of annual earnings.}
+\newblock \emph{The Accounting Review} \textbf{76(4)}: pp. 613--632.
 
 \bibitem[{Fama \& French(1993)}]{fama1993common}
 \textsc{Fama}, E.~F. \& K.~R. \textsc{French} (1993): \enquote{Common risk
@@ -84,6 +146,18 @@
   importance by studying an entire class of prediction models simultaneously.}
 \newblock \emph{Journal of Machine Learning Research} \textbf{20(177)}: pp.
   1--81.
+
+\bibitem[{Francis \emph{et~al.}(2004)Francis, LaFond, Olsson, \&
+  Schipper}]{francis2004costs}
+\textsc{Francis}, J., R.~\textsc{LaFond}, P.~M. \textsc{Olsson}, \&
+  K.~\textsc{Schipper} (2004): \enquote{Costs of equity and earnings
+  attributes.}
+\newblock \emph{The accounting review} \textbf{79(4)}: pp. 967--1010.
+
+\bibitem[{George \& Hwang(2004)}]{george200452}
+\textsc{George}, T.~J. \& C.-Y. \textsc{Hwang} (2004): \enquote{The 52-week
+  high and momentum investing.}
+\newblock \emph{The Journal of Finance} \textbf{59(5)}: pp. 2145--2176.
 
 \bibitem[{Giles \emph{et~al.}(1997)Giles, Lawrence, \& Tsoi}]{giles1997rule}
 \textsc{Giles}, C.~L., S.~\textsc{Lawrence}, \& A.~C. \textsc{Tsoi} (1997):
@@ -109,15 +183,47 @@
   \enquote{… and the cross-section of expected returns.}
 \newblock \emph{The Review of Financial Studies} \textbf{29(1)}: pp. 5--68.
 
+\bibitem[{Harvey \& Siddique(2000)}]{harvey2000conditional}
+\textsc{Harvey}, C.~R. \& A.~\textsc{Siddique} (2000): \enquote{Conditional
+  skewness in asset pricing tests.}
+\newblock \emph{The Journal of finance} \textbf{55(3)}: pp. 1263--1295.
+
+\bibitem[{Haugen \& Baker(1996)}]{haugen1996commonality}
+\textsc{Haugen}, R.~A. \& N.~L. \textsc{Baker} (1996): \enquote{Commonality in
+  the determinants of expected stock returns.}
+\newblock \emph{Journal of Financial Economics} \textbf{41(3)}: pp. 401--439.
+
 \bibitem[{Heaton \& Lucas(2000)}]{heaton2000portfolio}
 \textsc{Heaton}, J. \& D.~\textsc{Lucas} (2000): \enquote{Portfolio choice and
   asset prices: The importance of entrepreneurial risk.}
 \newblock \emph{The journal of finance} \textbf{55(3)}: pp. 1163--1198.
 
+\bibitem[{Heston \& Sadka(2008)}]{heston2008seasonality}
+\textsc{Heston}, S.~L. \& R.~\textsc{Sadka} (2008): \enquote{Seasonality in the
+  cross-section of stock returns.}
+\newblock \emph{Journal of Financial Economics} \textbf{87(2)}: pp. 418--445.
+
+\bibitem[{Hirshleifer \emph{et~al.}(2004)Hirshleifer, Hou, Teoh, \&
+  Zhang}]{hirshleifer2004investors}
+\textsc{Hirshleifer}, D., K.~\textsc{Hou}, S.~H. \textsc{Teoh}, \&
+  Y.~\textsc{Zhang} (2004): \enquote{Do investors overvalue firms with bloated
+  balance sheets?}
+\newblock \emph{Journal of Accounting and Economics} \textbf{38}: pp. 297--331.
+
 \bibitem[{Ioffe \& Szegedy(2015)}]{ioffe2015batch}
 \textsc{Ioffe}, S. \& C.~\textsc{Szegedy} (2015): \enquote{Batch normalization:
   Accelerating deep network training by reducing internal covariate shift.}
 \newblock \emph{arXiv preprint arXiv:1502.03167} .
+
+\bibitem[{Jegadeesh(1990)}]{jegadeesh1990evidence}
+\textsc{Jegadeesh}, N. (1990): \enquote{Evidence of predictable behavior of
+  security returns.}
+\newblock \emph{The Journal of finance} \textbf{45(3)}: pp. 881--898.
+
+\bibitem[{Jegadeesh \& Titman(1993)}]{jegadeesh1993returns}
+\textsc{Jegadeesh}, N. \& S.~\textsc{Titman} (1993): \enquote{Returns to buying
+  winners and selling losers: Implications for stock market efficiency.}
+\newblock \emph{The Journal of finance} \textbf{48(1)}: pp. 65--91.
 
 \bibitem[{Karpathy \emph{et~al.}(2015)Karpathy, Johnson, \&
   Fei-Fei}]{karpathy2015visualizing}
@@ -150,11 +256,28 @@
 \textsc{Molnar}, C. (2020): \emph{Interpretable Machine Learning}.
 \newblock Lulu. com.
 
+\bibitem[{Novy-Marx(2012)}]{novy2012momentum}
+\textsc{Novy-Marx}, R. (2012): \enquote{Is momentum really momentum?}
+\newblock \emph{Journal of Financial Economics} \textbf{103(3)}: pp. 429--453.
+
 \bibitem[{Olah \emph{et~al.}(2017)Olah, Mordvintsev, \&
   Schubert}]{olah2017feature}
 \textsc{Olah}, C., A.~\textsc{Mordvintsev}, \& L.~\textsc{Schubert} (2017):
   \enquote{Feature visualization.}
 \newblock \emph{Distill} \textbf{2(11)}: p.~e7.
+
+\bibitem[{Penman \emph{et~al.}(2007)Penman, Richardson, \&
+  Tuna}]{penman2007book}
+\textsc{Penman}, S.~H., S.~A. \textsc{Richardson}, \& I.~\textsc{Tuna} (2007):
+  \enquote{The book-to-price effect in stock returns: accounting for leverage.}
+\newblock \emph{Journal of accounting research} \textbf{45(2)}: pp. 427--467.
+
+\bibitem[{Richardson \emph{et~al.}(2006)Richardson, Sloan, Soliman, \&
+  Tuna}]{richardson2006implications}
+\textsc{Richardson}, S.~A., R.~G. \textsc{Sloan}, M.~T. \textsc{Soliman}, \&
+  I.~r. \textsc{Tuna} (2006): \enquote{The implications of accounting
+  distortions and growth for accruals and profitability.}
+\newblock \emph{The Accounting Review} \textbf{81(3)}: pp. 713--743.
 
 \bibitem[{Roll(1977)}]{roll1977critique}
 \textsc{Roll}, R. (1977): \enquote{A critique of the asset pricing theory's
@@ -178,6 +301,15 @@
   \enquote{Learning important features through propagating activation
   differences.}
 \newblock \emph{arXiv preprint arXiv:1704.02685} .
+
+\bibitem[{Sloan(1996)}]{sloan1996create}
+\textsc{Sloan}, A. (1996): \enquote{Create an account or log in.}
+\newblock \emph{Accounting review} \textbf{71(3)}: pp. 289--315.
+
+\bibitem[{Soliman(2008)}]{soliman2008use}
+\textsc{Soliman}, M.~T. (2008): \enquote{The use of dupont analysis by market
+  participants.}
+\newblock \emph{The Accounting Review} \textbf{83(3)}: pp. 823--853.
 
 \bibitem[{Springenberg \emph{et~al.}(2014)Springenberg, Dosovitskiy, Brox, \&
   Riedmiller}]{springenberg2014striving}
@@ -203,5 +335,10 @@
 \textsc{Tobek}, O. \& M.~\textsc{Hronec} (2020): \enquote{Does it pay to follow
   anomalies research? machine learning approach with international evidence.}
 \newblock \emph{Journal of Financial Markets} p. 100588.
+
+\bibitem[{Whited \& Wu(2006)}]{whited2006financial}
+\textsc{Whited}, T.~M. \& G.~\textsc{Wu} (2006): \enquote{Financial constraints
+  risk.}
+\newblock \emph{The Review of Financial Studies} \textbf{19(2)}: pp. 531--559.
 
 \end{thebibliography}

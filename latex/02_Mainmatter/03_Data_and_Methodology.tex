@@ -9,8 +9,8 @@
 		It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues. The liquidity filter is obtained from \cite{tobek2020does}.  
 	
 	\subsection{Predictors as Distillation of Prior Literature}
-		Table \ref{tab:meta} shows all 30 return predictors studied in this thesis. According to \cite{tobek2020does}, these variables are the best predictors of equity returns out of 153  candidate variables from leading financial and accounting journals (Figure 8 in \cite{tobek2020does}, global liquid universe of stocks). For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, as well as the publishing journal. Column Category presents the categorization of the features by the underlying data based on which the variable is calculated. Column Subcategory further discriminates the features based on the broad economic motivation for the feature as a return predictor. Finally, column Frequency shows the frequency (yearly or monthly) with which the feature changes values (is updated as new underlying data becomes available). [TODO make citations work, better classify the features into subcategories].   
-	 
+		Table \ref{tab:meta} shows all 30 return predictors studied in this thesis. According to \cite{tobek2020does}, these variables are the best predictors of equity returns out of 153  candidate variables from leading financial and accounting journals \footnote{See Figure 8 in \cite{tobek2020does}. Global liquid universe of stocks is considered.}. For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, as well as the publishing journal. Column Category presents the categorization of the features by the underlying data using which the variable is calculated: accounting (for variables calculated using firm's accounting numbers), market (for variables calculated using market information, such as return or volume), and analyst forecasts (for variables calculated using I/B/E/S database on professional forecasters). Column Subcategory further discriminates the features based on the broad economic motivation for the feature as a return predictor. [TODO explain more, link to literature review, better clasify to subcategories] Finally, column Frequency shows the frequency (yearly or monthly) with which the feature changes values (is updated as new underlying data becomes available).
+		
 		\begin{table}
 			\resizebox{\textwidth}{!}{\input{Tables/meta.tex}}
 			\caption{Categorization of the Features}
@@ -107,7 +107,7 @@
 	
 	First, let us describe a feed-forward neural network in general terms (e.g., \cite{goodfellow2016deep}). A feed-forward neural network can be represented as directed graph, consisting of several \textit{layers}. The input layer consists of several \textit{neurons} (nodes in the graph). This layer is connected to the next layer of neurons (the first hidden layer) by edges going from each input neuron to each hidden layer neuron. When each neuron of a layer is connected to each neuron in the next layer, we say that the two layers are fully connected. Each edge connecting two neurons is parametrized by a single trainable weight. More hidden layers can be connected to the previous hidden layer in the same fashion. Finally, the last hidden layer is connected, again, fully, to the output layer, which is the final prediction.
 	
-	This directed graph is a representation of the computation performed by the neural network to get from the input to the output. The values of a given hidden layer, \vec{h}, are computed using the previous layer's values $\vec{x}$, and the matrix of weights on the edges $\vec{W}$ using sum of products: 
+	This directed graph is a representation of the computation performed by the neural network to get from the input to the output. The values of a given hidden layer, $\vec{h}$, are computed using the previous layer's values $\vec{x}$, and the matrix of weights on the edges $\vec{W}$ using sum of products: 
 	
 	\begin{equation}
 		\label{eqn:hidden_layer}
@@ -399,6 +399,8 @@
 		\end{equation*}  
 		
 		where $\vec{v_t}$ is vector of underlying risk factors, which are common to all firms. To achieve behavior similar to the real data, the values $\vec{\theta}$ as well as the parameters of the data-generating distributions are calibrated such that the noisiness of the data as given by $R^2$ (both in time and in cross-section) as well as volatility of returns reflects those in the real world. For example, $\vec{\theta}$ is calibrated to $(0.004, 0.03, 0.012)'$. For more technical details, particularly concerning the distributions used to draw the values $c_{i,j,t}$, $x_t$  and all the error terms, please refer to the Internet Appendix A of \cite{gu2020empirical}. 
+		
+		\cite{baehrens2010explain}  \cite{elgers2001delayed}
 		  
 	
 	
