@@ -15,6 +15,9 @@ import warnings
 from ray import tune
 from alibi.explainers import IntegratedGradients
 
+from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError
+from train_network import RSquare
+
 from train_network import create_model, NetData, create_ensemble
 from utils import fix_folder_names
 
@@ -152,7 +155,8 @@ class Net():
         try: 
             self.args.optimizer = args.optimizer 
         except AttributeError: 
-            self.args.optimizer = "adam" 
+            self.args.optimizer = "adam"
+       
     
     @classmethod
     def from_logdir(cls, logdir):
@@ -187,6 +191,11 @@ class Net():
             json_string = json.load(f)
         model = tf.keras.models.model_from_json(json_string, custom_objects=None)
         model.load_weights(os.path.join(folder, 'weights.h5'))
+
+        model.compile(
+            loss ='mse',
+            metrics = [RootMeanSquaredError(), MeanAbsoluteError(), RSquare()]
+        )
         return cls(model, args)
 
 
@@ -222,8 +231,8 @@ class Net():
     
     def backtest(self):
         prediction = self.model.predict(x=self.netdata.test.data["features"])
-        backtest = pd.DataFrame(prediction, index=net.netdata.test.index, columns=['prediction'])
-        backtest["actual"] = net.netdata.test.data["targets"]
+        backtest = pd.DataFrame(prediction, index=self.netdata.test.index, columns=['prediction'])
+        backtest["actual"] = self.netdata.test.data["targets"]
         return backtest
     
     def model_reliance(self, on="test"):
