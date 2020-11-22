@@ -25,6 +25,13 @@ FEATURES = [
     'Seas11t15N', 'Seas2t5N', 'MomRev', 'Amihud', 'NOA', 'Seas6t10N', 
     'Seas', 'Seas2t5A', 'Accr', 'DurE', 'dCE', 'PM', 'LB3', 'LiqShck',
     'LCoBP', 'EPred','EFoP']
+
+FEATURES_OLD = ['52WH', 'STR', 'IdioRisk', 'VolTrend', 'CVoST', 'Max', 'WWI',
+    'Coskew', 'OPoA', 'MomLag', 'LB5', 'RDoMV', 'Seas6t10A',
+    'Seas11t15N', 'Seas2t5N', 'MomRev', 'Amihud', 'NOA', 'Seas6t10N', 
+    'Seas', 'Seas2t5A', 'Accr', 'DurE', 'dCE', 'PM', 'LB3', 'LiqShck',
+    'LCoBP', 'EPred','EFoP']
+
 N_FEATURES = len(FEATURES)
 
 class Data():
