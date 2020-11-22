@@ -13,9 +13,12 @@ import argparse
 
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from empyrical.stats import cum_returns
+from matplotlib.ticker import MaxNLocator
 
 from utils import chunks, get_parts, get_orders
-from data import Cleaned, Subset, Meta, FEATURES
+from data import Cleaned, Subset, Meta, FEATURES, FEATURES_OLD
+
 
 meta = Meta()
 meta.load()
@@ -23,24 +26,42 @@ mpl.use('pgf')
 sns.set()
 
 
-NN_DICT = {
+
+N_SEEDS = 9
+YTRAIN_NAMES = ["12","13","14", "15", "16"]
+SEED_NAMES = [str(i) for i in list(range(1,N_SEEDS+1))]
+N_YTRAIN = len(YTRAIN_NAMES)
+
+
+NN_DICT_OLD = {
         "-1":"LR",
-        "32":"NN1",
+        "32": "NN1",
         "32,16":"NN2",
         "32,16,8":"NN3",
         "32,16,8,4":"NN4",
-        "32,16,8,4,2":"NN5"
+        "32,16,8,4,2":"NN5",
         }
-N_SEEDS = 9
-SORTING = FEATURES
-YTRAIN_NAMES = ["12","13","14", "15", "16"]
+HIDDEN_LAYERS_OLD = list(NN_DICT_OLD.keys())
+NN_NAMES_OLD = list(NN_DICT_OLD.values())
+SORTING_OLD=FEATURES_OLD
+SORTING_LATEX_OLD = [meta.sc_to_latex.get(s) for s in SORTING_OLD]
 
-
-N_YTRAIN = len(YTRAIN_NAMES)
+NN_DICT = {
+        "-1":"LR",
+        "16":"NN1",
+        "16,8":"NN2",
+        "16,8,4":"NN3",
+        "16,8,4,2":"NN4",
+        }
 HIDDEN_LAYERS = list(NN_DICT.keys())
 NN_NAMES = list(NN_DICT.values())
-SEED_NAMES = [str(i) for i in list(range(1,N_SEEDS+1))]
+SORTING = FEATURES
+SORTING=FEATURES
 SORTING_LATEX = [meta.sc_to_latex.get(s) for s in SORTING]
+
+
+import backtest # must come after defining the ABOVE variables
+
 
 
 def plot_dummy(p=None):
@@ -51,11 +72,83 @@ def plot_dummy(p=None):
     if p is not None: 
         fig.save(p)
 
+
+class LatexTable():
+    def __init__(self, tab:str):
+        if (isinstance(tab, pd.DataFrame) or isinstance(tab, pd.Series)):
+            tab = tab.to_latex()
+        self.tab = tab
+    
+    def save(self, p):
+        if p is not None: 
+            with open(p,'w') as tf:
+                tf.write(self.tab)
+            print("Table  saved to {}".format(p))
+
+
+class LatexFigure():
+    def __init__(self, fig):
+        """
+        Arguments: 
+            fig: matplotlib fig
+        """
+        self.fig = fig
+        self._setup()
+
+    def fit(self, scale=1, square=False): 
+        """
+        Scales matplotplib figure to fit page size using provided scale
+        """
+        self.fig.set_size_inches(self._figsize(scale,square=square))
+    
+    def save(self, p:str):
+        if p is not None: 
+            self.fig.savefig(p, bbox_inches='tight')
+            print("Figure saved to {}".format(p))
+    
+
+    @staticmethod
+    def _figsize(scale:int, square:bool):
+        fig_width_pt = 401.18405                        # Get this from LaTeX using \the\textwidth
+        inches_per_pt = 1.0/72.27                       # Convert pt to inch
+        fig_width = fig_width_pt*inches_per_pt*scale    # width in inches
+        if square: 
+            fig_height=fig_width
+        else: 
+            golden_mean = (np.sqrt(5.0)-1.0)/2.0            # Aesthetic ratio (you could change this)
+            fig_height = fig_width*golden_mean              # height in inches
+        fig_size = [fig_width,fig_height]
+        return fig_size
+
+    def _setup(self):
+        """
+        Sets up matplolib so that all figures look latexy
+        """
+        pgf_with_latex = {                      # setup matplotlib to use latex for output
+            "pgf.texsystem": "pdflatex",        # change this if using xetex or lautex
+            "text.usetex": True,                # use LaTeX to write all text
+            "font.family": "serif",
+            "font.serif": [],                   # blank entries should cause plots to inherit fonts from the document
+            "font.sans-serif": [],
+            "font.monospace": [],
+            "axes.labelsize": 10,               # LaTeX default is 10pt font.
+            "font.size": 10,
+            "legend.fontsize": 8,               # Make the legend/label fonts a little smaller
+            "xtick.labelsize": 8,
+            "ytick.labelsize": 8,
+            "figure.figsize": self._figsize(0.9, square=False),     # default fig size of 0.9 textwidth
+            "pgf.preamble": "\n".join([
+                r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts becasue your computer can handle it :)
+                r"\usepackage[T1]{fontenc}",        # plots will be generated using this preamble
+                ])
+            }
+        mpl.rcParams.update(pgf_with_latex)
+
 #==========================================================================================
-#                                     On Meta
+#                                     On metadata
 #==========================================================================================
-def tabulate_meta(p=None):
-    df = meta.signals[~meta.signals.important_otmh_global_liquid.isna()]
+def tabulate_meta(SORTING_LATEX=SORTING_LATEX, p=None):
+    df = meta.signals
     df = df[["name_tex", "class", "class2", "tex_cite", "journal", "freq"]]
     df.set_index('name_tex', inplace=True)
     df.index.name = "Feature"
@@ -76,15 +169,13 @@ def tabulate_meta(p=None):
         "class2":"Subcategory"}
     df = df.rename(columns = cdict)
 
-    tab = df.to_latex(escape=False)
-    if p is not None: 
-        with open(p,'w') as tf:
-            tf.write(tab)
+    tab = LatexTable(df.to_latex(escape=False))
+    tab.save(p)
     return df
 
 
 #==========================================================================================
-#                                     On not cleaned data
+#                                     On not cleaned features
 #==========================================================================================
 def plot_missing_observations(df, p=None):
     nas = (df.isna().sum()/df.isna().count())*100
@@ -101,19 +192,17 @@ def plot_missing_observations(df, p=None):
     
     fig = LatexFigure(plt.gcf())
     fig.fit(square=True)
-    if p is not None: 
-        fig.save(p)
+    fig.save(p)
 
 #==========================================================================================
-#                                     On cleaned data 
+#                                     On cleaned features 
 #==========================================================================================
 def plot_histograms(df, p=None):
     df.columns = [meta.sc_to_latex.get(s) for s in df.columns.tolist()]
     df.hist(sharex=True)
     fig = LatexFigure(plt.gcf())
     fig.fit(scale=5)
-    if p is not None: 
-        fig.save(p)
+    fig.save(p)
 
 def plot_correlation_matrix(df, p=None):
     corr = df.corr()
@@ -122,8 +211,7 @@ def plot_correlation_matrix(df, p=None):
     _corrplot(corr, size_scale=30, legend=True)
     fig = LatexFigure(plt.gcf())
     fig.fit(square=True)
-    if p is not None: 
-        fig.save(p)
+    fig.save(p)
 
 def plot_standard_deviation(df,p=None):
     std = df.std()
@@ -135,8 +223,7 @@ def plot_standard_deviation(df,p=None):
     axis.invert_yaxis()
     fig = LatexFigure(plt.gcf())
     fig.fit(square=True)
-    if p is not None: 
-        fig.save(p)
+    fig.save(p)
 
 def plot_correlation_matrix_highest(df, p=None):
     corr = df.corr()
@@ -152,8 +239,7 @@ def plot_correlation_matrix_highest(df, p=None):
     _corrplot(df, size_scale=250, legend=True)
     fig = LatexFigure(plt.gcf())
     fig.fit(square=True)
-    if p is not None: 
-        fig.save(p)
+    fig.save(p)
     
 def tabulate_correlation_matrix(df, p=None):
     corr = df.corr()
@@ -163,15 +249,12 @@ def tabulate_correlation_matrix(df, p=None):
     tab = corr.to_latex()
 
     # Rotate header 
-    break_one, break_two = "\\toprule\n{} &", "\\\\\n\\midrule"
+    break_one, break_two = "\\toprule\n", "\\\\\n\\midrule"
     first, second = tab.split(break_one)
     second, third = second.split(break_two)
     second = "&".join(["\\rot{" +s + "}" for s in second.split("&")])
-    tab = first +  break_one + second + break_two + third
-    
-    if p is not None: 
-        with open(p,'w') as tf:
-            tf.write(tab)
+    tab = LatexTable(first +  break_one + second + break_two + third)
+    tab.save(p)
     return corr
 
 def tabulate_most_correlated_pairs(df, p=None):
@@ -185,10 +268,8 @@ def tabulate_most_correlated_pairs(df, p=None):
     most = so[so!=1].iloc[::2].abs().sort_values(ascending=False).head(10).round(3).index
     df = pd.DataFrame(so.loc[most].round(3))
     df.columns = ["Correlation Coefficient"]
-    tab = df.to_latex()
-    if p is not None: 
-        with open(p,'w') as tf:
-            tf.write(tab)
+    tab = LatexTable(df)
+    tab.save(p)
     return df 
 
 def tabulate_descriptives(df, p=None):
@@ -196,9 +277,8 @@ def tabulate_descriptives(df, p=None):
     df.rename(index=meta.sc_to_latex, inplace=True)
     df = df[df.columns.tolist()[1:]] # Omit count
     df.columns = ["Mean", "Std", "Min", "25%", "50%", "75%", "Max"]
-    if p is not None: 
-        with open(p,'w') as tf:
-            tf.write(df.to_latex())
+    tab = LatexTable(df)
+    tab.save(p)
     return df
 
 
@@ -213,18 +293,90 @@ def plot_returns_histogram(r, p=None):
     plt.ylabel('Number of Observations')
     fig = LatexFigure(plt.gcf())
     fig.fit()
-    if p is not None:
-        fig.save(p)
+    fig.save(p)
 
 
+#==========================================================================================
+#                                     On backtest predictions
+#==========================================================================================
+def tabulate_backtest_descriptives_ls(path_to_backtests, hidden_layers, p=None):
+    df = backtest.get_metrics_multiple_longshort(path_to_backtests, hidden_layers=hidden_layers)
+    df = df.round(3)
+    tab = LatexTable(df.to_latex())
+    tab.save(p)
+    return df
 
+def plot_backtest_cumreturns_ls(path_to_backtests, hidden_layers, p=None):
+    r = backtest.get_returns(path_to_backtests=path_to_backtests, hidden_layers=hidden_layers)
+    axis = cum_returns(r, starting_value=1).plot()
+    axis.set_ylabel("Gross Cumulative Return")
+    axis.set_xlabel("")
+    fig = LatexFigure(plt.gcf())
+    fig.fit()
+    fig.save(p)
+
+
+def plot_backtest_histogram(path_to_backtests, hidden_layers, p=None):
+    """
+    Arguments: 
+        returns: pd.Series
+    """
+    returns =  backtest.get_returns(path_to_backtests=path_to_backtests, hidden_layers=hidden_layers)["Long-short"]
+    returns = returns*100
+
+    fig, axis = plt.subplots(figsize=(8,8))
+    returns.plot.hist(grid=True, bins=10, rwidth=0.9,ax=axis)
+
+    sdate = pd.to_datetime(str(returns.index.values.min())).strftime('%b %Y')
+    edate = pd.to_datetime(str(returns.index.values.max())).strftime('%b %Y')
+
+    axis.set_ylabel("Number of Months ({} to {})".format(sdate, edate))
+    axis.set_xlabel("Monthly Return (percentage points)")
+    axis.yaxis.set_major_locator(MaxNLocator(integer=True))
+    fig = LatexFigure(plt.gcf())
+    fig.fit()
+    fig.save(p)
+
+
+def tabulate_backtest_descriptives_models(path_to_backtests, HIDDEN_LAYERS, NN_DICT, p=None):
+    df = backtest.get_metrics_all_models(path_to_backtests = path_to_backtests, 
+                                    HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT).round(3)
+    tab = LatexTable(df)
+    tab.save(p)
+    return df
+
+
+def plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS, NN_DICT, p=None):
+    r = backtest.get_returns_all_models(path_to_backtests = path_to_backtests,
+                                            HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT)
+    axis = cum_returns(r, starting_value=1).plot()
+    axis.set_ylabel("Gross Cumulative Return")
+    axis.set_xlabel("")
+    fig = LatexFigure(plt.gcf())
+    fig.fit()
+    fig.save(p)
+
+#==========================================================================================
+#                                     On results
+#==========================================================================================
+
+def tabulate_performance(pe, ar, p=None, NN_DICT=NN_DICT):
+    df = pe.groupby([ar.hidden_layers])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].apply(np.mean)
+    df.columns = ["R Square", "Mean Squared Error", "Mean Absolute Error", "Root Mean Squared Error"]
+    df.index = [NN_DICT.get(s) for s in list(df.index.values)]
+    df = df.transpose()
+    df = df*100
+    df = df.round(2)
+    tab = LatexTable(df)
+    tab.save(p)
+    return df
 
 
 class LocalIG():
     def __init__(self, path_to_models):
-        self.path_to_models = path_to_models 
+        self.path_to_models = path_to_models
     
-    def load(self, model_name, sort_features=True, suffix="_test"):
+    def load(self, model_name, sort_features=True, suffix="_test", SORTING=SORTING):
         df = pd.read_csv(os.path.join(self.path_to_models, model_name, "integrated_gradients{}.csv".format(suffix)), index_col=[0,1])
         if sort_features: 
             df = df[SORTING]
@@ -263,7 +415,7 @@ class Results():
         """
         self.path = path
     
-    def load(self, sort_features = True, suffix="_test"):
+    def load(self, sort_features = True, suffix="_test", SORTING=SORTING, NN_DICT=NN_DICT):
         """
         Models are in columns, features are in rows
         """
@@ -301,18 +453,6 @@ class Results():
         self.pe.index = new_names
         self.mr.index = new_names
         self.ig.index = new_names
-    
-    def calculate_seed_corr(self, df):
-        """
-        Returns correlation of seeds
-        """
-        corr = dict()
-        for ytrain in list(self.ar.ytrain.values.unique()):
-            corr["{}".format(ytrain)] = dict()
-            for hidden_layers in HIDDEN_LAYERS:
-                sub = (self.ar["hidden_layers"]==hidden_layers) & (self.ar["ytrain"]==ytrain)
-                corr["{}".format(ytrain)]["{}".format(hidden_layers)] = df[sub].transpose().corr().dropna(how="all").dropna(how="all", axis=1).values.mean()
-        return corr
 
 
 def plot_df_simple(df, scale=2, vmin=0, vmax=None, cmap=plt.cm.Blues, flip_cbar=False, show_cbar=True):
@@ -376,7 +516,7 @@ class Mode():
         self.column_groups = column_groups 
         self.group_xticks = group_xticks 
 
-def style_plot_df(df, styling, mode, vmin=None):
+def style_plot_df(df, styling, mode, vmin=None, NN_NAMES=NN_NAMES):
     stylings = {
         'heatmap':Styling("heatmap", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
         'top':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
@@ -388,7 +528,7 @@ def style_plot_df(df, styling, mode, vmin=None):
         'blues':Styling("identity", plt.cm.Blues, show_cbar=True, flip_cbar=False)
     }
     modes = {
-        'ensemble': Mode([["LR"],['NN1', 'NN2', 'NN3', 'NN4', 'NN5']], False),
+        'ensemble': Mode([["LR"],NN_NAMES[1:]], False),
         'seeds': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,SEED_NAMES)],N_SEEDS)),True),
         'ensemble_time': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,YTRAIN_NAMES)],N_YTRAIN)),True)
     }
@@ -461,6 +601,10 @@ def plot_df(
     plt.show()
 
 
+#==========================================================================================
+#                                    Auxiliary 
+#==========================================================================================
+
 def _corrplot(data, size_scale=500, marker='s', legend=True):
     """
     Args:
@@ -478,64 +622,6 @@ def _corrplot(data, size_scale=500, marker='s', legend=True):
         y_order=data.columns[::-1],
         size_scale=size_scale,
     )
-
-
-class LatexFigure():
-    def __init__(self, fig):
-        """
-        Arguments: 
-            fig: matplotlib fig
-        """
-        self.fig = fig
-        self._setup()
-
-    def fit(self, scale=1, square=False): 
-        """
-        Scales matplotplib figure to fit page size using provided scale
-        """
-        self.fig.set_size_inches(self._figsize(scale,square=square))
-    
-    def save(self, path:str):
-        self.fig.savefig(path, bbox_inches='tight')
-        print("Figure saved to {}".format(path))
-    
-
-    @staticmethod
-    def _figsize(scale:int, square:bool):
-        fig_width_pt = 401.18405                        # Get this from LaTeX using \the\textwidth
-        inches_per_pt = 1.0/72.27                       # Convert pt to inch
-        fig_width = fig_width_pt*inches_per_pt*scale    # width in inches
-        if square: 
-            fig_height=fig_width
-        else: 
-            golden_mean = (np.sqrt(5.0)-1.0)/2.0            # Aesthetic ratio (you could change this)
-            fig_height = fig_width*golden_mean              # height in inches
-        fig_size = [fig_width,fig_height]
-        return fig_size
-
-    def _setup(self):
-        """
-        Sets up matplolib so that all figures look latexy
-        """
-        pgf_with_latex = {                      # setup matplotlib to use latex for output
-            "pgf.texsystem": "pdflatex",        # change this if using xetex or lautex
-            "text.usetex": True,                # use LaTeX to write all text
-            "font.family": "serif",
-            "font.serif": [],                   # blank entries should cause plots to inherit fonts from the document
-            "font.sans-serif": [],
-            "font.monospace": [],
-            "axes.labelsize": 10,               # LaTeX default is 10pt font.
-            "font.size": 10,
-            "legend.fontsize": 8,               # Make the legend/label fonts a little smaller
-            "xtick.labelsize": 8,
-            "ytick.labelsize": 8,
-            "figure.figsize": self._figsize(0.9, square=False),     # default fig size of 0.9 textwidth
-            "pgf.preamble": [
-                r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts becasue your computer can handle it :)
-                r"\usepackage[T1]{fontenc}",        # plots will be generated using this preamble
-                ]
-            }
-        mpl.rcParams.update(pgf_with_latex)
 
 def _heatmap(x, y, legend, **kwargs):
     if 'color' in kwargs:
@@ -653,7 +739,9 @@ def _heatmap(x, y, legend, **kwargs):
             ax.set_yticks(np.linspace(min(bar_y), max(bar_y), 3)) # Show vertical ticks for min, middle and max
             ax.yaxis.tick_right() # Show vertical ticks on the right 
 
-
+#==========================================================================================
+#                                     MAIN
+#==========================================================================================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path_figures", default="latex/Figures", type=str, help="Folder where to save the figures.")
@@ -666,11 +754,11 @@ if __name__ == "__main__":
 
     plot_dummy(p=os.path.join(args.path_figures,"dummy.pdf"))
 
-    
+    """
     #==========================================================================================
     #                                     On Meta data
     #==========================================================================================
-    tabulate_meta(p=os.path.join(args.path_tables,"meta.tex"))
+    tabulate_meta(p=os.path.join(args.path_tables,"meta.tex"),SORTING_LATEX=SORTING_LATEX_OLD)
     
     #==========================================================================================
     #                                     On not cleaned data 
@@ -678,29 +766,69 @@ if __name__ == "__main__":
     dt = Subset()
     dt.load()
     df = dt.features[SORTING]
-    #plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
+    plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
+    """
 
     #==========================================================================================
     #                                     On cleaned data 
     #==========================================================================================
-    dt = Cleaned()
+    dt = Cleaned({"features":'data/selected/features.pkl', "targets":'data/selected/targets.pkl'})
     dt.load()
-    df = dt.features[SORTING]
+    df = dt.features[SORTING_OLD]
     r = dt.targets["r"]
     
     # Figures
-    #plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
-    #plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
-    #plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
-    #plot_standard_deviation(df,p=os.path.join(args.path_figures,"standard_deviation.pdf"))
+    """
+    plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
+    plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
+    plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
+    plot_standard_deviation(df,p=os.path.join(args.path_figures,"standard_deviation.pdf"))
     
     # Tables
-    #tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
-    #tabulate_most_correlated_pairs(df, p=os.path.join(args.path_tables,"most_correlated_pairs.tex"))
-    #tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
+    tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
+    tabulate_most_correlated_pairs(df, p=os.path.join(args.path_tables,"most_correlated_pairs.tex"))
+    tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
+    """
 
     # Figures of Returns 
     plot_returns_histogram(r, p=os.path.join(args.path_figures,"returns_histogram.pdf"))
     
+    
+    #==========================================================================================
+    #                                     On ensemble backtest
+    #==========================================================================================
+    path_to_backtests = os.path.join("models", "selected", "ensembles")
+    
+    # Single model tables
+    tabulate_backtest_descriptives_ls(path_to_backtests,'32',
+        p=os.path.join(args.path_tables,"backtest_descriptives_ls.tex"))
+    # Single model figures 
+    plot_backtest_cumreturns_ls(path_to_backtests,"32",
+        p=os.path.join(args.path_figures,"backtest_cumreturns_ls.pdf"))
+    plot_backtest_histogram(path_to_backtests,"32",
+        p=os.path.join(args.path_figures,"backtest_histogram.pdf"))
+    """
+    # All models tables
+    tabulate_backtest_descriptives_models(path_to_backtests, HIDDEN_LAYERS=HIDDEN_LAYERS_OLD, NN_DICT=NN_DICT_OLD, 
+         p=os.path.join(args.path_tables,"backtest_descriptives_models.tex"))
+    
+    # All models figures 
+    plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS=backtest.HIDDEN_LAYERS_OLD, NN_DICT=backtest.NN_DICT_OLD,
+        p=os.path.join(args.path_figures,"backtest_cumreturns_models.pdf"))
+
+    """
+    #==========================================================================================
+    #                                     On ensemble results
+    #==========================================================================================
+    res = Results(os.path.join("results", "selected", "ensembles"))
+    
+    # Tabulate performance
+    res.load(suffix="", SORTING=SORTING_OLD)
+    tabulate_performance(res.pe, res.ar, NN_DICT=NN_DICT_OLD,
+        p=os.path.join(args.path_tables,"performance.tex"))
+
+   
+
+    print("FINISHED")
 
 
