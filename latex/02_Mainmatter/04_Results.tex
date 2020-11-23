@@ -59,4 +59,77 @@
 			
 		} % end of argument of `\afterpage` command
 		
+	\subsection{Global Feature Importance}
 	
+		\subsubsection{Integrated Gradients}
+	
+		Figure \ref{fig:ig_ensemble} shows global feature importance in all models, as measured by Global Integrated Gradient. Figure \ref{fig:ig_ensemble_head} is a detail of Figure \ref{fig:ig_ensemble}, showing first 10 rows (i.e., 10 most important features as calculated by the measure). 
+		
+		\begin{figure}	
+			\centering		
+			\begin{subfigure}[t]{\textwidth}
+				\includegraphics[width=\textwidth]{Figures/ig_ensemble_blues.pdf}
+				\caption{Values of Global Integrated Gradient}
+				\label{fig:ig_ensemble_blues}
+			\end{subfigure}
+		
+			\begin{subfigure}[t]{\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{Figures/ig_ensemble_order.pdf}
+				\caption{Ordering of Features by Global Integrated Gradient}
+				\label{fig:ig_ensemble_order}
+			\end{subfigure}
+			\caption{Global Feature Importance Measured with Integrated Gradients.}
+			\medskip
+			\small
+			Panel (\subref{fig:ig_ensemble_blues}) shows values of the Global Integrated Gradient for all features, for all models.  Panel (\subref{fig:ig_ensemble_order}) shows how features are ordered by importance, as defined by Global Integrated Gradient, within each model. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Global Integrated Gradient.  
+			\label{fig:ig_ensemble}
+		\end{figure}
+		
+		\begin{figure}	
+			\centering		
+			\begin{subfigure}[t]{\textwidth}
+				\includegraphics[width=\textwidth]{Figures/ig_ensemble_blues_head.pdf}
+				\caption{Values of Global Integrated Gradient}
+				\label{fig:ig_ensemble_blues_head}
+			\end{subfigure}
+			
+			\begin{subfigure}[t]{\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{Figures/ig_ensemble_order_head.pdf}
+				\caption{Ordering of Features by Global Integrated Gradient}
+				\label{fig:ig_ensemble_order_head}
+			\end{subfigure}
+			\caption{Detail to Top 10 Features of Figure \ref{fig:ig_ensemble}} 
+			\medskip
+			\small
+			Panel (\subref{fig:ig_ensemble_blues_head}) shows values of the Integrated Gradient, for all models.  Panel (\subref{fig:ig_ensemble_order_head}) shows how features are ordered by importance, as defined by Integrated Gradient, within each model. Label 1 --- bright yellow (10 --- black) corresponds to 1st (10th) most  important feature in given model, as measured by highest (lowest) Global Integrated Gradient.  
+			\label{fig:ig_ensemble_head}
+		\end{figure}
+		
+		Figure \ref{fig:ig_time} shows how global feature importance, as measured by Integrated Gradients, changes with time. For each model, the measure is calculated on 5 different time periods (2014 to 2018, both inclusive).
+		
+		\begin{center}
+			\begin{figure}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/ig_time.pdf}
+				\caption{Robustness of Global Feature Importance in Time}
+				\medskip
+				\small
+				Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. For each model, Global Integrated Gradient is calculated on 5 different time periods (2014 to 2018, both inclusive). At the beginning of each year, the model is re-estimated and the measure is then calculated on the following 1-year window of out-of-sample data. The colors show the relative importance of the features, as ordered by the size of Global Integrated Gradient of the feature. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Global Integrated Gradient.   
+				\label{fig:ig_time}
+			\end{figure}
+		\end{center}
+	
+	
+		Figure \ref{fig:ig_seeds} shows how global feature importance, as measured by Integrated Gradients, changes in different random seeds (different model intitializations). As discussed in Subsection \ref{chap:ensembling}, optimization of each model (LR, NN1 to NN5), is performed 9 times, each time starting with different initial weights. Each such instance of the model is called a \textit{random seed}. Each of the models --- LR, NN1 to NN5 --- makes the prediction by predicting with each seed model separately and than averaging the predictions. (To stress the fact that a model comes from different initializations, the term \textit{ensemble model} can be used.)
+		
+		\begin{center}
+			\begin{figure}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/ig_seeds.pdf}
+				\caption{Robustness of Global Feature Importance Across Random Seeds}
+				\medskip
+				\small
+				Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. Each ensemble model is decomposed into its 9 random seeds (for details on ensembling using random seeds, see Subsection \ref{chap:ensembling}). For each seed model, Global Integrated Gradient is calculated. The colors show the relative importance of the features, as ordered by the size of Global Integrated Gradient of the feature. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Global Integrated Gradient.    
+				\label{fig:ig_seeds}
+			\end{figure}
+		\end{center}
