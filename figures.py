@@ -360,62 +360,16 @@ def plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS, NN_DICT, p
 #                                     On results
 #==========================================================================================
 
-def tabulate_performance(pe, ar, p=None, NN_DICT=NN_DICT):
-    df = pe.groupby([ar.hidden_layers])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].apply(np.mean)
-    df.columns = ["R Square", "Mean Squared Error", "Mean Absolute Error", "Root Mean Squared Error"]
-    df.index = [NN_DICT.get(s) for s in list(df.index.values)]
-    df = df.transpose()
-    df = df*100
-    df = df.round(2)
-    tab = LatexTable(df)
-    tab.save(p)
-    return df
-
-
-class LocalIG():
-    def __init__(self, path_to_models):
-        self.path_to_models = path_to_models
-    
-    def load(self, model_name, sort_features=True, suffix="_test", SORTING=SORTING):
-        df = pd.read_csv(os.path.join(self.path_to_models, model_name, "integrated_gradients{}.csv".format(suffix)), index_col=[0,1])
-        if sort_features: 
-            df = df[SORTING]
-        self.df = df
-    
-    def plot(self, nobs=100):
-        df = self.df.iloc[:nobs]
-        plot_all_observations(df, xlabel="Integrated Gradient")
-
-
-def plot_all_observations(df, xlabel):
-    df_melted = pd.DataFrame([(colname, df[colname].iloc[i]) for i in range(len(df)) for colname in df.columns], 
-                columns=['col', 'values'])
-    
-    # Plot
-    fig, axis = plt.subplots(1,1)
-    axis = sns.stripplot(x = 'values', y='col', data=df_melted)
-
-    # Axis Labels
-    axis.set_ylabel("")
-    axis.set_xlabel(xlabel)
-
-    # Y ticks 
-    labels = [meta.sc_to_latex.get(label) for label in list(df.columns)]
-    axis.set_yticklabels(labels)
-
-    # Convert to LatexFigure to change font and figsize
-    fig = LatexFigure(plt.gcf())
-    fig.fit(scale=2)
-    plt.show()
-
-
 class Results():
-    def __init__(self, path):
+    def __init__(self, path, SORTING, NN_DICT, NN_NAMES):
         """
         """
         self.path = path
+        self.SORTING = SORTING
+        self.NN_DICT=NN_DICT
+        self.NN_NAMES=NN_NAMES
     
-    def load(self, sort_features = True, suffix="_test", SORTING=SORTING, NN_DICT=NN_DICT):
+    def load(self, sort_features = True, suffix="_test"):
         """
         Models are in columns, features are in rows
         """
@@ -424,12 +378,12 @@ class Results():
         self.ig = pd.read_csv(os.path.join(self.path, "integrated_gradients_global{}.csv".format(suffix)), index_col=0)
         self.mr = pd.read_csv(os.path.join(self.path, "model_reliance{}.csv".format(suffix)), index_col=0)
 
-        self.ar["nn_name"] = self.ar[["hidden_layers"]].replace(NN_DICT)
+        self.ar["nn_name"] = self.ar[["hidden_layers"]].replace(self.NN_DICT)
         self.ar["nn_name_short"] = [s[-1:] for s in self.ar.nn_name]
 
         if sort_features: 
-            self.ig = self.ig[SORTING]
-            self.mr = self.mr[SORTING]
+            self.ig = self.ig[self.SORTING]
+            self.mr = self.mr[self.SORTING]
     
     def subset(self, key_name, value):
         sub = (self.ar[key_name] == value) 
@@ -453,23 +407,140 @@ class Results():
         self.pe.index = new_names
         self.mr.index = new_names
         self.ig.index = new_names
+    
+    def tabulate_performance(self, p=None):
+        df = self.pe.groupby([self.ar.hidden_layers])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].apply(np.mean)
+        df.columns = ["R Square", "Mean Squared Error", "Mean Absolute Error", "Root Mean Squared Error"]
+        df.index = [self.NN_DICT.get(s) for s in list(df.index.values)]
+        df = df.transpose()
+        df = df*100
+        df = df.round(2)
+        tab = LatexTable(df)
+        tab.save(p)
+        return df
+    
+    def plot_ig_ensemble_blues(self, p=None):
+        fig = self.style_plot_df(self.ig.transpose(), styling="blues", mode='ensemble', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+
+    def plot_mr_ensemble_blues(self, p=None):
+        fig = self.style_plot_df(self.mr.transpose(), styling="blues", mode='ensemble', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+
+    def plot_ig_ensemble_order(self, p=None):
+        fig = self.style_plot_df(self.ig.transpose(), styling="order", mode='ensemble', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+
+    def plot_mr_ensemble_order(self, p=None):
+        fig = self.style_plot_df(self.mr.transpose(), styling="order", mode='ensemble', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+
+    def plot_ig_ensemble_blues_head(self, p=None):
+        fig = self.style_plot_df(self.ig.transpose().head(10), styling="blues", mode='ensemble', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+    
+    def plot_ig_ensemble_order_head(self, p=None):
+        fig = self.style_plot_df(self.ig.transpose().head(10), styling="order", mode='ensemble', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+    
+    def plot_ig_time(self, p=None):
+        fig = self.style_plot_df(self.ig.transpose(), styling="order", mode='ensemble_time', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+    
+    def plot_ig_seeds(self, p=None):
+        fig = self.style_plot_df(self.ig.transpose(), styling="order", mode='seeds', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+
+    @staticmethod
+    def plot_df_simple(df, scale=2, vmin=0, vmax=None, cmap=plt.cm.Blues, flip_cbar=False, show_cbar=True):
+        fig, axis = plt.subplots() 
+        heatmap = axis.pcolor(df, cmap=cmap, vmin=vmin, vmax=vmax)
+        labels = [meta.sc_to_latex.get(label) for label in df.index.values.tolist()]
+        plt.yticks(np.arange(0.5, len(df.index), 1), labels)
+        plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
+        axis.invert_yaxis()
+        axis.xaxis.tick_top()
+        if show_cbar:
+            cbar = plt.colorbar(heatmap)
+            if flip_cbar:
+                cbar.ax.invert_yaxis() 
+        fig = LatexFigure(plt.gcf())
+        fig.fit(scale=scale)
+
+    @staticmethod
+    def style_plot_df(df, styling, mode, vmin=None, NN_NAMES=NN_NAMES):
+        stylings = {
+            'heatmap':Styling("heatmap", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
+            'order':Styling("order", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
+            'top':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+            'bottom':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+            'top10':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+            'bottom10':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+            'top5':Styling("top5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+            'bottom5':Styling("bottom5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
+            'blues':Styling("identity", plt.cm.Blues, show_cbar=True, flip_cbar=False)
+        }
+        modes = {
+            'ensemble': Mode([["LR"],NN_NAMES[1:]], False),
+            'seeds': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,SEED_NAMES)],N_SEEDS)),True),
+            'ensemble_time': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,YTRAIN_NAMES)],N_YTRAIN)),True)
+        }
+        if type(styling) == str: 
+            styling = stylings.get(styling)
+        if type(mode) == str: 
+            mode = modes.get(mode)
+        
+        df = styling.transform(df)
+        return _plot_df(
+            df, column_groups=mode.column_groups, group_xticks=mode.group_xticks, 
+            cmap=styling.cmap, flip_cbar=styling.flip_cbar, show_cbar=styling.show_cbar, 
+            vmin=vmin)
+
+#==========================================================================================
+#                                     On local integrated gradients
+#==========================================================================================
+
+class LocalIG():
+    def __init__(self, path_to_models):
+        self.path_to_models = path_to_models
+    
+    def load(self, model_name, sort_features=True, suffix="_test", SORTING=SORTING):
+        df = pd.read_csv(os.path.join(self.path_to_models, model_name, "integrated_gradients{}.csv".format(suffix)), index_col=[0,1])
+        if sort_features: 
+            df = df[SORTING]
+        self.df = df
+    
+    def plot(self, nobs=100):
+        df = self.df.iloc[:nobs]
+        self.plot_all_observations(df, xlabel="Integrated Gradient")
 
 
-def plot_df_simple(df, scale=2, vmin=0, vmax=None, cmap=plt.cm.Blues, flip_cbar=False, show_cbar=True):
-    fig, axis = plt.subplots() 
-    heatmap = axis.pcolor(df, cmap=cmap, vmin=vmin, vmax=vmax)
-    labels = [meta.sc_to_latex.get(label) for label in df.index.values.tolist()]
-    plt.yticks(np.arange(0.5, len(df.index), 1), labels)
-    plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
-    axis.invert_yaxis()
-    axis.xaxis.tick_top()
-    if show_cbar:
-        cbar = plt.colorbar(heatmap)
-        if flip_cbar:
-            cbar.ax.invert_yaxis() 
-    fig = LatexFigure(plt.gcf())
-    fig.fit(scale=scale)
-    plt.show()
+    @staticmethod
+    def plot_all_observations(df, xlabel):
+        df_melted = pd.DataFrame([(colname, df[colname].iloc[i]) for i in range(len(df)) for colname in df.columns], 
+                    columns=['col', 'values'])
+        
+        # Plot
+        fig, axis = plt.subplots(1,1)
+        axis = sns.stripplot(x = 'values', y='col', data=df_melted)
+
+        # Axis Labels
+        axis.set_ylabel("")
+        axis.set_xlabel(xlabel)
+
+        # Y ticks 
+        labels = [meta.sc_to_latex.get(label) for label in list(df.columns)]
+        axis.set_yticklabels(labels)
+
+        # Convert to LatexFigure to change font and figsize
+        fig = LatexFigure(plt.gcf())
+        fig.fit(scale=2)
+
+
+#==========================================================================================
+#                                    Auxiliary 
+#==========================================================================================
+
 
 class Styling(): 
     def __init__(self, transform, cmap, show_cbar, flip_cbar): 
@@ -479,6 +550,7 @@ class Styling():
 
         transforms = {
             'heatmap': self.heatmap,
+            'order':self.order,
             'top10': self.top10,
             'bottom10': self.bottom10,
             'top5': self.top5,
@@ -490,6 +562,10 @@ class Styling():
     @staticmethod
     def heatmap(df):
         return df.apply(lambda x: get_parts(x,6), axis=0)
+    
+    @staticmethod
+    def order(df):
+        return len(df) - df.apply(lambda x: get_orders(x), axis=0)
     
     @staticmethod
     def top10(df):
@@ -516,94 +592,6 @@ class Mode():
         self.column_groups = column_groups 
         self.group_xticks = group_xticks 
 
-def style_plot_df(df, styling, mode, vmin=None, NN_NAMES=NN_NAMES):
-    stylings = {
-        'heatmap':Styling("heatmap", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
-        'top':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-        'bottom':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-        'top10':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-        'bottom10':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-        'top5':Styling("top5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-        'bottom5':Styling("bottom5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-        'blues':Styling("identity", plt.cm.Blues, show_cbar=True, flip_cbar=False)
-    }
-    modes = {
-        'ensemble': Mode([["LR"],NN_NAMES[1:]], False),
-        'seeds': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,SEED_NAMES)],N_SEEDS)),True),
-        'ensemble_time': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,YTRAIN_NAMES)],N_YTRAIN)),True)
-    }
-    if type(styling) == str: 
-        styling = stylings.get(styling)
-    if type(mode) == str: 
-        mode = modes.get(mode)
-    
-    df = styling.transform(df)
-    plot_df(
-        df, column_groups=mode.column_groups, group_xticks=mode.group_xticks, 
-        cmap=styling.cmap, flip_cbar=styling.flip_cbar, show_cbar=styling.show_cbar, 
-        vmin=vmin)
-
-def plot_df(
-        df, column_groups:list=None, cmap=plt.cm.Blues, 
-        flip_cbar:bool=False, show_cbar:bool=True, 
-        scale:int=2, vmin=None, group_xticks=False):
-    
-    # Create as many column subplots as there are column groups
-    if column_groups == None: 
-        column_groups = [df.columns.tolist()]
-        
-    fig, axes = plt.subplots(nrows=1, ncols=len(column_groups), figsize=(6.5,7),
-                         gridspec_kw={"width_ratios":[len(group) for group in column_groups]})
-    # fix axes if there is only one columns group from integer to list
-    if len(column_groups) == 1: 
-        axes = np.array(axes)
-    
-    # Populate all axes
-    vmin = df.min().min() if vmin is None else vmin
-    kw = {'cmap':cmap, 'vmin':vmin, 'vmax':df.max().max()}
-    for i, group in enumerate(column_groups): 
-        im = axes[i].pcolor(df[group], **kw)
-    
-    # Y labels for first group are the index of the df
-    labels = [meta.sc_to_latex.get(label) for label in df.index.values.tolist()]
-    axes[0].set_yticks(np.arange(0.5, len(df.index)))
-    axes[0].set_yticklabels(labels)
-    axes[0].invert_yaxis()
-    
-    # Y labels for rest of groups are empty
-    for i in range(1,len(column_groups)):
-        axes[i].invert_yaxis()
-        axes[i].set_yticks([])
-    
-    # Set X labels for each group (column names of the df) 
-    for i, group in enumerate(column_groups): 
-        if group_xticks:
-            axes[i].set_xticks([np.median(np.arange(0.5, len(group), 1))])
-            axes[i].set_xticklabels([group[0].split("-")[0]])
-        else: 
-            axes[i].set_xticks(np.arange(0.5, len(group), 1))
-            axes[i].set_xticklabels(group)
-        axes[i].xaxis.set_ticks_position('top')    
-    
-    
-    # Make the width of space between subplots smaller
-    plt.subplots_adjust(wspace=0.025)
-    
-    if show_cbar: 
-        #fig.colorbar(im, ax=axes.ravel().tolist())
-        cbar = fig.colorbar(im, ax=axes.ravel().tolist())
-        if flip_cbar:
-            cbar.ax.invert_yaxis() 
-    
-    # Convert to LatexFigure to change font and figsize
-    fig = LatexFigure(plt.gcf())
-    fig.fit(scale=scale)
-    plt.show()
-
-
-#==========================================================================================
-#                                    Auxiliary 
-#==========================================================================================
 
 def _corrplot(data, size_scale=500, marker='s', legend=True):
     """
@@ -739,6 +727,63 @@ def _heatmap(x, y, legend, **kwargs):
             ax.set_yticks(np.linspace(min(bar_y), max(bar_y), 3)) # Show vertical ticks for min, middle and max
             ax.yaxis.tick_right() # Show vertical ticks on the right 
 
+def _plot_df(
+            df, column_groups:list=None, cmap=plt.cm.Blues, 
+            flip_cbar:bool=False, show_cbar:bool=True, 
+            scale:int=2, vmin=None, group_xticks=False):
+        
+        # Create as many column subplots as there are column groups
+        if column_groups == None: 
+            column_groups = [df.columns.tolist()]
+            
+        fig, axes = plt.subplots(nrows=1, ncols=len(column_groups), figsize=(6.5,7),
+                            gridspec_kw={"width_ratios":[len(group) for group in column_groups]})
+        # fix axes if there is only one columns group from integer to list
+        if len(column_groups) == 1: 
+            axes = np.array(axes)
+        
+        # Populate all axes
+        vmin = df.min().min() if vmin is None else vmin
+        kw = {'cmap':cmap, 'vmin':vmin, 'vmax':df.max().max()}
+        for i, group in enumerate(column_groups): 
+            im = axes[i].pcolor(df[group], **kw)
+        
+        # Y labels for first group are the index of the df
+        labels = [meta.sc_to_latex.get(label) for label in df.index.values.tolist()]
+        axes[0].set_yticks(np.arange(0.5, len(df.index)))
+        axes[0].set_yticklabels(labels)
+        axes[0].invert_yaxis()
+        
+        # Y labels for rest of groups are empty
+        for i in range(1,len(column_groups)):
+            axes[i].invert_yaxis()
+            axes[i].set_yticks([])
+        
+        # Set X labels for each group (column names of the df) 
+        for i, group in enumerate(column_groups): 
+            if group_xticks:
+                axes[i].set_xticks([np.median(np.arange(0.5, len(group), 1))])
+                axes[i].set_xticklabels([group[0].split("-")[0]])
+            else: 
+                axes[i].set_xticks(np.arange(0.5, len(group), 1))
+                axes[i].set_xticklabels(group)
+            axes[i].xaxis.set_ticks_position('top')    
+        
+        
+        # Make the width of space between subplots smaller
+        plt.subplots_adjust(wspace=0.025)
+        
+        if show_cbar: 
+            #fig.colorbar(im, ax=axes.ravel().tolist())
+            cbar = fig.colorbar(im, ax=axes.ravel().tolist())
+            if flip_cbar:
+                cbar.ax.invert_yaxis() 
+        
+        # Convert to LatexFigure to change font and figsize
+        fig = LatexFigure(plt.gcf())
+        fig.fit(scale=scale)
+        return fig
+
 #==========================================================================================
 #                                     MAIN
 #==========================================================================================
@@ -767,7 +812,7 @@ if __name__ == "__main__":
     dt.load()
     df = dt.features[SORTING]
     plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
-    """
+    
 
     #==========================================================================================
     #                                     On cleaned data 
@@ -778,7 +823,6 @@ if __name__ == "__main__":
     r = dt.targets["r"]
     
     # Figures
-    """
     plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
     plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
     plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
@@ -788,7 +832,6 @@ if __name__ == "__main__":
     tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
     tabulate_most_correlated_pairs(df, p=os.path.join(args.path_tables,"most_correlated_pairs.tex"))
     tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
-    """
 
     # Figures of Returns 
     plot_returns_histogram(r, p=os.path.join(args.path_figures,"returns_histogram.pdf"))
@@ -807,7 +850,7 @@ if __name__ == "__main__":
         p=os.path.join(args.path_figures,"backtest_cumreturns_ls.pdf"))
     plot_backtest_histogram(path_to_backtests,"32",
         p=os.path.join(args.path_figures,"backtest_histogram.pdf"))
-    """
+
     # All models tables
     tabulate_backtest_descriptives_models(path_to_backtests, HIDDEN_LAYERS=HIDDEN_LAYERS_OLD, NN_DICT=NN_DICT_OLD, 
          p=os.path.join(args.path_tables,"backtest_descriptives_models.tex"))
@@ -815,19 +858,39 @@ if __name__ == "__main__":
     # All models figures 
     plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS=backtest.HIDDEN_LAYERS_OLD, NN_DICT=backtest.NN_DICT_OLD,
         p=os.path.join(args.path_figures,"backtest_cumreturns_models.pdf"))
+    
 
-    """
     #==========================================================================================
     #                                     On ensemble results
     #==========================================================================================
-    res = Results(os.path.join("results", "selected", "ensembles"))
+    res = Results(os.path.join("results", "selected", "ensembles"), SORTING=SORTING_OLD, NN_DICT=NN_DICT_OLD, NN_NAMES=NN_NAMES_OLD)
     
-    # Tabulate performance
-    res.load(suffix="", SORTING=SORTING_OLD)
-    tabulate_performance(res.pe, res.ar, NN_DICT=NN_DICT_OLD,
-        p=os.path.join(args.path_tables,"performance.tex"))
+    res.load(suffix="")
+    res.tabulate_performance(p=os.path.join(args.path_tables,"performance.tex"))
 
-   
+    res.load(suffix="")
+    res.subset('ytrain',16)
+    res.rename(['nn_name'])
+    res.plot_ig_ensemble_blues(p=os.path.join(args.path_figures,"ig_ensemble_blues.pdf"))
+    res.plot_mr_ensemble_blues(p=os.path.join(args.path_figures,"mr_ensemble_blues.pdf"))
+    res.plot_ig_ensemble_order(p=os.path.join(args.path_figures,"ig_ensemble_order.pdf"))
+    res.plot_mr_ensemble_order(p=os.path.join(args.path_figures,"mr_ensemble_order.pdf"))
+    res.plot_ig_ensemble_blues_head(p=os.path.join(args.path_figures,"ig_ensemble_blues_head.pdf"))
+    res.plot_ig_ensemble_order_head(p=os.path.join(args.path_figures,"ig_ensemble_order_head.pdf"))
+
+    res.load(suffix="")
+    res.rename(['nn_name', "ytrain"])
+    res.plot_ig_time(p=os.path.join(args.path_figures,"ig_time.pdf"))
+    """
+    #==========================================================================================
+    #                                     On seeds results
+    #==========================================================================================
+    res = Results(os.path.join("results", "selected", "seeds"), SORTING=SORTING_OLD, NN_DICT=NN_DICT_OLD, NN_NAMES=NN_NAMES_OLD)
+    
+    res.load(suffix="")
+    res.subset('ytrain',16)
+    res.rename(['nn_name', "seed"])
+    res.plot_ig_seeds(p=os.path.join(args.path_figures,"ig_seeds.pdf"))
 
     print("FINISHED")
 
