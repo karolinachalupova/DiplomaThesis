@@ -16,7 +16,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from empyrical.stats import cum_returns
 from matplotlib.ticker import MaxNLocator
 
-from utils import chunks, get_parts, get_orders
+from utils import chunks, get_parts, get_orders, divide_by_max
 from data import Cleaned, Subset, Meta, FEATURES, FEATURES_OLD
 
 
@@ -368,6 +368,12 @@ class Results():
         self.SORTING = SORTING
         self.NN_DICT=NN_DICT
         self.NN_NAMES=NN_NAMES
+
+        self.ar = None 
+        self.pe = None 
+        self.ig = None 
+        self.mr = None 
+        self.pr = None
     
     def load(self, sort_features = True, suffix="_test"):
         """
@@ -377,6 +383,20 @@ class Results():
         self.pe = pd.read_csv(os.path.join(self.path, "performance.csv"), index_col=0)
         self.ig = pd.read_csv(os.path.join(self.path, "integrated_gradients_global{}.csv".format(suffix)), index_col=0)
         self.mr = pd.read_csv(os.path.join(self.path, "model_reliance{}.csv".format(suffix)), index_col=0)
+        self.ar.index = [s.split(': ')[1] for s in self.ar.index.values]  # Get rid of the class name in index
+        self.pe.index = [s.split(': ')[1] for s in self.pe.index.values]
+        self.ig.index = [s.split(': ')[1] for s in self.ig.index.values]
+        self.mr.index = [s.split(': ')[1] for s in self.mr.index.values]
+        self.ar.sort_index(inplace=True)
+        self.pe.sort_index(inplace=True)
+        self.ig.sort_index(inplace=True)
+        self.mr.sort_index(inplace=True)
+        try: 
+            self.pr = pd.read_csv(os.path.join(self.path, "portfolio_reliance.csv"), index_col=0)
+            self.pr.index = [s.split(': ')[1] for s in self.pr.index.values]
+            self.pr.sort_index(inplace=True)
+        except: 
+            print("File {}/portfolio_reliance.csv not found, skipping".format(self.path))
 
         self.ar["nn_name"] = self.ar[["hidden_layers"]].replace(self.NN_DICT)
         self.ar["nn_name_short"] = [s[-1:] for s in self.ar.nn_name]
@@ -384,6 +404,8 @@ class Results():
         if sort_features: 
             self.ig = self.ig[self.SORTING]
             self.mr = self.mr[self.SORTING]
+            if self.pr is not None: 
+                self.pr = self.pr[self.SORTING]
     
     def subset(self, key_name, value):
         sub = (self.ar[key_name] == value) 
@@ -391,6 +413,8 @@ class Results():
         self.pe = self.pe[sub]
         self.ig = self.ig[sub]
         self.mr = self.mr[sub]
+        if self.pr is not None: 
+            self.pr = self.pr[sub]
     
     def rename(self, keys):
         """
@@ -407,6 +431,8 @@ class Results():
         self.pe.index = new_names
         self.mr.index = new_names
         self.ig.index = new_names
+        if self.pr is not None: 
+            self.pr.index = new_names
     
     def tabulate_performance(self, p=None):
         df = self.pe.groupby([self.ar.hidden_layers])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].apply(np.mean)
@@ -418,37 +444,33 @@ class Results():
         tab = LatexTable(df)
         tab.save(p)
         return df
-    
-    def plot_ig_ensemble_blues(self, p=None):
-        fig = self.style_plot_df(self.ig.transpose(), styling="blues", mode='ensemble', NN_NAMES=self.NN_NAMES)
-        fig.save(p)
 
-    def plot_mr_ensemble_blues(self, p=None):
-        fig = self.style_plot_df(self.mr.transpose(), styling="blues", mode='ensemble', NN_NAMES=self.NN_NAMES)
-        fig.save(p)
-
-    def plot_ig_ensemble_order(self, p=None):
-        fig = self.style_plot_df(self.ig.transpose(), styling="order", mode='ensemble', NN_NAMES=self.NN_NAMES)
-        fig.save(p)
-
-    def plot_mr_ensemble_order(self, p=None):
-        fig = self.style_plot_df(self.mr.transpose(), styling="order", mode='ensemble', NN_NAMES=self.NN_NAMES)
-        fig.save(p)
-
-    def plot_ig_ensemble_blues_head(self, p=None):
-        fig = self.style_plot_df(self.ig.transpose().head(10), styling="blues", mode='ensemble', NN_NAMES=self.NN_NAMES)
+    def plot_pr_ensemble(self, p=None, head=None, styling="blues"):
+        fig = self.style_plot_df(self.pr.transpose().head(head), styling=styling, mode='ensemble', NN_NAMES=self.NN_NAMES)
         fig.save(p)
     
-    def plot_ig_ensemble_order_head(self, p=None):
-        fig = self.style_plot_df(self.ig.transpose().head(10), styling="order", mode='ensemble', NN_NAMES=self.NN_NAMES)
+    def plot_ig_ensemble(self, p=None, head=None, styling="blues"):
+        fig = self.style_plot_df(self.ig.transpose().head(head), styling=styling, mode='ensemble', NN_NAMES=self.NN_NAMES)
         fig.save(p)
     
-    def plot_ig_time(self, p=None):
-        fig = self.style_plot_df(self.ig.transpose(), styling="order", mode='ensemble_time', NN_NAMES=self.NN_NAMES)
+    def plot_mr_ensemble(self, p=None, head=None, styling="blues"):
+        fig = self.style_plot_df(self.mr.transpose().head(head), styling=styling, mode='ensemble', NN_NAMES=self.NN_NAMES)
         fig.save(p)
     
-    def plot_ig_seeds(self, p=None):
-        fig = self.style_plot_df(self.ig.transpose(), styling="order", mode='seeds', NN_NAMES=self.NN_NAMES)
+    def plot_ig_time(self, p=None, styling="order"):
+        fig = self.style_plot_df(self.ig.transpose(), styling=styling, mode='ensemble_time', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+    
+    def plot_pr_time(self, p=None, styling="order"):
+        fig = self.style_plot_df(self.pr.transpose(), styling=styling, mode='ensemble_time', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+    
+    def plot_ig_seeds(self, p=None, styling="order"):
+        fig = self.style_plot_df(self.ig.transpose(), styling=styling, mode='seeds', NN_NAMES=self.NN_NAMES)
+        fig.save(p)
+    
+    def plot_pr_seeds(self, p=None, styling="order"):
+        fig = self.style_plot_df(self.pr.transpose(), styling=styling, mode='seeds', NN_NAMES=self.NN_NAMES)
         fig.save(p)
 
     @staticmethod
@@ -471,6 +493,7 @@ class Results():
     def style_plot_df(df, styling, mode, vmin=None, NN_NAMES=NN_NAMES):
         stylings = {
             'heatmap':Styling("heatmap", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
+            'relative':Styling("relative", plt.cm.Blues, show_cbar=True, flip_cbar=False),
             'order':Styling("order", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
             'top':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
             'bottom':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
@@ -551,6 +574,7 @@ class Styling():
         transforms = {
             'heatmap': self.heatmap,
             'order':self.order,
+            'relative':self.relative,
             'top10': self.top10,
             'bottom10': self.bottom10,
             'top5': self.top5,
@@ -562,6 +586,10 @@ class Styling():
     @staticmethod
     def heatmap(df):
         return df.apply(lambda x: get_parts(x,6), axis=0)
+    
+    @staticmethod
+    def relative(df):
+        return df.apply(lambda x: divide_by_max(x), axis=0)
     
     @staticmethod
     def order(df):
@@ -858,29 +886,43 @@ if __name__ == "__main__":
     # All models figures 
     plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS=backtest.HIDDEN_LAYERS_OLD, NN_DICT=backtest.NN_DICT_OLD,
         p=os.path.join(args.path_figures,"backtest_cumreturns_models.pdf"))
-    
+    """
 
     #==========================================================================================
     #                                     On ensemble results
     #==========================================================================================
+    
     res = Results(os.path.join("results", "selected", "ensembles"), SORTING=SORTING_OLD, NN_DICT=NN_DICT_OLD, NN_NAMES=NN_NAMES_OLD)
     
-    res.load(suffix="")
-    res.tabulate_performance(p=os.path.join(args.path_tables,"performance.tex"))
+    #res.load(suffix="")
+    #res.tabulate_performance(p=os.path.join(args.path_tables,"performance.tex"))
 
     res.load(suffix="")
     res.subset('ytrain',16)
     res.rename(['nn_name'])
-    res.plot_ig_ensemble_blues(p=os.path.join(args.path_figures,"ig_ensemble_blues.pdf"))
-    res.plot_mr_ensemble_blues(p=os.path.join(args.path_figures,"mr_ensemble_blues.pdf"))
-    res.plot_ig_ensemble_order(p=os.path.join(args.path_figures,"ig_ensemble_order.pdf"))
-    res.plot_mr_ensemble_order(p=os.path.join(args.path_figures,"mr_ensemble_order.pdf"))
-    res.plot_ig_ensemble_blues_head(p=os.path.join(args.path_figures,"ig_ensemble_blues_head.pdf"))
-    res.plot_ig_ensemble_order_head(p=os.path.join(args.path_figures,"ig_ensemble_order_head.pdf"))
+    res.plot_pr_ensemble(styling="blues",p=os.path.join(args.path_figures,"pr_ensemble_blues.pdf"))
+    res.plot_pr_ensemble(styling="order",p=os.path.join(args.path_figures,"pr_ensemble_order.pdf"))
 
-    res.load(suffix="")
-    res.rename(['nn_name', "ytrain"])
-    res.plot_ig_time(p=os.path.join(args.path_figures,"ig_time.pdf"))
+    #res.plot_ig_ensemble(styling="relative",p=os.path.join(args.path_figures,"ig_ensemble_relative.pdf"))
+    #res.plot_mr_ensemble(styling="relative",p=os.path.join(args.path_figures,"mr_ensemble_relative.pdf"))
+    #res.plot_ig_ensemble(styling="blues",p=os.path.join(args.path_figures,"ig_ensemble_blues.pdf"))
+    #res.plot_mr_ensemble(styling="blues",p=os.path.join(args.path_figures,"mr_ensemble_blues.pdf"))
+    #res.plot_ig_ensemble(styling="order", p=os.path.join(args.path_figures,"ig_ensemble_order.pdf"))
+    #res.plot_mr_ensemble(styling="order",p=os.path.join(args.path_figures,"mr_ensemble_order.pdf"))
+    
+    #res.plot_ig_ensemble(styling="relative", head=10, p=os.path.join(args.path_figures,"ig_ensemble_relative_head.pdf"))
+    #res.plot_ig_ensemble(styling="blues", head=10, p=os.path.join(args.path_figures,"ig_ensemble_blues_head.pdf"))
+    #res.plot_ig_ensemble(styling="order", head=10, p=os.path.join(args.path_figures,"ig_ensemble_order_head.pdf"))
+
+    #res.load(suffix="")
+    #res.rename(['nn_name', "ytrain"])
+    #res.plot_ig_time(styling="relative",p=os.path.join(args.path_figures,"ig_time_relative.pdf"))
+    #res.plot_pr_time(styling="relative", p=os.path.join(args.path_figures,"pr_time_relative.pdf"))
+    #res.plot_ig_time(styling="blues",p=os.path.join(args.path_figures,"ig_time_blues.pdf"))
+    #res.plot_pr_time(styling="blues", p=os.path.join(args.path_figures,"pr_time_blues.pdf"))
+    #res.plot_ig_time(styling="order",p=os.path.join(args.path_figures,"ig_time_order.pdf"))
+    #res.plot_pr_time(styling="order", p=os.path.join(args.path_figures,"pr_time_order.pdf"))
+    
     """
     #==========================================================================================
     #                                     On seeds results
@@ -890,8 +932,35 @@ if __name__ == "__main__":
     res.load(suffix="")
     res.subset('ytrain',16)
     res.rename(['nn_name', "seed"])
-    res.plot_ig_seeds(p=os.path.join(args.path_figures,"ig_seeds.pdf"))
+    res.plot_ig_seeds(styling="order",p=os.path.join(args.path_figures,"ig_seeds_order.pdf"))
+    res.plot_pr_seeds(styling="order",p=os.path.join(args.path_figures,"pr_seeds_order.pdf"))
+    
+    #==========================================================================================
+    #                                     On ensemble simulation results
+    #==========================================================================================
+    res = Results(os.path.join("results", "simulated", "ensembles"), SORTING=SORTING_OLD, NN_DICT=NN_DICT_OLD, NN_NAMES=NN_NAMES_OLD)
+    
+    res.load(suffix="_test", sort_features=False)
+    res.tabulate_performance(p=os.path.join(args.path_tables,"sim_performance.tex"))
 
+    res.load(suffix="_test", sort_features=False)
+    res.subset('ytrain',12)
+    res.rename(['nn_name'])
+    res.plot_ig_ensemble(styling="relative",p=os.path.join(args.path_figures,"sim_ig_ensemble_relative.pdf"))
+    res.plot_mr_ensemble(styling="relative",p=os.path.join(args.path_figures,"sim_mr_ensemble_relative.pdf"))
+    res.plot_ig_ensemble(styling="blues",p=os.path.join(args.path_figures,"sim_ig_ensemble_blues.pdf"))
+    res.plot_mr_ensemble(styling="blues",p=os.path.join(args.path_figures,"sim_mr_ensemble_blues.pdf"))
+    res.plot_ig_ensemble(styling="order", p=os.path.join(args.path_figures,"sim_ig_ensemble_order.pdf"))
+    res.plot_mr_ensemble(styling="order",p=os.path.join(args.path_figures,"sim_mr_ensemble_order.pdf"))
+    
+    res.plot_ig_ensemble(styling="relative", head=10, p=os.path.join(args.path_figures,"sim_ig_ensemble_relative_head.pdf"))
+    res.plot_ig_ensemble(styling="blues", head=10, p=os.path.join(args.path_figures,"sim_ig_ensemble_blues_head.pdf"))
+    res.plot_ig_ensemble(styling="order", head=10, p=os.path.join(args.path_figures,"sim_ig_ensemble_order_head.pdf"))
+
+    res.load(suffix="_test", sort_features=False)
+    res.rename(['nn_name', "ytrain"])
+    res.plot_ig_time(styling="relative",p=os.path.join(args.path_figures,"sim_ig_time_relative.pdf"))
+    res.plot_ig_time(styling="blues",p=os.path.join(args.path_figures,"sim_ig_time_blues.pdf"))
+    """
     print("FINISHED")
-
-
+    
