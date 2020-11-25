@@ -11,6 +11,7 @@ import argparse
 import tensorflow as tf
 import pandas as pd
 import warnings
+import pandas as pd
 
 from ray import tune
 from alibi.explainers import IntegratedGradients
@@ -22,7 +23,86 @@ from train_network import create_model, NetData, create_ensemble
 from utils import fix_folder_names
 
 
-class ModelReliance():
+class PermutationImportanceMeasure():
+
+   
+    @staticmethod
+    def _permute(x, y, index):
+        # Fisher eq. 3.4,3.5
+        adjustment = 1
+        n = x.shape[0]
+        if n % 2 == 1: 
+            x = x[0:-1,:]
+            y = y[0:-1]
+            adjustment = n * (1/(2*((n-1)/2)))
+        feature = x[:,index]
+        halves = np.split(feature,2)
+        perturbed = np.concatenate((halves[1], halves[0]))
+        x = np.concatenate((x[:,0:index], perturbed[:,None], x[:,index+1:]),axis=1)
+        return x, y, adjustment
+
+
+class PortfolioReliance(PermutationImportanceMeasure):
+    def __init__(self, percent_long:int, percent_short:int):
+        self.percent_long = percent_long 
+        self.percent_short = percent_short 
+    
+    @staticmethod 
+    def _drop_last_observation_if_odd(x, y, df_index):
+        n = x.shape[0]
+        if n % 2 == 1: 
+            x = x[0:-1,:]
+            y = y[0:-1]
+            df_index = df_index[0:-1]
+        return x, y, df_index
+    
+    @staticmethod
+    def _get_p_largest(df, percent):
+        n = int(0.01* percent * len(df))
+        return df.nlargest(n, columns="prediction")
+    
+    @staticmethod
+    def _get_p_smallest(df, percent):
+        n = int(0.01* percent * len(df))
+        return df.nsmallest(n, columns="prediction")
+
+    def _get_longshort_mean_return(self, f, x, y, df_index):
+        predicted_return = f.predict(x)
+        actual_return = y
+        df = pd.DataFrame(actual_return, columns=["actual"], index=df_index)
+        df["prediction"] = predicted_return
+        srt = df.groupby(pd.Grouper(level=1, freq="M")).apply(self._get_p_smallest, percent=self.percent_short)
+        lng = df.groupby(pd.Grouper(level=1, freq="M")).apply(self._get_p_largest, percent=self.percent_short)
+        long_mean = lng.actual.mean()
+        short_mean = srt.actual.mean()
+        return long_mean - short_mean
+
+    def _r_orig(self, f, x, y, df_index):
+        return self._get_longshort_mean_return(f, x, y, df_index)
+    
+    def _r_div(self, f, x, y, index, df_index):
+        x, y, df_index = self._drop_last_observation_if_odd(x, y, df_index)
+        x, y, _ = self._permute(x, y, index)
+        return self._get_longshort_mean_return(f, x, y, df_index)
+    
+    def fit_single_feature(self, f, x, y, index, df_index):
+        """
+        Calculates model reliance on a single feature (at position `index`.)
+
+        Arguments: 
+            f: tf.keras.Model instance
+            x (np.array): inputs to the model
+            y (np.array): true labels of the model
+        """
+        r_orig = self._r_orig(f, x, y, df_index)
+        r_div = self._r_div(f, x, y, index, df_index)
+        return r_orig - r_div  ## If the difference between orig and div is large, the feature is important
+    
+    def fit(self, f, x, y, df_index):
+        return np.array([self.fit_single_feature(f, x, y, index, df_index) for index in range(x.shape[1])])
+
+
+class ModelReliance(PermutationImportanceMeasure):
     def __init__(self, loss):
         """
         Arguments: 
@@ -36,16 +116,7 @@ class ModelReliance():
     
     def _e_div(self, f, x, y, index):
         # Fisher eq. 3.4,3.5
-        adjustment = 1
-        n = x.shape[0]
-        if n % 2 == 1: 
-            x = x[0:-1,:]
-            y = y[0:-1]
-            adjustment = n * (1/(2*((n-1)/2)))
-        feature = x[:,index]
-        halves = np.split(feature,2)
-        perturbed = np.concatenate((halves[1], halves[0]))
-        x = np.concatenate((x[:,0:index], perturbed[:,None], x[:,index+1:]),axis=1)
+        x, y, adjustment = self._permute(x, y, index)
         return adjustment * self.loss(y, f.predict(x)).numpy()
     
     def fit_single_feature(self, f, x, y, index):
@@ -99,6 +170,9 @@ class Nets():
     
     def model_reliance(self, on="test"):
         return pd.concat([net.model_reliance(on=on) for net in self.nets])
+    
+    def portfolio_reliance(self,  percent_long, percent_short):
+        return pd.concat([net.portfolio_reliance(percent_long=percent_long, percent_short=percent_short) for net in self.nets])
     
     def integrated_gradients_global(self, on="test"):
         return pd.concat([net.integrated_gradients(on=on)[1] for net in self.nets])
@@ -235,6 +309,18 @@ class Net():
         backtest["actual"] = self.netdata.test.data["targets"]
         return backtest
     
+    def portfolio_reliance(self, percent_long, percent_short):
+        dataset = self.netdata.test
+        data = dataset.data
+        df_index = dataset.index
+
+        pr = PortfolioReliance(percent_long=percent_long, percent_short=percent_short)
+        array = pr.fit(self.model, x=data["features"], y=data["targets"], df_index=df_index)
+        return pd.DataFrame(
+            array, 
+            index = dataset.columns['features'],
+            columns=[self.__repr__()]).transpose()
+    
     def model_reliance(self, on="test"):
         data_select = {
             "test": self.netdata.test,
@@ -313,8 +399,8 @@ class Net():
 if __name__ == "__main__":
     ## Extract models from logdir, save them.
     parser = argparse.ArgumentParser()
-    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_cleaned (2)", type=str, help="Path to logdir.")
-    parser.add_argument("--dataset", default="cleaned", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_simulated", type=str, help="Path to logdir.")
+    parser.add_argument("--dataset", default="simulated", type=str, help="Which dataset class from data.py to use")
     parser.add_argument("--ensemble", default=True, action="store_true", help="Whether to create ensemble models or seed models.")
 
     args = parser.parse_args([] if "__file__" not in globals() else None)
