@@ -11,13 +11,13 @@ import argparse
 import pandas as pd
 
 from nets import Net, Nets
-from data import Cleaned, Simulated
+from data import Cleaned, Simulated, Selected
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--ensemble", default=False, action="store_true", help="Whether to use ensembles or of seed models.")
-    parser.add_argument("--dataset", default="cleaned", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument("--dataset", default="selected", type=str, help="Which dataset class from data.py to use")
     parser.add_argument('--calculate_on', default="test", type=str, help="Where to calculate interpretability measures. test, train or valid")
 
     args = parser.parse_args([] if "__file__" not in globals() else None)
@@ -32,7 +32,8 @@ if __name__ == "__main__":
     # Load necessary datasets
     dataset_name_map = {
         "cleaned":Cleaned,
-        "simulated":Simulated
+        "simulated":Simulated,
+        "selected":Selected
     }
     C = dataset_name_map.get(args.dataset)
     dataset = C()
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     # Set datasets
     [net.set_dataset(dataset, ytest=1) for net in models.nets]
 
+    """
     if args.ensemble: 
         # Calculate local integrated gradients
         for net in models.nets:
@@ -62,3 +64,5 @@ if __name__ == "__main__":
     models.performance().to_csv(os.path.join(path_results, 'performance.csv'))
     models.model_reliance(on=args.calculate_on).to_csv(os.path.join(path_results, 'model_reliance_{}.csv'.format(args.calculate_on)))
     models.integrated_gradients_global(on=args.calculate_on).to_csv(os.path.join(path_results, 'integrated_gradients_global_{}.csv'.format(args.calculate_on)))
+    """
+    models.portfolio_reliance(percent_long=10,percent_short=10).to_csv(os.path.join(path_results, 'portfolio_reliance.csv'))
