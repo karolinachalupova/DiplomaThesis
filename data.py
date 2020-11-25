@@ -123,6 +123,15 @@ class Subset(Data):
         self.save()
 
 
+class Selected(Data):
+    PATHS = {
+        "features":  os.path.join(directory, 'data/selected/features.pkl'),
+        "targets":  os.path.join(directory, 'data/selected/targets.pkl')
+    }
+    def __init__(self, paths= PATHS):
+        self.paths = paths
+
+
 class Cleaned(Data):
     PATHS = {
         "features":  os.path.join(directory, 'data/cleaned/features.pkl'),
