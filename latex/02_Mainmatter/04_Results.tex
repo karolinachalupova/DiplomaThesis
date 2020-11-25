@@ -133,3 +133,33 @@
 				\label{fig:ig_seeds}
 			\end{figure}
 		\end{center}
+		
+		\subsubsection{Model Reliance}
+		
+			Figure \ref{fig:mr_ensemble} shows global feature importance in all models, as measured by Model Reliance.
+			
+			\begin{figure}	
+				\centering		
+				\begin{subfigure}[t]{\textwidth}
+					\includegraphics[width=\textwidth]{Figures/mr_ensemble_blues.pdf}
+					\caption{Values of Model Reliance}
+					\label{fig:mr_ensemble_blues}
+				\end{subfigure}
+				
+				\begin{subfigure}[t]{\textwidth}
+					\centering
+					\includegraphics[width=\textwidth]{Figures/mr_ensemble_order.pdf}
+					\caption{Ordering of Features by Model Reliance}
+					\label{fig:mr_ensemble_order}
+				\end{subfigure}
+				\caption{Global Feature Importance Measured with Model Reliance.}
+				\medskip
+				\small
+				Panel (\subref{fig:mr_ensemble_blues}) shows values of Model Reliance for all features, for all models.  Panel (\subref{fig:mr_ensemble_order}) shows how features are ordered by importance, as defined by Model Reliance, within each model. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Model Reliance.  
+				\label{fig:mr_ensemble}
+			\end{figure}
+		
+	\subsection{Simulation Results}
+	
+	
+	

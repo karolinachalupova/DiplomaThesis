@@ -1,4 +1,4 @@
-\begin{thebibliography}{59}
+\begin{thebibliography}{60}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -340,5 +340,10 @@
 \textsc{Whited}, T.~M. \& G.~\textsc{Wu} (2006): \enquote{Financial constraints
   risk.}
 \newblock \emph{The Review of Financial Studies} \textbf{19(2)}: pp. 531--559.
+
+\bibitem[{Zhang \& Ma(2012)}]{zhang2012ensemble}
+\textsc{Zhang}, C. \& Y.~\textsc{Ma} (2012): \emph{Ensemble machine learning:
+  methods and applications}.
+\newblock Springer.
 
 \end{thebibliography}
