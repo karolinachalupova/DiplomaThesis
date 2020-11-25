@@ -57,3 +57,6 @@ def get_parts(row, nparts):
     res = np.array([temp.index(i) for i in array])
     labels = list(reversed((np.arange(nparts)+1)*(30/nparts)))
     return pd.qcut(pd.Series(res, row.index).rank(method='first'),nparts,labels).astype(float)
+
+def divide_by_max(row):
+    return row / row.max()
