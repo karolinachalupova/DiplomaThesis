@@ -6,6 +6,7 @@ import os
 import shutil
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 def delete_unfinished_logdirs(logs):
     logdirs = [os.path.join(logs, x) for x in os.listdir(logs)]
@@ -39,6 +40,20 @@ def fix_folder_names(logs):
         os.rename([f for f in os.listdir(p) if f.startswith('Training')][0], 'Training')
     os.chdir(cwd)
 
+def move_file_up_one_folder(path):
+    p = Path(path).absolute()
+    parent_dir = p.parents[1]
+    p.rename(parent_dir / p.name)
+
+def flatten_folder(path):
+    """
+    Given path to folder, goes through all subfolders and for each folder in the subfolder, 
+    extracts all its files to the subfolder.
+    """
+    for subfolder in [os.path.join(path, f) for f in os.listdir(path)]:
+        for subsubfolder in [os.path.join(subfolder, f) for f in os.listdir(subfolder)]:
+            for filepath in [os.path.join(subsubfolder, f) for f in os.listdir(subsubfolder)]:
+                move_file_up_one_folder(filepath)
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
