@@ -158,7 +158,7 @@ class Cleaned(Data):
     
     @staticmethod
     def winsorize(df):
-        return df.apply(scipy.stats.mstats.winsorize, axis=0, limits=(0.01,0.05))
+        return df.apply(scipy.stats.mstats.winsorize, axis=0, limits=(0.01,0.01))
 
     @staticmethod
     def center(df):
@@ -168,9 +168,18 @@ class Cleaned(Data):
         scaler = preprocessing.StandardScaler(with_std=False)
         t = scaler.fit_transform(df)
         return pd.DataFrame(t, columns=df.columns, index=df.index)
-        
+
     @staticmethod
     def normalize(df):
+        """
+        removes the mean of the data, columnwise
+        """
+        scaler = preprocessing.StandardScaler(with_std=True)
+        t = scaler.fit_transform(df)
+        return pd.DataFrame(t, columns=df.columns, index=df.index)
+
+    @staticmethod
+    def scale_minmax(df):
         max_abs_scaler = preprocessing.MaxAbsScaler()
         t = max_abs_scaler.fit_transform(df)
         return pd.DataFrame(t, columns=df.columns, index=df.index)
@@ -181,12 +190,36 @@ class Cleaned(Data):
         t = imputer.fit_transform(df)
         return pd.DataFrame(t, columns=df.columns, index=df.index)
 
+
+class MinMaxed(Cleaned):
+    PATHS = {
+        "features":  os.path.join(directory, 'data/minmaxed/features.pkl'),
+        "targets":  os.path.join(directory, 'data/minmaxed/targets.pkl')
+    }
+    def __init__(self, paths= PATHS):
+        self.paths = paths
+    
     def clean(self, df):
         df = self.replace_inf(df)
-        df =  df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.mask_outliers)
         df = self.impute_nan(df)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.winsorize)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.center)
+        df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.scale_minmax)
+        return df
+
+
+class Normalized(Cleaned):
+    PATHS = {
+        "features":  os.path.join(directory, 'data/normalized/features.pkl'),
+        "targets":  os.path.join(directory, 'data/normalized/targets.pkl')
+    }
+    def __init__(self, paths= PATHS):
+        self.paths = paths
+    
+    def clean(self, df):
+        df = self.replace_inf(df)
+        df = self.impute_nan(df)
+        df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.winsorize)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.normalize)
         return df
 
@@ -347,14 +380,14 @@ class Meta():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--calculate", default="cleaned", type=str, help="Which dataset to (re)calculate.")
+    parser.add_argument("--calculate", default="normalized", type=str, help="Which dataset to (re)calculate.")
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
     name_map = {
         "filtered": Filtered,
         "subset": Subset, 
-        "cleaned": Cleaned,
-        "simulated": Simulated 
+        "minmaxed": MinMaxed,
+        "normalized": Normalized 
     }
 
     if args.calculate == "all":
@@ -362,8 +395,10 @@ if __name__ == "__main__":
         filtered.calculate()
         subset = Subset()
         subset.calculate()
-        cleaned = Cleaned()
-        cleaned.calculate()
+        minmaxed = MinMaxed()
+        minmaxed.calculate()
+        normalized = Normalized() 
+        normalized.calculate()
     else: 
         C = name_map.get(args.calculate)
         c = C()

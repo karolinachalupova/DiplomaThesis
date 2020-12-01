@@ -23,7 +23,7 @@ from tensorflow import reduce_sum, square, subtract, reduce_mean, divide, cast, 
 from ray import tune
 import ray
 
-from data import Cleaned, Simulated, N_FEATURES
+from data import MinMaxed, Normalized, Simulated, N_FEATURES
 
 class RSquare(Metric):
     def __init__(self, name="r_square", **kwargs):
@@ -222,7 +222,7 @@ class NetData():
             ytrain (int): number of years in training set
             yvalid (int): number of years in validation set
             ytest (int): number of years in test set
-            dataset (instance of loaded data.Cleaned or data.Simulated) 
+            dataset (instance of loaded data.MinMaxed, data.Normalized or data.Simulated) 
                 dataset has attributes `targets` and `features`, each is a pd.DataFrame.
         
         Examples: 
@@ -283,13 +283,15 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", default=True, action="store_true", help="Verbose TF logging.")
     parser.add_argument("--optimizer", default="adam", type=str, help="Optimizer for gradient descent. Gu: adam")
 
-    parser.add_argument("--dataset", default="cleaned", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument("--dataset", default="minmaxed", type=str, help="Which dataset class from data.py to use")
+    parser.add_argument("--name", default="minmax_long", type=str, help="Name of the trial")
     
     args = parser.parse_args([] if "__file__" not in globals() else None)
 
     dataset_name_map = {
-        "cleaned":Cleaned,
-        "simulated":Simulated
+        "minmaxed":MinMaxed,
+        "simulated":Simulated,
+        "normalized":Normalized
     }
 
     # Fix random seeds and threads
@@ -304,7 +306,7 @@ if __name__ == "__main__":
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
     # Create logdir name
-    args.logdir = os.path.join("logs_{}".format(args.dataset), "{}-{}-{}".format(
+    args.logdir = os.path.join("logs_{}".format(args.name), "{}-{}-{}".format(
         os.path.basename(globals().get("__file__", "notebook")),
         datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S"),
         ",".join(("{}={}".format(re.sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(vars(args).items())))
