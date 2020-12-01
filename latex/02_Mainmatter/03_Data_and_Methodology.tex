@@ -49,7 +49,18 @@
 			\end{figure}
 		\end{center}
 		
-		Other aspects of the unconditional features distributions are shown in the Appendix \ref{chap:additional_figures}. Specifically, Table \ref{tab:descriptives} gives mean, minimum, maximum, and 25th, 50th and 75th percentile of all features. The distributions are also summarized visually using histograms in Figure \ref{fig:histograms}.  
+		Other aspects of the unconditional features distributions are shown in the Appendix \ref{chap:additional_figures}. Specifically, Table \ref{tab:descriptives} gives mean, minimum, maximum, and 25th, 50th and 75th percentile of all features. The distributions are also summarized visually using histograms in Figure \ref{fig:histograms}. 
+		
+		\begin{center}
+			\begin{sidewaysfigure}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/histograms.pdf}
+				\caption{Histograms of All Features}
+				\label{fig:histograms}
+				\medskip
+				\small
+				The figure shows how the values of observations are distributed within each feature. The horizontal axis shows the values of the features (which range between $-1$ and $1$ due to normalization), and the vertical axis shows number of observations (or examples in ML terminology) within each bin, in millions.  
+			\end{sidewaysfigure}
+		\end{center} 
 	
 			
 		Figure \ref{fig:correlation_matrix} shows the correlations of all features. The correlation matrix is also presented in a table form in the Appendix \ref{chap:additional_figures}.
@@ -59,6 +70,9 @@
 				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix.pdf}
 				\caption{Features Correlation Matrix}
 				\label{fig:correlation_matrix}
+				\medskip
+				\small 
+				The figure shows pairwise correlation coefficients of all features. Each square represents the value of the particular correlation coefficient. The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red).
 			\end{figure}
 		\end{center}
 		
@@ -71,6 +85,9 @@
 					\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix_highest.pdf}
 					\caption{Features Correlation Matrix (Subset to Show 10 Most Correlated Pairs)}
 					\label{fig:correlation_matrix_highest}
+					\medskip
+					\small
+					The figure is a detail of the correlation matrix (Figure \ref{fig:correlation_matrix}), subset so as to show 10 most correlated features.  Same as in Figure \ref{fig:correlation_matrix}, each square represents the value of the particular correlation coefficient.The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red).
 				\end{figure}
 			\end{center}
 			
@@ -392,6 +409,7 @@
 			Two implementation decisions must be made when calculating the Integrated Gradients: first, choosing the right baseline input, and second, choosing the right the step size. First, the baseline input should be chosen such that it can be interpreted as "no signal". In this thesis, there are two possible baselines: random noise and all-zero input. The latter was chosen, as it lends itself well to the "no signal" interpretation: all the features are normalized between -1 and 1 and have a mean of 0, thus, an all-zero input can be considered a natural point of departure. Additionally, the authors recommend to check that the model's prediction at baseline is around zero. This is important because it allows to use Integrated Gradient to explain the prediction as a function of the input, and not as of the input and the baseline. Indeed, the predictions for the all-zero input are around zero, which confirms that the all-zero input is the correct baseline here. Second, the step size should be chosen such that the approximation is good enough: the authors recommend to check that the attributions approximately sum up to the difference between the prediction at $\vec{z}$ and at $\vec{z'}$. Given that the latter is around zero, it remains to check that the attributions for $\vec{z}$ sum up to the prediction at $\vec{z}$. (Note that this is a verification of passing the Completness Axiom, see Literature Review.) This thesis uses the step size of 50, which passes this summation check comfortably.  
 		
 	\subsection{Simulations}
+		\label{chap:simulations}
 		All the results in this thesis are calculated twice: once on real data, and once on simulated data. There are several benefits of replicating the calculations on simulated data, as it allows for complete control of the data-generating process. Most notably, the true relationship between the returns and predictors is known, i.e., we know which variables have a relationship to returns, as well as the precise functional form of this relationship. In real data, on the other hand, the data generating process is unknown, and therefore it is impossible to know with certainty if the methods used to uncover the data generating process (model selection, interpretability measures) are appropriate or accurate enough. Calculating the results on simulated data, where the data generating process is fully known, is therefore is a suitable way to see whether the models and metrics used are appropriate. This, of course, is true only to the extent to which the simulation is faithful to the reality, namely, the amount of noise and the variances of the data should correspond to the real world. This section discloses how the simulations are calculated and also how the faithfulness of the simulation is achieved. 
 		
 		The simulations are performed exactly following \cite{gu2020empirical}, who study the identical prediction task and a very similar dataset. The simulation is adjusted to fit this thesis data by changing the number of simulated variables to 30 (as in the real data), the number of simulated firms to $N=4600$ (4618 in average month in real data) and the number of observations per firm to  $T=190$ (192 in average month in the real data). Other than that, the simulation follows exactly \cite{gu2020empirical} (see their Internet Appendix A for details). For each firm in $i=1, 2\dots,N$ and for each month $t=1, 2, \dots,T$, 30 predictive variables $c_ij,t$ are simulated, out of which 3 then determine the return in the next month:

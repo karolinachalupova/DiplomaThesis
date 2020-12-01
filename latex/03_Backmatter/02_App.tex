@@ -1,3 +1,69 @@
-\chapter{Internet Appendix}
+\chapter{Robustness Checks of Simulated Results}
+\label{chap:robustness_simulations}
 
-[TODO add github reference]
+The same robustness checks performed on the real-world data are also performed here on the simulated data. This serves to show that the main results on simulated data (Section \ref{chap:simulations}) hold irrespective of time and seed. 
+Figures \ref{fig:sim_ig_robustness}, \ref{fig:sim_mr_robustness}, \ref{fig:sim_pr_robustness} show how global feature importance, as measured, respectively, by Integrated Gradients, Model Reliance and Portfolio Reliance, changes with time and with random seed. The figures confirm the robustness of the message discussed in Section \ref{chap:simulations}, which also explains why the results on simulated data are so unstable, and what it means for the main results. 
+
+
+\begin{figure}	
+	\centering		
+	\begin{subfigure}[t]{\textwidth}
+		\includegraphics[width=\textwidth]{Figures/sim_ig_time_relative.pdf}
+		\caption{Robustness across Time}
+		\label{fig:sim_ig_time_relative}
+	\end{subfigure}
+	
+	\begin{subfigure}[t]{\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{Figures/sim_ig_seeds_relative.pdf}
+		\caption{Robustness across Random Seeds}
+		\label{fig:sim_ig_seeds_relative}
+	\end{subfigure}
+	\caption{Robustness of Integrated Gradients on Simulated Data.}
+	\medskip
+	\small
+	Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. In Panel (\subref{fig:sim_ig_time_relative}), for each model, Global Integrated Gradient is calculated on 5 different time periods (2014 to 2018, both inclusive). At the beginning of each year, the model is re-estimated and the measure is then calculated on the following 1-year window of out-of-sample data. In Panel (\subref{fig:sim_ig_seeds_relative}), each ensemble model is decomposed into its 9 random seeds. For both panels, the plotted values are \textit{relative} to unify the scale across the different models (column-wise division by maximum value is performed).
+	\label{fig:sim_ig_robustness}
+\end{figure}
+
+\begin{figure}	
+	\centering		
+	\begin{subfigure}[t]{\textwidth}
+		\includegraphics[width=\textwidth]{Figures/sim_mr_time_relative.pdf}
+		\caption{Robustness across Time}
+		\label{fig:sim_mr_time_relative}
+	\end{subfigure}
+	
+	\begin{subfigure}[t]{\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{Figures/sim_mr_seeds_relative.pdf}
+		\caption{Robustness across Random Seeds}
+		\label{fig:sim_mr_seeds_relative}
+	\end{subfigure}
+	\caption{Robustness of Model Reliance on Simulated Data.}
+	\medskip
+	\small
+	Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. In Panel (\subref{fig:sim_mr_time_relative}), for each model, Model Reliance is calculated on 5 different time periods (2014 to 2018, both inclusive). At the beginning of each year, the model is re-estimated and the measure is then calculated on the following 1-year window of out-of-sample data. In Panel (\subref{fig:sim_mr_seeds_relative}), each ensemble model is decomposed into its 9 random seeds. For both panels, the plotted values are \textit{relative} to unify the scale across the different models (column-wise division by maximum value is performed).
+	\label{fig:sim_mr_robustness}
+\end{figure}
+
+\begin{figure}	
+	\centering		
+	\begin{subfigure}[t]{\textwidth}
+		\includegraphics[width=\textwidth, height=\textheight, keepaspectratio]{Figures/sim_pr_time_relative.pdf}
+		\caption{Robustness across Time}
+		\label{fig:sim_pr_time_relative}
+	\end{subfigure}
+	
+	\begin{subfigure}[t]{\textwidth}
+		\centering
+		\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{Figures/sim_pr_seeds_relative.pdf}
+		\caption{Robustness across Random Seeds}
+		\label{fig:sim_pr_seeds_relative}
+	\end{subfigure}
+	\caption{Robustness of Portfolio Reliance on Simulated Data.}
+	\medskip
+	\small
+	Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. In Panel (\subref{fig:sim_pr_time_relative}), for each model, Portfolio Reliance is calculated on 5 different time periods (2014 to 2018, both inclusive). At the beginning of each year, the model is re-estimated and the measure is then calculated on the following 1-year window of out-of-sample data. In Panel (\subref{fig:sim_pr_seeds_relative}), each ensemble model is decomposed into its 9 random seeds. For both panels, the plotted values are \textit{relative} to unify the scale across the different models (column-wise division by maximum value is performed).
+	\label{fig:sim_pr_robustness}
+\end{figure}
