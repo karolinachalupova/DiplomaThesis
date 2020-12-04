@@ -286,48 +286,5 @@
 			Another approach to neural network interpretation is constructing a \textit{surrogate model}, an intrinsically interpretable model, such as linear regression, which explains the model's \textit{predictions}, as opposed to explaining the target variable itself (here, such surrogate model would explain the model's returns predictions, as opposed to returns as such.) [TODO expand] 
 		 
 
-	\section{Unused text}
-		
-			A possible definition of ML is from  \cite[p.~2]{mitchell1997machine}: "A computer  program is  said to learn from experience E with respect to  some class of tasks T and performance  measure P, if  its performance at  tasks in T, as measured by P, improves with experience E." In the case of predicting stock returns, the task T is a regression, performance measure can be for example the mean-squared-error, and the experience E is the historical data. Using this definition, ML is a broad collection of methods, including the very simplest, like linear regression or principal components analysis, that are well-known to any economist.  
-	   		
-	   		Of course, studying only the first-order impact of a characteristic provides only a very limited picture. For example, \cite{bryzgalova2019forest} find that the first-order impact of accruals on returns is flat (zero), but when controlling for size, the relationship turns out to be U-shaped. 
-	   		
-	   		
-	   		
-	   		In case of linear model
-	   		
-	   		\begin{equation}
-	   		\hat{f(x)} = \beta_1x_1 + \beta_2x_2 \ldots + \beta_K x_K
-	   		\end{equation}
-	   		
-	   		where $\vec{x}$ are the values for particular observation, the Shapley value of feature $j$ is exactly
-	   		
-	   		\begin{equation}
-	   		\psi_j(\hat{f}) = \beta_jx_j - \beta_jE(X_j)
-	   		\end{equation}
-	   		
-	   		 In case of linear models, the order in which the features "vote" for the prediction is irrelevant (addition is commutative). This is not so in nonlinear models, and this is why the Shapley value takes account for all possible orders in which features can participate in the prediction: in a model with $K$ features, there are $2^K$ possible coalitions between them.	   
-	   		 
-	   		 
-	   		 \cite{gu2020empirical} apply a wide range of ML methods to the stock-returns prediction task. Their model is 
-	   		 
-	   		 \begin{equation}
-	   		 r_{i, t+1} = E_t(r_{i,t+1}) + \epsilon_{i,t+1}
-	   		 \end{equation}
-	   		 
-	   		 where 
-	   		 
-	   		 \begin{equation}
-	   		 E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = g(\vec{x}_t \otimes \vec{c}_{i,t})
-	   		 \end{equation}
-	   		 
-	   		 
-	   		 The function $g$ stands for any ML model and the variables $\vec{z}_{i,t}$ are 94 characteristics of stocks $ \vec{c}_{i,t}$ interacted with 8 macroeconomic predictors $\vec{x}_t$. The multiple-factor model \ref{ER_betalambda} is a special case of this specification, with $g$ linear: 
-	   		 
-	   		 \begin{equation}
-	   		 E_t(r_{i,t+1}) = g(\vec{z}_{i,t}) = \vec{c}'_{i,t}\Theta_1'\Theta_2 \vec{x}_t = \vec{{\beta}}'_{i,t} \vec{\lambda}_{t}
-	   		 \end{equation}
 	
-			The task is to predict the return of given stock in month $t+1$ given that stock's anomalies as of the time $t$. (Two technical notes: first, the dataset is organized so that this shift is taken care of, i.e., the features corresponding to the given target have the same index. Second, the anomalies as of the time $t-1$ can be (and often are) calculated from raw data based on several preceding time periods, e.g., $t$, $t-1$, $t-2$ and therefore the time index  represents the entire information set rather than financial or accounting information being \textit{published} at that time index. For example, a single observation at a given time index $t$ consists of the target (stock's return in $t+1$), and anomalies calculated as of $t$, such as average return in the last six months ($t$, $t-1$, $t-2$, $t-3$, $t-4$, $t-5$))
-
 
