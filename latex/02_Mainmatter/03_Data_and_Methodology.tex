@@ -4,26 +4,35 @@
 \section{Data}
 
 	\subsection{Universe of Stocks}
-		The dataset, sourced at Reuters Datastream, comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 1,607,117 observations. An average firms is present for 16 years (192 observations). The data are rather evenly distributed in time, with 4,618 observations (firms) in an average month. 
+		The dataset, sourced at Reuters Datastream, comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 657,141 observations. An average firms is present for 6.5 years (79 monthly observations). The data are rather evenly distributed in time, with 1,888 observations (firms) in an average month. 
 		
 		It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues. The liquidity filter is obtained from \cite{tobek2020does}.  
 	
-	\subsection{Predictors as Distillation of Prior Literature}
-		Table \ref{tab:meta} shows all 30 return predictors studied in this thesis. According to \cite{tobek2020does}, these variables are the best predictors of equity returns out of 153  candidate variables from leading financial and accounting journals \footnote{See Figure 8 in \cite{tobek2020does}. Global liquid universe of stocks is considered.}. For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, as well as the publishing journal. Column Category presents the categorization of the features by the underlying data using which the variable is calculated: accounting (for variables calculated using firm's accounting numbers), market (for variables calculated using market information, such as return or volume), and analyst forecasts (for variables calculated using I/B/E/S database on professional forecasters). Column Subcategory further discriminates the features based on the broad economic motivation for the feature as a return predictor. [TODO explain more, link to literature review, better clasify to subcategories] Finally, column Frequency shows the frequency (yearly or monthly) with which the feature changes values (is updated as new underlying data becomes available).
+	\subsection{Predictors}
+	
+		A single observation (in ML terminology, an example), represents a single firm in a given month. An observation consists of 30 values of characteristics of that firm, as of the given month (calculated from underlying data from before and up the the month in question), and the predicted variable, return, in the next month. 
+		
+		Table \ref{tab:meta} shows all 30 predictors studied in this thesis. According to \cite{tobek2020does}, these variables are the best predictors of equity returns out of 153  candidate variables from leading financial and accounting journals \footnote{See Figure 8 in \cite{tobek2020does}. Global liquid universe of stocks is considered.}. For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, the underlying underlying economic motivation of the variable (discussed in Section \ref{chap:economic_motivation_of_predictors}). The table also shows that most predictors are calculated using market data (19 of them), rather than the firms' accounting numbers (10 predictors); one predictor is calculated using I/B/E/S database on professional forecasters. Typically, the market variables are updated monthly, and the accounting predictors change values with yearly frequency.
 		
 		\begin{table}
 			\resizebox{\textwidth}{!}{\input{Tables/meta.tex}}
-			\caption{Categorization of the Features}
+			\caption{Predictors}
 			\label{tab:meta}
+			\medskip
+			\small
+			The table is a list of all predictors used in this thesis. Column Features gives the names of the variables, (the naming comes from \cite{tobek2020does}, which is the source of the dataset used in this thesis).  
+			Column Data Source informs whether the variable is calculated using the firm's accounting data, market data, or data on forecasts of analysts. Column Category presents the categorization of the features by the underlying economic motivation of the variable (discussed in Section \ref{chap:economic_motivation_of_predictors}). Column Frequency shows how often the feature changes values (is updated as new underlying data becomes available): yearly (Y) or monthly (M). All the variables are calculated by \cite{tobek2020does}, which offer more information on their construction. 
 		\end{table}
 	
 	\subsection{Data Cleaning}
 	
-		Before feeding the data to the neural network, it is crucial to suitably clean them so that they are as informative as possible. As neural networks work best when the values of all features are on the same scale, the data are centered (by subtracting the mean) and then normalized so that all features range between the values $-1$ and $1$, as in \cite{gu2020empirical}. However, this operation would be highly problematic in the presence of outliers: if a feature has observations several times as high (or as small) as the rest of the data, normalization between $-1$ and $1$ would set the outliers' values close to $1$ (or $-1$), while setting the remaining majority of the values close to 0, thus rendering the data completely uninformative. To avoid this, the outliers are treated before normalization.
+		Before feeding the data to the neural network, it is crucial to suitably clean them so that they are as informative as possible. As neural networks work best when the values of all features are on the same scale, the data are centered (by subtracting the mean) and then fitted into the range between the values $-1$ and $1$ using their original minima and maxima to define the scale, as in \cite{gu2020empirical}. However, this operation would be highly problematic in the presence of outliers: if a feature has observations several times as high (or as small) as the rest of the data, scaling between $-1$ and $1$ would set the outliers' values close to $1$ (or $-1$), while setting the remaining majority of the values close to 0, thus rendering the data completely uninformative. To avoid this, the outliers are treated before scaling.
 		
-		The correct treatment of the outliers depends on whether the outlier value is a valid observation or not. In the former case, we should keep the observation, but clip the value so that it does not disturb the normalization, while in the latter case we should treat the value as missing, since it is likely due to errors in the data. Of course, the two cases are impossible to tell from each other from certainty, so the approach here is to declare values outside 2 standard deviations from the mean as erroneous and treat them as missing, and subsequently winsorize the data at 1\% bottom and 5\% top. Winsorization preserves the observation being treated, but clips it to the value of the corresponding percentile (1\% and 95\%). This approach to treating outliers was selected by inspecting the histograms of all variables with the aim that the normalization preserves the data distribution as well as possible.    
+		Outliers are treated using winsorization, which preserves the observation being treated, but clips it to the value of the corresponding percentile (1\% and 99\%). This approach to treating outliers was selected by inspecting the resulting histograms of all variables.     
 		
-		Lastly, since all data fed to the neural network must be real numbers, missing observations must be imputed. Here, the missing data are replaced by 0, which is suitable, since the normalization between $-1$ and $1$ allows to interpret the value of $0$ as "no signal". The predictors vary considerably as to the percentage of missing data, as documented in Figure \ref{fig:missing_observations}. This is important, as the predictors with many missing values are likely to be less informative, as they offer less space for learning. The variables calculated directly from past returns, such as 52-Week High, Short-Term Reversal, Idiosyncratic Risk and Maximum, have almost no missing values. On the other hand, the ratio of research and development expenses to market value (RD / Market Equity) has more than 60\% of values missing, as some firms do not report research and development in their accounts. Other variables with many missing values are Earnings Predictability and Earnings Forecast-to-Price (around 50\% and 40\%). These are calculated based on analysts' forecasts, that are sometimes unavailable. The rest of variables have typically between 5\% and 20\% of missing values.  
+		Since all data fed to the neural network must be real numbers, missing observations must be imputed. Here, the missing data are replaced by 0, which is suitable, since the scaling between $-1$ and $1$ allows to interpret the value of $0$ as "no signal". The predictors vary considerably as to the percentage of missing data, as documented in Figure \ref{fig:missing_observations}. This is important, as the predictors with many missing values are likely to be less informative, as they offer less space for learning. The variables calculated directly from past returns, such as 52-Week High, Short-Term Reversal, Idiosyncratic Risk and Maximum, have almost no missing values. On the other hand, the ratio of research and development expenses to market value (RD / Market Equity) has more than 60\% of values missing. Other variables with many missing values are Earnings Predictability and Earnings Forecast-to-Price (around 50\% and 40\%). These are calculated based on analysts' forecasts, that are sometimes unavailable. The rest of variables have typically between 5\% and 20\% of missing values.  
+		
+		These data-cleaning operations must be employed in a suitable order, which is: imputing missing values by $0$, winsorizing, centering and scaling into the $-1$ and $1$ interval. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years.  
 		
 		\begin{center}
 			\begin{figure}
@@ -33,13 +42,13 @@
 			\end{figure}
 		\end{center}
 		
-		These data-cleaning operations must be employed in a suitable order, which is: masking most extreme outliers as missing, imputing missing values by $0$, winsorizing, centering and normalizing. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years.  
+	
 	
 	\subsection{Predictor Descriptives}   	
 	
 		This subsection describes basic statistical properties of individual predictors (features) after cleaning, which is precisely the data entering the neural network. (The terms \textit{predictors}, \textit{variables} and \textit{features} are used interchangeably.) 
 		 
-		Since all the features are normalized to have 0 mean and to fit into the interval $-1$ and $1$, possibly the most important statistic to describe their distribution is standard deviation, plotted in Figure \ref{fig:standard_deviation}. It typically ranges between 0.2 and 0.5, with most features having standard deviation around 0.35. This is relatively high, meaning that the values are well-distributed in their $[-1,1]$ interval. Having high enough standard deviation is an important aspect of an informative feature: since the values are very different across observations, there is room for the model to learn from these differences. Three features have standard deviation below 0.2: Liquidity Shocks, Leverage Component of Book/Price and Profit Margin. On the other hand, three features have notably high standard deviations (above 0.5): Whited-Wu Index, Liquidity Beta 5 and Net Operating Assets. 
+		Since all the features are scaled to have 0 mean and to fit into the interval $-1$ and $1$, possibly the most important statistic to describe their distribution is standard deviation, plotted in Figure \ref{fig:standard_deviation}. It typically ranges between 0.2 and 0.35, which is quite high. Having large enough standard deviation is an important aspect of an informative feature: since the values are very different across observations, there is room for the model to learn from these differences.
 		
 		\begin{center}
 			\begin{figure}
@@ -49,21 +58,10 @@
 			\end{figure}
 		\end{center}
 		
-		Other aspects of the unconditional features distributions are shown in the Appendix \ref{chap:additional_figures}. Specifically, Table \ref{tab:descriptives} gives mean, minimum, maximum, and 25th, 50th and 75th percentile of all features. The distributions are also summarized visually using histograms in Figure \ref{fig:histograms}. 
-		
-		\begin{center}
-			\begin{sidewaysfigure}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/histograms.pdf}
-				\caption{Histograms of All Features}
-				\label{fig:histograms}
-				\medskip
-				\small
-				The figure shows how the values of observations are distributed within each feature. The horizontal axis shows the values of the features (which range between $-1$ and $1$ due to normalization), and the vertical axis shows number of observations (or examples in ML terminology) within each bin, in millions.  
-			\end{sidewaysfigure}
-		\end{center} 
+		Other aspects of unconditional distributions of the features are given in the Appendix \ref{chap:additional_figures}. Specifically, the distributions are summarized visually using histograms in Figure \ref{fig:histograms} and the precise values of the descriptives (mean, standard deviation, minimum, maximum, and 25th, 50th and 75th percentile) are in the table Table \ref{tab:descriptives}.
 	
 			
-		Figure \ref{fig:correlation_matrix} shows the correlations of all features. The correlation matrix is also presented in a table form in the Appendix \ref{chap:additional_figures}.
+		Figure \ref{fig:correlation_matrix} shows the correlations of all features. The correlation matrix is also presented in a table form in the Appendix \ref{chap:additional_figures}. Figure \ref{fig:correlation_matrix_highest} shows a smaller part of this matrix, subset so that the 10 most correlated feature pairs are shown. The correlation coefficients of these pairs are listed in Table \ref{tab:most_correlated_pairs}.
 		
 		\begin{center}
 			\begin{figure}
@@ -75,8 +73,6 @@
 				The figure shows pairwise correlation coefficients of all features. Each square represents the value of the particular correlation coefficient. The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red).
 			\end{figure}
 		\end{center}
-		
-		 Figure \ref{fig:correlation_matrix_highest} shows a smaller part of this matrix, subset so that the 10 most correlated feature pairs are shown. The correlation coefficients of these pairs are listed in Table \ref{tab:most_correlated_pairs}.
 		 
 		% Correlation matrix and table showing 10 most correlated pairs
 		\afterpage{%    % defer execution until the next page break occurs anyway
@@ -105,25 +101,24 @@
 		
 		Figure \ref{fig:returns_histogram} shows histogram of monthly returns. 
 			
-		\begin{center}
-			\begin{figure}
-				\includegraphics{Figures/returns_histogram.pdf}
-				\caption{Histogram of Monthly Returns}
-				\label{fig:returns_histogram}
-			\end{figure}
-		\end{center}
+		\begin{figure}
+			\centering
+			\includegraphics{Figures/returns_histogram.pdf}
+			\caption{Histogram of Monthly Returns}
+			\label{fig:returns_histogram}
+		\end{figure}
 
 
 \section{Methodology}
 
-	I train 4 distinct feed-forward neural networks, each with 9 different random seeds. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and investigate whether this interpretability is robust across different random seeds. I also investigate whether the interpretation of the model is stable in time. This  section describes the methodological issues related, in this order, to the model's architecture, training, performance evaluation and interpretation of the neural networks employed in this thesis.
+	I train 4 feed-forward neural networks, each with 10 different random seeds. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and investigate whether this interpretability is robust across different random seeds and in time. This  section describes the methodological issues related, in this order, to the model's architecture, training, performance evaluation and interpretation of the neural networks employed in this thesis.
 	
 	\subsection{Architecture of the Neural Networks}
 		\label{chap:architecture}
 	
-		The prediction task is a regression of a stocks' returns in the following month on a set of the stocks' charasteristics calculated as of the current month. My neural networks' architecture follows closely \cite{gu2020empirical}, which studies the very same prediction task. In brief summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 4 different depths are used, with 1, 2, 3, and hidden layers consisting of 16, 8, 4, and 2 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
+		The prediction task is a regression of a stocks' returns in the following month on a set of the stocks' charasteristics calculated as of the current month. My neural networks' architecture follows closely \cite{gu2020empirical}, which studies the very same prediction task. In brief summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 4 different depths are used, with 1, 2, 3, and hidden layers consisting of 32, 16, 8, and 4 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
 		
-		First, let us describe a feed-forward neural network in general terms (e.g., \cite{goodfellow2016deep}). A feed-forward neural network can be represented as directed graph, consisting of several \textit{layers}. The input layer consists of several \textit{neurons} (nodes in the graph). This layer is connected to the next layer of neurons (the first hidden layer) by edges going from each input neuron to each hidden layer neuron. When each neuron of a layer is connected to each neuron in the next layer, we say that the two layers are fully connected. Each edge connecting two neurons is parametrized by a single trainable weight. More hidden layers can be connected to the previous hidden layer in the same fashion. Finally, the last hidden layer is connected, again, fully, to the output layer, which is the final prediction.
+		First, let us describe a feed-forward neural network in general terms (e.g., \cite{goodfellow2016deep}). A feed-forward neural network can be represented as directed graph, consisting of several \textit{layers}. An example of such a graph is given in Figure \ref{fig:computation_graph}. The input layer consists of several \textit{neurons} (nodes in the graph). This layer is connected to the next layer of neurons (the first hidden layer) by edges going from each input neuron to each hidden layer neuron. When each neuron of a layer is connected to each neuron in the next layer, we say that the two layers are fully connected. Each edge connecting two neurons is parametrized by a single trainable weight. More hidden layers can be connected to the previous hidden layer in the same fashion. Finally, the last hidden layer is connected, again, fully, to the output layer, which is the final prediction.
 		
 		This directed graph is a representation of the computation performed by the neural network to get from the input to the output. The values of a given hidden layer, $\vec{h}$, are computed using the previous layer's values $\vec{x}$, and the matrix of weights on the edges $\vec{W}$ using sum of products: 
 		
@@ -163,11 +158,15 @@
 		
 		In the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract information from them. This information then enters the next hidden layer and the information is made yet more concentrated. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 4 hidden layers, where the most abstract or high-level information is extracted.
 		
-		In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point, dimension of the input layer) and propagates it through the series of hidden layers to produce the return prediction.	A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is not necessary, as reaching the best possible performance is not the goal of this thesis. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons as they, adapted to reflect my smaller size of input layer. I train models of 4 different depths: 1, 2, 3, and 4 hidden layers. The first hidden layer comprises of 16 neurons. Subsequent layers, if used, contains 8, 4 and 2 neurons for the second, third and fourth layer respectively. Note that the decreasing number of neurons is why we say the information is becoming more and more concentrated the deeper the hidden layer. Throughout the thesis, these 4 distinct neural networks are referred to as NN1, NN2, NN3 and NN4, the number standing for the respective number of hidden layers in the network.
+		In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point, dimension of the input layer) and propagates it through the series of hidden layers to produce the return prediction. This is visible as the 30 $x$ inputs in Figure \ref{fig:computation_graph}. A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is not necessary, as reaching the best possible performance is not the goal of this thesis. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons. I train models of 4 different depths: 1, 2, 3, and 4 hidden layers. The first hidden layer comprises of 32 neurons. Subsequent layers, if used, contains 16, 8 and 4 neurons for the second, third and fourth layer respectively. Note that the decreasing number of neurons is why we say the information is becoming more and more concentrated the deeper the hidden layer. Throughout the thesis, these 4 distinct neural networks are referred to as NN1, NN2, NN3 and NN4, the number standing for the respective number of hidden layers in the network.  Figure \ref{fig:computation_graph} shows the computation graph of NN2.
 		
-		One of the neural networks used in this thesis, particularly, NN2 (the network with two hidden layers), is visualized here: 
+		In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer, again in line with  \cite{gu2020empirical}. This changes the formula for hidden layer values from \ref{eqn:hidden_layer} to to: 
 		
-	
+		\begin{equation}
+			\vec{h} = \text{ReLU}(\text{BN}(\vec{W}\vec{x}))
+		\end{equation}
+		
+		where $\text{BN}$ represents the batch-normalization operation. The operation simply normalizes its input data (subtracts sample mean and divides by sample variance). The data is split to batches to improve computing speed of the operation. The operation helps with multiple aspects of training the neural networks, as it prevents the values coming out of a hidden layer from being extreme. This helps to regularize the network and also speeds up the training. Importantly, it helps with the problem of "internal covariate shift", where the distributions of inputs to hidden layers are shifted relative to their validation and testing counterparts, which harms the predictive power and the convergence. By demeaning and standardizing the data, batch normalization preserves the information contained in the hidden layer while preventing the covariate shift \citep{ioffe2015batch}. 
 		
 		\begin{center}
 			\begin{figure}
@@ -186,108 +185,101 @@
 				}
 				
 				\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
-				% draw nodes in input layer
-				\foreach \m/\l [count=\y] in {1,2,3,missing,4}
-				\node [every neuron/.try, neuron \m/.try] (input-\m) at (0,2.5-\y) {};
-				
-				% draw nodes in hidden layers
-				\foreach \m [count=\y] in {1,missing,2}
-				\node [every neuron/.try, neuron \m/.try ] (hidden1-\m) at (2,2-\y*1.25) {};
-				
-				% draw nodes in hidden layers
-				\foreach \m [count=\y] in {1,missing,2}
-				\node [every neuron/.try, neuron \m/.try ] (hidden2-\m) at (4,2-\y*1.25) {};
-				
-				% draw nodes in output layer
-				\foreach \m [count=\y] in {1}
-				\node [every neuron/.try, neuron \m/.try ] (output-\m) at (6,-0.25) {};
-				
-				% Annotate input neurons, draw input arrows
-				\foreach \l [count=\i] in {1,2,3,30}
-				\draw [<-] (input-\i) -- ++(-1,0)
-				node [above, midway] {$x_{\l}$};
-				
-				% Annotate hidden neurons
-				\foreach \l [count=\i] in {1,16}
-				\node [above] at (hidden1-\i.north) {$h_{\l}$};
-				
-				% Annotate hidden neurons
-				\foreach \l [count=\i] in {1,8}
-				\node [above] at (hidden2-\i.north) {$l_{\l}$};
-				
-				% Annotate output neurons, draw output arrows
-				\foreach \l [count=\i] in {1}
-				\draw [->] (output-\i) -- ++(1,0)
-				node [above, midway] {$o$};
-				
-				% Draw arrows between input and hidden
-				\foreach \i in {1,...,4}
-				\foreach \j in {1,...,2}
-				\draw [->] (input-\i) -- (hidden1-\j);
-				
-				% Draw arrows between hidden and hidden
-				\foreach \i in {1,...,2}
-				\foreach \j in {1,...,2}
-				\draw [->] (hidden1-\i) -- (hidden2-\j);
-				
-				% Draw arrows between hidden and output
-				\foreach \i in {1,...,2}
-				\foreach \j in {1}
-				\draw [->] (hidden2-\i) -- (output-\j);
-				
-				% Annotate layers
-				\foreach \l [count=\x from 0] in {Input, First Hidden , Second Hidden, Ouput}
-				\node [align=center, above] at (\x*2,2) {\l \\ Layer};
+					% draw nodes in input layer
+					\foreach \m/\l [count=\y] in {1,2,3,missing,4}
+					\node [every neuron/.try, neuron \m/.try] (input-\m) at (0,2.5-\y) {};
+					
+					% draw nodes in hidden layers
+					\foreach \m [count=\y] in {1,missing,2}
+					\node [every neuron/.try, neuron \m/.try ] (hidden1-\m) at (2,2-\y*1.25) {};
+					
+					% draw nodes in hidden layers
+					\foreach \m [count=\y] in {1,missing,2}
+					\node [every neuron/.try, neuron \m/.try ] (hidden2-\m) at (4,2-\y*1.25) {};
+					
+					% draw nodes in output layer
+					\foreach \m [count=\y] in {1}
+					\node [every neuron/.try, neuron \m/.try ] (output-\m) at (6,-0.25) {};
+					
+					% Annotate input neurons, draw input arrows
+					\foreach \l [count=\i] in {1,2,3,30}
+					\draw [<-] (input-\i) -- ++(-1,0)
+					node [above, midway] {$x_{\l}$};
+					
+					% Annotate hidden neurons
+					\foreach \l [count=\i] in {1,32}
+					\node [above] at (hidden1-\i.north) {$h_{\l}$};
+					
+					% Annotate hidden neurons
+					\foreach \l [count=\i] in {1,16}
+					\node [above] at (hidden2-\i.north) {$l_{\l}$};
+					
+					% Annotate output neurons, draw output arrows
+					\foreach \l [count=\i] in {1}
+					\draw [->] (output-\i) -- ++(1,0)
+					node [above, midway] {$o$};
+					
+					% Draw arrows between input and hidden
+					\foreach \i in {1,...,4}
+					\foreach \j in {1,...,2}
+					\draw [->] (input-\i) -- (hidden1-\j);
+					
+					% Draw arrows between hidden and hidden
+					\foreach \i in {1,...,2}
+					\foreach \j in {1,...,2}
+					\draw [->] (hidden1-\i) -- (hidden2-\j);
+					
+					% Draw arrows between hidden and output
+					\foreach \i in {1,...,2}
+					\foreach \j in {1}
+					\draw [->] (hidden2-\i) -- (output-\j);
+					
+					% Annotate layers
+					\foreach \l [count=\x from 0] in {Input, First Hidden , Second Hidden, Ouput}
+					\node [align=center, above] at (\x*2,2) {\l \\ Layer};
 				\end{tikzpicture}
 				\caption{Computation Graph of the Neural Network NN2}
 				\label{fig:computation_graph}
 			\end{figure}
 		\end{center}
-		
-		In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer, again in line with  \cite{gu2020empirical}. This changes the formula for hidden layer values from \ref{eqn:hidden_layer} to to: 
-		
-		\begin{equation}
-			\vec{h} = \text{ReLU}(\text{BN}(\vec{W}\vec{x}))
-		\end{equation}
-		
-		where $\text{BN}$ represents the batch-normalization operation. The operation simply normalizes its input data (subtracts sample mean and divides by sample variance). The data is split to batches to improve computing speed of the operation. The operation helps with multiple aspects of training the neural networks, as it prevents the values coming out of a hidden layer from being extreme. This helps to regularize the network and also speeds up the training. Importantly, it helps with the problem of "internal covariate shift", where the distributions of inputs to hidden layers are shifted relative to their validation and testing counterparts, which harms the predictive power and the convergence. By demeaning and standardizing the data, batch normalization preserves the information contained in the hidden layer while preventing the covariate shift \citep{ioffe2015batch}. 
 	
 	
 	\subsection{Training, Regularization and Hyperparameter Tuning}
 		\label{chap:train_regularize_tune}
 	
-		In general terms, training any neural network amounts to searching for such weights on its edges such that the loss on the training data (typically reflecting the prediction error) is small. The optimization is done numerically, by iteratively adjusting the weights so that a loss is gradually decreasing. At the beginning of training, the model is initialized with small random weights, where the random state is determined using the so-called random seed. Prediction is computed using these weights, which are then adjusted using the negative gradient of the loss. This is applied iteratively until a stopping criterion is met and the final weights are extracted. This thesis uses mean squared error as the loss, as the prediction task is a regression.
+		In general terms, training any neural network amounts to searching for such weights on its edges such that the loss on the training data (typically reflecting the prediction error) is small. The optimization is done numerically, by iteratively adjusting the weights so that a loss is gradually decreasing. At the beginning of training, the model is initialized with small random weights, where the random state is determined using the so-called random seed. Prediction is computed using these weights, which are then adjusted using the negative gradient of the loss \citep{kingma2014adam}. This is applied iteratively until a stopping criterion is met and the final weights are extracted. This thesis uses mean squared error as the loss, as the prediction task is a regression.
 		
-		The data is fed to the network in so-called batches, meaning that several inputs are processed together and the weight update is calculated across the whole batch. When all training data-points have been fed to the network exactly once, we say one epoch has passed. This is repeated for a number of epochs. I use batch size of 5,000, which is enough for processing the data reasonably fast while not overflowing the memory. I use 100 epochs in line with \cite{gu2020empirical}, but this number is never actually reached during the training (it works just as an upper limit), due to early stopping, as explained below.
+		The data is fed to the network in so-called batches, meaning that several inputs are processed together and the weight update is calculated across the whole batch. When all training data-points have been fed to the network exactly once, we say one epoch has passed. This is repeated for a number of epochs. I use batch size of 5,000, which is enough for processing the data reasonably fast while not overflowing the memory. I use 100 epochs in line with \cite{gu2020empirical}, but this number is seldom reached during the training (it works just as an upper limit), due to early stopping, as explained below.
 		
-		There are several optimizers one can use to descend the slopes of the loss function. In line with \cite{gu2020empirical}, I use Adam optimizer. The advantage of Adam is two-fold. First, it essentially lowers the learning rate as the training progresses. The learning rate governs how much the weights are adjusted in a given direction (in the direction of negative gradient of the loss in the simple case of Stochastic Gradient Descent optimizer). Shrinking the learning rate gradually allows faster learning at the beginning of the training and a more nuanced convergence near the optimum [TODO add citation]. [TODO refresh the theory behind using Adam and describe the advantages better]. (In about 1\% of the cases, the optimized model learns to predict just the average of the training data. I retrain these models using Stochastic Gradient Descent optimizer with Nesterov momentum 0.99.)
+		There are several optimizers one can use to descend the slopes of the loss function. In line with \cite{gu2020empirical}, I use Adam optimizer \citep{kingma2014adam}. The advantage of Adam is two-fold. First, it essentially lowers the learning rate as the training progresses. The learning rate governs how much the weights are adjusted in a given direction (in the direction of negative gradient of the loss in the simple case of Stochastic Gradient Descent optimizer). Shrinking the learning rate gradually allows faster learning at the beginning of the training and a more nuanced convergence near the optimum.
 		
 		Neural networks are non-parametric way of modeling the relationship between the predictors and the predicted variables, in the sense that there is no a priori assumption made about the functional form of the relationship. In fact, the Universal Approximation Theorem shows that with already a single hidden layer, the network outlined above is able to approximate any "well-behaved" function arbitrarily well. This is directly opposed to the linear approach, where we fit the relationship between inputs and outputs assuming a linear functional form. 
 		
 		This necessarily means that neural networks are prone to overfitting the training data. An overfitted model performs well on the training data and poorly on previously unseen data. This is a problem, as the point of having a model in the first place is to be able to draw general conclusions and predict from new data. This is why the models are evaluated solely on held-out data (testing sample), which is disjoint from both training and validation sample, both for purposes of measuring performance and interpreting the models. In addition, there is a number of methods that can be used to prevent overfitting on the training data in the first place, commonly called regularization. The goal is to limit the training process to prevent overfitting while leaving enough room for learning. I use the same regularization techniques as \cite{gu2020empirical}, namely, learning rate shrinkage, batch normalization, early stopping, weight regularization, and ensembling. Batch normalization and learning rate shrinkage is discussed in Subsection \ref{chap:architecture}, ensembling is described in \ref{chap:ensembling} (it can be considered a regularization technique, as different models fit the training data differently, their average takes out the possible over-fitting of any single model (averages out the overfitting error), and thus is able to generalize better.) The remaining techniques, early stopping and weight regularization, are discussed here: 
 		
-		Early stopping amounts to ceasing the training at some earlier point than reaching the pre-specified number of epochs. To determine that point, one can evaluate the model's predictive power after each epoch. A subsample of the data disjoint from training data (called validation sample) is used for the evaluation. This simulates the out-of-sample performance. When the validation loss increases for $k$ consecutive epochs ($k$ is called patience), training is stopped. In line with \cite{gu2020empirical}, I use patience of 5. 
+		Early stopping amounts to ceasing the training at some earlier point than reaching the pre-specified number of epochs. To determine that point, one can evaluate the model's predictive power after each epoch. A subsample of the data disjoint from training data (called validation sample) is used for the evaluation. This simulates the out-of-sample performance. When the validation loss increases for $k$ consecutive epochs ($k$ is called \textit{patience}), training is stopped. In line with \cite{gu2020empirical}, I use patience of 5. 
 		
-		Weight regularization allows to punish the model for finding too big weights, as large weights are a symptom of overfitting. The size of weights can be measured as their L2 or L1 norm, L1 norm is used here. The strength of the weight regularization is chosen as a hyperparameter on validation data and line with \cite{gu2020empirical}, as described below in the section on hyperparameter tuning.
+		Weight regularization allows to punish the model for finding too big weights, as large weights are a symptom of overfitting. The size of weights can be measured as their L2 or L1 norm; L1 norm is used here. The strength of the weight regularization is chosen as a hyperparameter on validation data and line with \cite{gu2020empirical}, as described in this section in a paragraph below, devoted to hyperparameter tuning. 
 		
-		The remaining modeling choices (starting learning rate and strength of L1 regularization) are done using hyperparameter tuning. The hyperparameters discussed so far are not very data-specific, so it suffices to choose them using prior literature: I use \cite{gu2020empirical}, as we share the exact same prediction task. However, there are parameters that are very data-specific, and must therefore be chosen using the data. Choosing the parameters on the training data would lead to overfitting, which is why they are selected using a sample disjoint from training data, called validation sample. This is called hyperparameter tuning. Specifically, I tune the learning rate and the strength of L1 regularization. Each model (each of its 9 random seeds) is run 20 independent times, each time sampling the learning rate and the L1 hyperparameters randomly from pre-specified intervals using logarithmic distribution. The intervals are $\left[1\mathrm{e}{-3}, 1\mathrm{e}{-2}\right]$ and $\left[1\mathrm{e}{-5}, 1\mathrm{e}{-3}\right]$ respectively, again in line with \cite{gu2020empirical}. A single best instance is then selected, as determined by predictive performance of the model on the validation set.
+		The remaining modeling choices (starting learning rate and strength of L1 regularization) are done using hyperparameter tuning. The hyperparameters discussed so far are not very data-specific, so it suffices to choose them using prior literature: I use \cite{gu2020empirical}, as we share the exact same prediction task. However, there are parameters that are very data-specific, and must therefore be chosen using the data. Choosing the parameters on the training data would lead to overfitting, which is why they are selected using a sample disjoint from training data, called validation sample. This is called hyperparameter tuning. Specifically, I tune the learning rate and the strength of L1 regularization. Each model (each of its 10 random seeds) is run 10 independent times, each time sampling the learning rate and the L1 hyperparameters randomly from pre-specified intervals using logarithmic distribution. The intervals are $\left[1\mathrm{e}{-3}, 1\mathrm{e}{-2}\right]$ and $\left[1\mathrm{e}{-5}, 1\mathrm{e}{-3}\right]$ respectively, again in line with \cite{gu2020empirical}. A single best instance is then selected, as determined by predictive performance of the model on the validation set.
 		
-		The train-validation-test split is done as follows. There are 29 years of data in the entire dataset, with rather evenly distributed observations from 1990 to 2018. The first 12 years of data are used as training set. The next 12 years are used as the validation set, and the year after that as the test set. To investigate how the model changes in time, more splits are performed: each year, the training data is rolled forward using expanding window (that is, taking 13 years from the beginning of the dataset, 14, 15 etc.). Validation set is rolled forward using fixed window (always consisting of 12 years) and starts directly at the end of the corresponding training set, and the test set is rolled forward also using fixed window (always consisting of 1 year) and starts directly at the end of the corresponding validation set. The train-validation-test split can be therefore summarized as 12-12-1, 13-12-1, 14-12-1, 15-12-1 and 16-12-1, where the last split uses all 29 years in the dataset. Each time a different split is taken, the model is retrained from scratch. This approach reflects that of \cite{gu2020empirical}, adjusted appropriately to my shorter dataset (29 years instead of 60) and is used instead of cross-validation so that the temporal ordering of the data is preserved (the model is trained on the past and evaluated on the future, never in the reverse).    
+		The train-validation-test split is done as follows. There are 29 years of data in the entire dataset, with rather evenly distributed observations from 1990 to 2018. Multiple train-validation-test splits are performed. The first split uses the first 6 years of data are used as training set. The next 4 years are used as the validation set, and the year after that as the test set. The remaining splits are done similarly, each year, the training data is rolled forward using expanding window (that is, taking 7 years from the beginning of the dataset, 8, 9 etc.). Validation set is rolled forward using fixed window (always consisting of 4 years) and starts directly at the end of the corresponding training set, and the test set is rolled forward also using fixed window (always consisting of 1 year) and starts directly at the end of the corresponding validation set. The train-validation-test split can be therefore summarized as 6--4--1, 7--4--1, \ldots, 24--4--1,  where the last split uses all years in the dataset. Each time a different split is taken, the model is retrained from scratch. This approach reflects that of \cite{gu2020empirical}, adjusted appropriately to my shorter dataset (30 years instead of 60) and is used instead of cross-validation so that the temporal ordering of the data is preserved (the model is trained on the past and evaluated on the future, never in the reverse).    
 	
 	\subsection{Ensembling}
 		\label{chap:ensembling}
-		Ensembling in general refers to the use of multiple models at the same time to make a single prediction. It is a popular technique in current ML, due to the fact that it tends to diminish the generalization error considerably (improves prediction accuracy out-of-sample) \citep{zhang2012ensemble}, and stock returns prediction is no exception \citep{gu2020empirical}. The process consists of training several models in the same prediction task and then \textit{assembling} them into a single model: the ensemble prediction is typically a result of individual models majority vote (classification problems) or average (regression task); the latter is the case of this thesis. Intuitively, this decreases the variance of the prediction (and thereby increases accuracy), as the errors of individual models average out. 
+		Ensembling in general refers to the use of multiple models at the same time to make a single prediction. It is a popular technique in current ML, due to the fact that it tends to diminish the generalization error considerably (improves prediction accuracy out-of-sample) \citep{zhang2012ensemble}, and stock returns prediction is no exception \citep{gu2020empirical}. The process consists of training several models in the same prediction task and then \textit{assembling} them into a single model: the ensemble prediction is typically a result of individual models majority vote (classification tasks) or average (regression tasks); the latter is the case of this thesis. Intuitively, as the errors of individual models average out, ensembling decreases the variance of the prediction (and thereby increases accuracy). 
 		
 		Since the optimization algorithm of neural networks must be initialized with some small weights (initial values of the parameters being optimized), a natural approach of constructing an ensemble  model is to perform the optimization multiple times, each time with a different random initial weights, save all thus optimized models, and finally join them into a single model using average. Implementation-wise, sampling different initial weights is done by setting a different \textit{random seed} at the beginning of the optimization, thus, the term \textit{random seeds} is used as a short way to refer to the multiple instances of the same model with different initial weights. 
 		
-		This is precisely the approach taken in \cite{gu2020empirical} in stock returns prediction task: ensembles are constructed by averaging several random seeds. This thesis also follows this approach, using 9 random seeds for each model. As models with different random seeds can be trained in parallel, this does not place such a burden on the computation time: for example, if a single model needs 2 CPUs (or 1 GPU) to train and the resources available are 10 CPUs (or 5 GPUs), it is possible to parallelize 5 seeds. These numbers are precisely the resources used in training models in this thesis, and it follows that the number 9 was selected to reflect the trade-off between computation intensity and sufficient number of seeds, given these technical constraints.
+		This is precisely the approach taken in \cite{gu2020empirical} in stock returns prediction task: ensembles are constructed by averaging several random seeds. This thesis also follows this approach, using 10 random seeds for each model. As models with different random seeds can be trained in parallel, this does not place such a burden on the computation time: for example, if a single model needs 2 CPUs (or 1 GPU) to train and the resources available are 10 CPUs (or 5 GPUs), it is possible to parallelize 5 seeds. These numbers are precisely the resources used in training models in this thesis, and it follows that the number 10 was selected to reflect the trade-off between computation intensity and sufficient number of seeds, given these technical constraints.
 
-	\subsection{Performance Evaluation}
-		The quality of the models is evaluated using two common approaches. First, the accuracy of the models' predictions is measured using three out-of-sample metrics – $R^2$, root-mean-squared error (RMSE) and mean-absolute error (MAE). Second, long-short portfolios are constructed based on model's out-of-sample predictions, and the returns of the trading portfolios are studied. The latter approach is known as backtesting, and approximates the situation of using the model in financial practice to trade equity. This section describes the methodological details of the two approaches in turn. 
+	\subsection{Model Evaluation}
+		\label{chap:model_evaluation}
+		The quality of the models is evaluated using two common approaches. First, the accuracy of the models' predictions is measured using three out-of-sample metrics – $R^2$, root-mean-squared error (RMSE) and mean-absolute error (MAE). Second, long-short portfolios are constructed based on model's out-of-sample predictions, and the returns of the trading portfolios are studied. Note that the former approach focuses on the \textit{predictability} (whether the model predicts cross-section of stocks well enough), while the latter focuses on the \textit{profitability} of a trading strategy based on the predictions. The latter approach is known as backtesting, and approximates the situation of using the model in financial practice to trade equity. This section describes the methodological details of the two approaches in turn. 
 		
-		Both evaluation approaches are executed on the held-out (testing) sample, so that the network does not see the testing observations while learning. As described in Subsection \ref{chap:train_regularize_tune}, each model (NN1 to NN4) is completely re-trained at the beginning of each testing year to make sure that the model is up-to-date with the current state of the world. As this re-training does not start from the year 1 of the dataset (models need more than 1 year of data to train and validate meaningfully), we are left with 5 testing years end of the data for performance evaluation and backtesting: 2014 to 2018, both inclusive. The model is update yearly and not monthly due to the high computational intensity of re-training. In other words, the model itself (the weights) remain unchanged for the entire year, both the model receives the up-to-date testing data each month. At the beginning of the next testing year, the re-training takes place and the evaluation procedure is repeated. This is the same approach as in \cite{gu2020empirical, tobek2020does}.
+		Both evaluation approaches are executed on the held-out (testing) sample, so that the network does not see the testing observations while learning. As described in Subsection \ref{chap:train_regularize_tune}, each model (NN1 to NN4) is completely re-trained at the beginning of each testing year to make sure that the model is up-to-date with the current state of the world. As this re-training does not start from the year 1 of the dataset (models need more than 1 year of data to train and validate meaningfully), we are left with 19 testing years end of the data for performance evaluation and backtesting: 2000 to 2018, both inclusive. (The model is update yearly and not monthly due to the high computational intensity of re-training. In other words, the model itself (the weights) remain unchanged for the entire year, both the model receives the up-to-date testing data each month. At the beginning of the next testing year, the re-training takes place and the evaluation procedure is repeated.) This is the same approach as in \cite{gu2020empirical, tobek2020does}.
 		
-		\subsubsection{Prediction Accuracy} 
+		\subsubsection{Predictive Ability} 
 		
 			The predictive accuracy of the models is measured using three metrics – $R^2$, root-mean-squared error (RMSE) and mean-absolute error (MAE). As all the models are evaluated on the test set, whose data were never used during training and hyperparameter tuning, we call all these metrics out-of-sample (OOS), as opposed to in-sample. It is important to use the out-of-sample metrics to be sure that the results are not due to overfitting. 
 			
@@ -315,12 +307,10 @@
 			
 			and differs from RMSE just in taking absolute value of the error instead of square, which gives same weight to large errors as to the small ones, as opposed to RMSE where large errors have larger weights (rising with their square). 
 	
-		\subsubsection{Backtest Using Long-Short Portfolios}
-			Another approach to evaluate the quality of models' predictions is to construct portfolios based on the predicted returns. A the beginning of each month, the network makes prediction of returns for all currently available stocks. The stocks are then sorted on the predicted return and top $l\%$ of them are considered as bought (long position) and bottom $s\%$ are shorted. A typical value for $l$ and $s$ is $10$, meaning that the top decile is the long position and the bottom decile the short one. At the end of the month, the true return is revealed. If the model is any good, the true return on the long (short) positions should be high (low), relative to the return on the entire universe of stocks. The performance of the long-short portfolio is then the return on all long positions minus the return on all short positions. In other words, the model should be able to predict winners and loosers and thus generate profits if acted upon. To see if this is the case, the properties of the returns on long-short portfolio can be evaluated using the usual metrics, such as mean, standard deviation, Sharpe ratio, or maximum drawdown. 
+		\subsubsection{Profitability of Trading Strategy (Backtest)}
+			Another approach to evaluate the quality of models' predictions is to construct portfolios based on the predicted returns. A the beginning of each month, the network makes prediction of returns for all currently available stocks. The stocks are then sorted on the predicted return and top $l\%$ of them are considered as bought (long position) and bottom $s\%$ are shorted. A typical value for $l$ and $s$ is $10$, meaning that the top decile is the long position and the bottom decile the short one. At the end of the month, the true return is revealed. If the model is any good, the true return on the long (short) positions should be high (low), relative to the return on the entire universe of stocks. The performance of the long-short portfolio is then the return on all long positions minus the return on all short positions. In other words, the model should be able to predict winners and loosers and thus generate profits if acted upon. To see if this is the case, the properties of the returns on long-short portfolio can be evaluated using the usual financial metrics, such as mean, standard deviation, Sharpe Ratio, or Maximum Drawdown. 
 			
 			This approach is generally known as \textit{backtesting} and it approximates the situation of using the model of financial practice to trade equity. Note that since the backtest is performed on held-out (testing) data, which comes from the future that the model has not yet seen, this approximation may actually be considered quite faithful. A limitation, however, is that the backtesting return assumes no transaction costs, such as fees to the broker and shorting costs, which makes the backtesting return artificially slightly higher. Another limitation is that it may may be simply impossible to execute some of the trades in practice  due to illiquidity. However, both these limitations can be considered rather small in the case of this thesis, because all the stocks in the dataset are highly liquid and tradable thanks to filters by \cite{tobek2020does}. 
-			
-			The remainder here describes the metrics used in this thesis to evaluate the return earned on the long-short portfolios. [TODO Max Drawdown, Sharpe ratio. Is necessary? Maybe not.]
 	
 	
 	\subsection{Interpretation}

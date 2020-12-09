@@ -193,11 +193,6 @@
   the determinants of expected stock returns.}
 \newblock \emph{Journal of Financial Economics} \textbf{41(3)}: pp. 401--439.
 
-\bibitem[{Heaton \& Lucas(2000)}]{heaton2000portfolio}
-\textsc{Heaton}, J. \& D.~\textsc{Lucas} (2000): \enquote{Portfolio choice and
-  asset prices: The importance of entrepreneurial risk.}
-\newblock \emph{The journal of finance} \textbf{55(3)}: pp. 1163--1198.
-
 \bibitem[{Heston \& Sadka(2008)}]{heston2008seasonality}
 \textsc{Heston}, S.~L. \& R.~\textsc{Sadka} (2008): \enquote{Seasonality in the
   cross-section of stock returns.}
@@ -225,6 +220,12 @@
   winners and selling losers: Implications for stock market efficiency.}
 \newblock \emph{The Journal of finance} \textbf{48(1)}: pp. 65--91.
 
+\bibitem[{Kahneman \& Tversky(2013)}]{kahneman2013prospect}
+\textsc{Kahneman}, D. \& A.~\textsc{Tversky} (2013): \enquote{Prospect theory:
+  An analysis of decision under risk.}
+\newblock In \enquote{Handbook of the fundamentals of financial decision
+  making: Part I,} pp. 99--127. World Scientific.
+
 \bibitem[{Karpathy \emph{et~al.}(2015)Karpathy, Johnson, \&
   Fei-Fei}]{karpathy2015visualizing}
 \textsc{Karpathy}, A., J.~\textsc{Johnson}, \& L.~\textsc{Fei-Fei} (2015):
@@ -238,6 +239,11 @@
   return.}
 \newblock \emph{Journal of Financial Economics} \textbf{134(3)}: pp. 501--524.
 
+\bibitem[{Kingma \& Ba(2014)}]{kingma2014adam}
+\textsc{Kingma}, D.~P. \& J.~\textsc{Ba} (2014): \enquote{Adam: A method for
+  stochastic optimization.}
+\newblock \emph{arXiv preprint arXiv:1412.6980} .
+
 \bibitem[{Liew \& Vassalou(2000)}]{liew2000can}
 \textsc{Liew}, J. \& M.~\textsc{Vassalou} (2000): \enquote{Can book-to-market,
   size and momentum be risk factors that predict economic growth?}
@@ -247,10 +253,6 @@
 \textsc{McLean}, R.~D. \& J.~\textsc{Pontiff} (2016): \enquote{Does academic
   research destroy stock return predictability?}
 \newblock \emph{The Journal of Finance} \textbf{71(1)}: pp. 5--32.
-
-\bibitem[{Mitchell(1997)}]{mitchell1997machine}
-\textsc{Mitchell}, T. (1997): \emph{Machine Learning}.
-\newblock McGraw Hill.
 
 \bibitem[{Molnar(2020)}]{molnar2020interpretable}
 \textsc{Molnar}, C. (2020): \emph{Interpretable Machine Learning}.

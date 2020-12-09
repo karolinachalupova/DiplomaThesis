@@ -1,69 +1,67 @@
-\chapter{Robustness Checks of Simulated Results}
-\label{chap:robustness_simulations}
+\chapter{Additional Metrics}
+\label{chap:additional_metrics} 
 
-The same robustness checks performed on the real-world data are also performed here on the simulated data. This serves to show that the main results on simulated data (Section \ref{chap:simulations}) hold irrespective of time and seed. 
-Figures \ref{fig:sim_ig_robustness}, \ref{fig:sim_mr_robustness}, \ref{fig:sim_pr_robustness} show how global feature importance, as measured, respectively, by Integrated Gradients, Model Reliance and Portfolio Reliance, changes with time and with random seed. The figures confirm the robustness of the message discussed in Section \ref{chap:simulations}, which also explains why the results on simulated data are so unstable, and what it means for the main results. 
-
+As described in \ref{chap:met}, Portfolio Reliance metric is a close cousin of Model Reliance \cite{fisher2019all}. Both measure global importance of a feature by permuting the feature randomly and observing the deterioration in model performance. Intuitively, if a feature is important, making it uninformative should decrease performance. The metrics differ in how performance is defined. Portfolio Reliance looks at the deterioration in mean return on long-short portfolios based on the model's prediction, while Model Reliance looks at the decrease in the model's loss (here, the Mean Squared Error). As presented in Section \ref{chap:res}, the main predictive ability of the models stems from predicting well-performing stocks, while the models are not very useful for predicting the entire universe of stocks. Another issue is that Mean Squared Error is rather noisy, which is likely due to low signal-to-noise ratio of the data. Both of these factors cause Model Reliance to be rather uninformative relative to Portfolio Reliance. This is why Portfolio Reliance is presented in the main results, while Model Reliance is given here in the Appendix. 
 
 \begin{figure}	
 	\centering		
 	\begin{subfigure}[t]{\textwidth}
-		\includegraphics[width=\textwidth]{Figures/sim_ig_time_relative.pdf}
-		\caption{Robustness across Time}
-		\label{fig:sim_ig_time_relative}
+		\includegraphics[width=\textwidth]{Figures/mr_blues.pdf}
+		\caption{Values of Model Reliance}
+		\label{fig:mr_blues}
 	\end{subfigure}
 	
 	\begin{subfigure}[t]{\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{Figures/sim_ig_seeds_relative.pdf}
-		\caption{Robustness across Random Seeds}
-		\label{fig:sim_ig_seeds_relative}
+		\includegraphics[width=\textwidth]{Figures/mr_relative.pdf}
+		\caption{Relative Values of Model Reliance}
+		\label{fig:mr_relative}
 	\end{subfigure}
-	\caption{Robustness of Integrated Gradients on Simulated Data.}
+	\caption{Global Feature Importance Measured with Model Reliance.}
 	\medskip
 	\small
-	Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. In Panel (\subref{fig:sim_ig_time_relative}), for each model, Global Integrated Gradient is calculated on 5 different time periods (2014 to 2018, both inclusive). At the beginning of each year, the model is re-estimated and the measure is then calculated on the following 1-year window of out-of-sample data. In Panel (\subref{fig:sim_ig_seeds_relative}), each ensemble model is decomposed into its 9 random seeds. For both panels, the plotted values are \textit{relative} to unify the scale across the different models (column-wise division by maximum value is performed).
-	\label{fig:sim_ig_robustness}
+	Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Panel (\subref{fig:mr_blues}) shows values of the Model Reliance for all features, for all models.  Panel (\subref{fig:mr_relative}) shows relative importance of the features: values of Model Reliance are divided by the value for the most important feature, so as to unify the scale across the different models. The features are ordered in descending order by mean value computed across models.
+	\label{fig:mr_ensemble}
 \end{figure}
 
 \begin{figure}	
 	\centering		
 	\begin{subfigure}[t]{\textwidth}
-		\includegraphics[width=\textwidth]{Figures/sim_mr_time_relative.pdf}
-		\caption{Robustness across Time}
-		\label{fig:sim_mr_time_relative}
+		\includegraphics[width=\textwidth]{Figures/mr_relative.pdf}
+		\caption{Main Result}
+		\label{fig:mr_time_main}
 	\end{subfigure}
 	
 	\begin{subfigure}[t]{\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{Figures/sim_mr_seeds_relative.pdf}
-		\caption{Robustness across Random Seeds}
-		\label{fig:sim_mr_seeds_relative}
+		\includegraphics[width=\textwidth]{Figures/mr_time_relative.pdf}
+		\caption{Time Decomposition}
+		\label{fig:mr_time_relative}
 	\end{subfigure}
-	\caption{Robustness of Model Reliance on Simulated Data.}
+	\caption{Global Feature Importance in Time as Measured by Integrated Gradients}
+	\label{fig:mr_time}
 	\medskip
 	\small
-	Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. In Panel (\subref{fig:sim_mr_time_relative}), for each model, Model Reliance is calculated on 5 different time periods (2014 to 2018, both inclusive). At the beginning of each year, the model is re-estimated and the measure is then calculated on the following 1-year window of out-of-sample data. In Panel (\subref{fig:sim_mr_seeds_relative}), each ensemble model is decomposed into its 9 random seeds. For both panels, the plotted values are \textit{relative} to unify the scale across the different models (column-wise division by maximum value is performed).
-	\label{fig:sim_mr_robustness}
+	Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Both panels show relative values of Model Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models and time periods. 
 \end{figure}
 
 \begin{figure}	
 	\centering		
 	\begin{subfigure}[t]{\textwidth}
-		\includegraphics[width=\textwidth, height=\textheight, keepaspectratio]{Figures/sim_pr_time_relative.pdf}
-		\caption{Robustness across Time}
-		\label{fig:sim_pr_time_relative}
+		\includegraphics[width=\textwidth]{Figures/mr_relative_without_lr.pdf}
+		\caption{Main Result}
+		\label{fig:mr_seeds_main}
 	\end{subfigure}
 	
 	\begin{subfigure}[t]{\textwidth}
 		\centering
-		\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{Figures/sim_pr_seeds_relative.pdf}
-		\caption{Robustness across Random Seeds}
-		\label{fig:sim_pr_seeds_relative}
+		\includegraphics[width=\textwidth]{Figures/mr_seeds_relative.pdf}
+		\caption{Decomposition Into Random Seeds}
+		\label{fig:mr_seeds_relative}
 	\end{subfigure}
-	\caption{Robustness of Portfolio Reliance on Simulated Data.}
+	\caption{Global Feature Importance across Random Seeds as Measured by Model Reliance}
+	\label{fig:mr_seeds}
 	\medskip
 	\small
-	Column LR shows linear regression and columns NN1 to NN5 the neural networks of respective depths. In Panel (\subref{fig:sim_pr_time_relative}), for each model, Portfolio Reliance is calculated on 5 different time periods (2014 to 2018, both inclusive). At the beginning of each year, the model is re-estimated and the measure is then calculated on the following 1-year window of out-of-sample data. In Panel (\subref{fig:sim_pr_seeds_relative}), each ensemble model is decomposed into its 9 random seeds. For both panels, the plotted values are \textit{relative} to unify the scale across the different models (column-wise division by maximum value is performed).
-	\label{fig:sim_pr_robustness}
+	Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Both panels show relative values of Model Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models.
 \end{figure}
