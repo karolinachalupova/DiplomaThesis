@@ -18,7 +18,7 @@ from empyrical.stats import cum_returns
 from matplotlib.ticker import MaxNLocator
 
 from utils import chunks, get_parts, get_orders, divide_by_max
-from data import MinMaxed, Normalized, Subset, Meta, FEATURES, FEATURES_OLD
+from data import MinMaxed, Normalized, Subset, Meta
 
 
 meta = Meta()
@@ -26,40 +26,55 @@ meta.load()
 mpl.use('pgf')
 sns.set()
 
+SORTING = ['52WH',
+ 'WWI',
+ 'EFoP',
+ 'MomLag',
+ 'LB5',
+ 'STR',
+ 'Seas6t10A',
+ 'DurE',
+ 'VolMV',
+ 'Seas',
+ 'Seas2t5A',
+ 'Max',
+ 'IdioRisk',
+ 'LB3',
+ 'MomRev',
+ 'NOA',
+ 'Accr',
+ 'Seas2t5N',
+ 'Coskew',
+ 'Seas11t15N',
+ 'PM',
+ 'OPoA',
+ 'Seas6t10N',
+ 'RDoMV',
+ 'CVoST',
+ 'LiqShck',
+ 'Amihud',
+ 'dCE',
+ 'LCoBP',
+ 'EPred']
 
-
-N_SEEDS = 9
-YTRAIN_NAMES = ["12","13","14", "15", "16"]
+N_SEEDS = 10
+YTRAIN_NAMES = [str(i) for i in range(6,25)]
+YTRAIN_NAMES_TO_TEST_YEAR = {n:str(int(n)+1994) for n in YTRAIN_NAMES}
 SEED_NAMES = [str(i) for i in list(range(1,N_SEEDS+1))]
+SEED_INT_TO_STR = {int(i):i for i in SEED_NAMES} 
 N_YTRAIN = len(YTRAIN_NAMES)
 
 
-NN_DICT_OLD = {
+NN_DICT = {
         "-1":"LR",
         "32": "NN1",
         "32,16":"NN2",
         "32,16,8":"NN3",
         "32,16,8,4":"NN4",
-        "32,16,8,4,2":"NN5",
-        }
-HIDDEN_LAYERS_OLD = list(NN_DICT_OLD.keys())
-NN_NAMES_OLD = list(NN_DICT_OLD.values())
-SORTING_OLD=FEATURES_OLD
-SORTING_LATEX_OLD = [meta.sc_to_latex.get(s) for s in SORTING_OLD]
-
-NN_DICT = {
-        "-1":"LR",
-        "16":"NN1",
-        "16,8":"NN2",
-        "16,8,4":"NN3",
-        "16,8,4,2":"NN4",
         }
 HIDDEN_LAYERS = list(NN_DICT.keys())
 NN_NAMES = list(NN_DICT.values())
-SORTING = FEATURES
-SORTING=FEATURES
 SORTING_LATEX = [meta.sc_to_latex.get(s) for s in SORTING]
-
 
 import backtest # must come after defining the ABOVE variables
 
@@ -151,29 +166,47 @@ class LatexFigure():
 #==========================================================================================
 def tabulate_meta(SORTING_LATEX=SORTING_LATEX, p=None):
     df = meta.signals
-    df = df[["name_tex", "class", "class2", "tex_cite", "journal", "freq"]]
+    df = df[["name_tex", "class", "class2", "tex_cite", "freq"]]
     df.set_index('name_tex', inplace=True)
     df.index.name = "Feature"
     df = df.loc[SORTING_LATEX]
 
     class_dict = {"frictions":"Market", "fund":"Accounting","IBES":"Analyst Forecasts"}
-    class2_dict = {"other":"Other"}
     freq_dict = {"monthly":"M", "annual_july":"Y"}
     tex_cite_dict = {old: "\cite{" + old + "}" for old in list(df.tex_cite.values)}
-    df.replace({"class": class_dict, "freq":freq_dict, "class2":class2_dict, "tex_cite":tex_cite_dict}, inplace=True)
+    df.replace({"class": class_dict, "freq":freq_dict, "tex_cite":tex_cite_dict}, inplace=True)
 
     cdict = {
         'name_tex':"Feature", 
         "tex_cite":"Author", 
-        "journal":"Journal", 
         "freq":"Frequency", 
-        "class":"Category", 
-        "class2":"Subcategory"}
+        "class":"Data Source", 
+        "class2":"Category"}
     df = df.rename(columns = cdict)
 
     tab = LatexTable(df.to_latex(escape=False))
     tab.save(p)
     return df
+
+def tabulate_characteristics_motivation(SORTING_LATEX = SORTING_LATEX, p=None):
+    df = meta.signals[["name_tex", "tex_cite", "class2", "journal"]]
+    tex_cite_dict = {old: "\cite{" + old + "}" for old in list(df.tex_cite.values)}
+    df.replace({"tex_cite":tex_cite_dict}, inplace=True)
+    df = df[df["name_tex"].isin(SORTING_LATEX)]
+    df["class2"] = df["class2"].str.title() 
+    cdict = {
+        'name_tex':"Feature", 
+        "tex_cite":"Author", 
+        "class2":"Category",
+        "journal":"Journal"}
+    df = df.rename(columns = cdict)
+    df.set_index(["Category", "Feature"],inplace=True)
+    df.sort_index(inplace=True)
+
+    tab = LatexTable(df.to_latex(escape=False))
+    tab.save(p)
+    return df
+
 
 
 #==========================================================================================
@@ -200,7 +233,7 @@ def plot_missing_observations(df, p=None):
 #                                     On cleaned features 
 #==========================================================================================
 def _numfmt(x, pos): # your custom formatter function: divide by 100.0
-    s = '{}'.format(x / 1000000.0)
+    s = '{}'.format(x / 1000.0)
     return s
 
 
@@ -318,8 +351,12 @@ def tabulate_backtest_descriptives_ls(path_to_backtests, hidden_layers, p=None):
     return df
 
 def plot_backtest_cumreturns_ls(path_to_backtests, hidden_layers, p=None):
-    r = backtest.get_returns(path_to_backtests=path_to_backtests, hidden_layers=hidden_layers)
-    axis = cum_returns(r, starting_value=1).plot()
+    l, s, ls, al = backtest.get_cumulative_returns(path_to_backtests=path_to_backtests, hidden_layers=hidden_layers)
+    df = pd.DataFrame(l, columns=["Long"])
+    df["Short"] = - s 
+    df["Long-Short"] = ls 
+    df["All Stocks"] = al
+    axis = df.plot()
     axis.set_ylabel("Gross Cumulative Return")
     axis.set_xlabel("")
     fig = LatexFigure(plt.gcf())
@@ -332,18 +369,22 @@ def plot_backtest_histogram(path_to_backtests, hidden_layers, p=None):
     Arguments: 
         returns: pd.Series
     """
-    returns =  backtest.get_returns(path_to_backtests=path_to_backtests, hidden_layers=hidden_layers)["Long-short"]
+    _, _, ls, market =  backtest.get_returns(path_to_backtests=path_to_backtests, hidden_layers=hidden_layers)
+    returns = ls
     returns = returns*100
+    market = market*100
 
     fig, axis = plt.subplots(figsize=(8,8))
-    returns.plot.hist(grid=True, bins=10, rwidth=0.9,ax=axis)
+    returns.plot.hist(grid=True, bins=15, rwidth=0.9,ax=axis, alpha=0.5, label="NN1")
+    market.plot.hist(grid=True, bins=15, rwidth=0.9,ax=axis, alpha=0.5, label="Market")
 
     sdate = pd.to_datetime(str(returns.index.values.min())).strftime('%b %Y')
     edate = pd.to_datetime(str(returns.index.values.max())).strftime('%b %Y')
 
     axis.set_ylabel("Number of Months ({} to {})".format(sdate, edate))
-    axis.set_xlabel("Monthly Return (percentage points)")
+    axis.set_xlabel("Monthly Return (Percentage Points)")
     axis.yaxis.set_major_locator(MaxNLocator(integer=True))
+    fig.legend(loc='upper right')
     fig = LatexFigure(plt.gcf())
     fig.fit()
     fig.save(p)
@@ -358,9 +399,9 @@ def tabulate_backtest_descriptives_models(path_to_backtests, HIDDEN_LAYERS, NN_D
 
 
 def plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS, NN_DICT, p=None):
-    r = backtest.get_returns_all_models(path_to_backtests = path_to_backtests,
+    df = backtest.get_cumulative_returns_all_models(path_to_backtests = path_to_backtests,
                                             HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT)
-    axis = cum_returns(r, starting_value=1).plot()
+    axis = df.plot()
     axis.set_ylabel("Gross Cumulative Return")
     axis.set_xlabel("")
     fig = LatexFigure(plt.gcf())
@@ -372,7 +413,7 @@ def plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS, NN_DICT, p
 #==========================================================================================
 
 class Results():
-    def __init__(self, path, SORTING, NN_DICT, NN_NAMES):
+    def __init__(self, path, SORTING=SORTING, NN_DICT=NN_DICT, NN_NAMES=NN_NAMES):
         """
         """
         self.path = path
@@ -386,7 +427,7 @@ class Results():
         self.mr = None 
         self.pr = None
     
-    def load(self, sort_features = True, suffix="_test"):
+    def load(self, sort_features = True, suffix="_test", adjust_index=True):
         """
         Models are in columns, features are in rows
         """
@@ -394,21 +435,27 @@ class Results():
         self.pe = pd.read_csv(os.path.join(self.path, "performance.csv"), index_col=0)
         self.ig = pd.read_csv(os.path.join(self.path, "integrated_gradients_global{}.csv".format(suffix)), index_col=0)
         self.mr = pd.read_csv(os.path.join(self.path, "model_reliance{}.csv".format(suffix)), index_col=0)
-        self.ar.index = [s.split(': ')[1] for s in self.ar.index.values]  # Get rid of the class name in index
-        self.pe.index = [s.split(': ')[1] for s in self.pe.index.values]
-        self.ig.index = [s.split(': ')[1] for s in self.ig.index.values]
-        self.mr.index = [s.split(': ')[1] for s in self.mr.index.values]
+        self.pr = pd.read_csv(os.path.join(self.path, "portfolio_reliance.csv"), index_col=0)
+        if adjust_index: 
+            self.ar.index = [s.split(': ')[1] for s in self.ar.index.values]  # Get rid of the class name in index
+            self.pe.index = [s.split(': ')[1] for s in self.pe.index.values]
+            self.ig.index = [s.split(': ')[1] for s in self.ig.index.values]
+            self.mr.index = [s.split(': ')[1] for s in self.mr.index.values]
+            self.pr.index = [s.split(': ')[1] for s in self.pr.index.values]
         self.ar.sort_index(inplace=True)
         self.pe.sort_index(inplace=True)
         self.ig.sort_index(inplace=True)
         self.mr.sort_index(inplace=True)
+        self.pr.sort_index(inplace=True)
         try: 
-            self.pr = pd.read_csv(os.path.join(self.path, "portfolio_reliance.csv"), index_col=0)
-            self.pr.index = [s.split(': ')[1] for s in self.pr.index.values]
-            self.pr.sort_index(inplace=True)
+            self.dp = pd.read_csv(os.path.join(self.path, "decile_performance.csv"), index_col=0)
+            if adjust_index: 
+                self.dp.index = [s.split(': ')[1] for s in self.dp.index.values]
+            self.dp.sort_index(inplace=True)
         except: 
-            print("File {}/portfolio_reliance.csv not found, skipping".format(self.path))
+            print("File {}/decile_performance.csv not found, skipping".format(self.path))
 
+        self.ar["hidden_layers"] = self.ar["hidden_layers"].astype(str)
         self.ar["nn_name"] = self.ar[["hidden_layers"]].replace(self.NN_DICT)
         self.ar["nn_name_short"] = [s[-1:] for s in self.ar.nn_name]
 
@@ -447,8 +494,26 @@ class Results():
         if self.pr is not None: 
             self.pr.index = new_names
     
+    
+    def tabulate_performance_single_model(self, p=None):
+        df = self.pe.groupby([self.ar.ytrain])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].apply(np.median)
+        return df
+
+    def tabulate_decile_performance(self, p=None):
+        dp = pd.DataFrame(self.dp.median())
+        dp["decile"] = [s.split("_")[0] for s in dp.index.values.tolist()]
+        dp["measure"] = ["_".join(s.split("_")[1:]) for s in dp.index.values.tolist()]
+        dp.set_index(["decile", "measure"],inplace=True)
+        dp = dp.unstack(level=1)
+        dp.columns = dp.columns.droplevel(0)
+        dp.index = [int(s) for s in dp.index.values.tolist()]
+        dp.sort_index(inplace=True)
+        dp["r2"] = dp["r2"]*100
+        dp.round(3).transpose()
+        return dp
+    
     def tabulate_performance(self, p=None):
-        df = self.pe.groupby([self.ar.hidden_layers])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].apply(np.mean)
+        df = self.pe.groupby([self.ar.hidden_layers])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].mean()
         df.columns = ["R Square", "Mean Squared Error", "Mean Absolute Error", "Root Mean Squared Error"]
         df.index = [self.NN_DICT.get(s) for s in list(df.index.values)]
         df = df.transpose()
@@ -456,17 +521,10 @@ class Results():
         df = df.round(2)
         tab = LatexTable(df)
         tab.save(p)
-        return df
-
-    def plot_all(self,head=None, styling="blues"):
-        if styling == "relative":
-            vmin = 0
-        else: 
-            vmin = None
-        
+        return df        
 
     def plot_pr_ensemble(self, p=None, head=None, styling="blues", add_simulated=False):
-        if styling == "relative":
+        if styling == "blues":
             vmin = 0
         else: 
             vmin = None
@@ -572,7 +630,8 @@ class Results():
         modes = {
             'ensemble': Mode([["LR"],NN_NAMES[1:]], False),
             'seeds': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,SEED_NAMES)],N_SEEDS)),True),
-            'ensemble_time': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,YTRAIN_NAMES)],N_YTRAIN)),True)
+            'ensemble_time': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,YTRAIN_NAMES)],N_YTRAIN)),True),
+            'single_model_time':Mode(list(YTRAIN_NAMES),False)
         }
         if type(styling) == str: 
             styling = stylings.get(styling)
@@ -843,6 +902,7 @@ def _plot_df(
         # fix axes if there is only one columns group from integer to list
         if len(column_groups) == 1: 
             axes = np.array(axes)
+            axes = axes.reshape(-1)
         
         # Populate all axes
         vmin = df.min().min() if vmin is None else vmin
@@ -908,7 +968,8 @@ if __name__ == "__main__":
     #==========================================================================================
     #                                     On Meta data
     #==========================================================================================
-    tabulate_meta(p=os.path.join(args.path_tables,"meta.tex"),SORTING_LATEX=SORTING_LATEX_OLD)
+    tabulate_meta(p=os.path.join(args.path_tables,"meta.tex"),SORTING_LATEX=SORTING_LATEX)
+    tabulate_characteristics_motivation(p=os.path.join(args.path_tables,"characteristics_motivation.tex"),SORTING_LATEX=SORTING_LATEX)
     
     #==========================================================================================
     #                                     On not cleaned data 
@@ -918,18 +979,17 @@ if __name__ == "__main__":
     df = dt.features[SORTING]
     plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
     
-    """
+    
     #==========================================================================================
     #                                     On cleaned data 
     #==========================================================================================
     dt = MinMaxed()
     dt.load()
-    df = dt.features[SORTING_OLD]
+    df = dt.features[SORTING]
     r = dt.targets["r"]
     
     # Figures
     plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
-    """
     plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
     plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
     plot_standard_deviation(df,p=os.path.join(args.path_figures,"standard_deviation.pdf"))
@@ -942,11 +1002,11 @@ if __name__ == "__main__":
     # Figures of Returns 
     plot_returns_histogram(r, p=os.path.join(args.path_figures,"returns_histogram.pdf"))
     
-    
+    """
     #==========================================================================================
-    #                                     On ensemble backtest
+    #                                     On alfa
     #==========================================================================================
-    path_to_backtests = os.path.join("models", "minmaxed", "ensembles")
+    path_to_backtests = os.path.join("models", "alfa", "ensembles")
     
     # Single model tables
     tabulate_backtest_descriptives_ls(path_to_backtests,'32',
@@ -957,26 +1017,30 @@ if __name__ == "__main__":
     plot_backtest_histogram(path_to_backtests,"32",
         p=os.path.join(args.path_figures,"backtest_histogram.pdf"))
 
-    # All models tables
-    tabulate_backtest_descriptives_models(path_to_backtests, HIDDEN_LAYERS=HIDDEN_LAYERS_OLD, NN_DICT=NN_DICT_OLD, 
-         p=os.path.join(args.path_tables,"backtest_descriptives_models.tex"))
-    
-    # All models figures 
-    plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS=backtest.HIDDEN_LAYERS_OLD, NN_DICT=backtest.NN_DICT_OLD,
-        p=os.path.join(args.path_figures,"backtest_cumreturns_models.pdf"))
-    
+
+    res = Results(os.path.join("results", "alfa", "ensembles"), SORTING=SORTING, NN_DICT={"32":"NN1"}, NN_NAMES=["NN1"])
+    res.load()
+    res.rename(['nn_name', "ytrain"])
+    res.plot_ig_time(styling="relative", p=os.path.join(args.path_figures,"ig_time_relative.pdf"))
+    res.plot_mr_time(styling="relative", p=os.path.join(args.path_figures,"mr_time_relative.pdf"))
+    res.plot_pr_time(styling="relative", p=os.path.join(args.path_figures,"pr_time_relative.pdf"))
+
+    res.plot_ig_time(styling="order",p=os.path.join(args.path_figures,"ig_time_order.pdf"))
+    res.plot_mr_time(styling="order", p=os.path.join(args.path_figures,"mr_time_order.pdf"))
+    res.plot_pr_time(styling="order", p=os.path.join(args.path_figures,"pr_time_order.pdf"))
+
+    res.plot_ig_time(styling="blues",p=os.path.join(args.path_figures,"ig_time_blues.pdf"))
+    res.plot_mr_time(styling="blues", p=os.path.join(args.path_figures,"mr_time_blues.pdf"))
+    res.plot_pr_time(styling="blues", p=os.path.join(args.path_figures,"pr_time_blues.pdf"))
 
     #==========================================================================================
-    #                                     On ensemble results
-    #==========================================================================================
-    
-    res = Results(os.path.join("results", "minmaxed", "ensembles"), SORTING=SORTING_OLD, NN_DICT=NN_DICT_OLD, NN_NAMES=NN_NAMES_OLD)
-    
-    #res.load(suffix="")
+    #                                     On beta results
+    #==========================================================================================    
+    #res.load()
     #res.tabulate_performance(p=os.path.join(args.path_tables,"performance.tex"))
-
-    res.load(suffix="")
-    res.subset('ytrain',16)
+    
+    res = Results(os.path.join("results", "beta", "ensembles"))
+    res.load()
     res.rename(['nn_name'])
     
     res.plot_ig_ensemble(styling="relative", p=os.path.join(args.path_figures,"ig_relative.pdf"))
@@ -995,44 +1059,30 @@ if __name__ == "__main__":
     res.plot_ig_ensemble(styling="blues", head=10, p=os.path.join(args.path_figures,"ig_blues_head.pdf"))
 
 
-    res.load(suffix="")
-    res.rename(['nn_name', "ytrain"])
-    res.plot_ig_time(styling="relative", p=os.path.join(args.path_figures,"ig_time_relative.pdf"))
-    res.plot_mr_time(styling="relative", p=os.path.join(args.path_figures,"mr_time_relative.pdf"))
-    res.plot_pr_time(styling="relative", p=os.path.join(args.path_figures,"pr_time_relative.pdf"))
-
-    res.plot_ig_time(styling="order",p=os.path.join(args.path_figures,"ig_time_order.pdf"))
-    res.plot_mr_time(styling="order", p=os.path.join(args.path_figures,"mr_time_order.pdf"))
-    res.plot_pr_time(styling="order", p=os.path.join(args.path_figures,"pr_time_order.pdf"))
-
-    res.plot_ig_time(styling="blues",p=os.path.join(args.path_figures,"ig_time_blues.pdf"))
-    res.plot_mr_time(styling="blues", p=os.path.join(args.path_figures,"mr_time_blues.pdf"))
-    res.plot_pr_time(styling="blues", p=os.path.join(args.path_figures,"pr_time_blues.pdf"))
-    """
     #==========================================================================================
     #                                     On seeds results
     #==========================================================================================
-    #res = Results(os.path.join("results", "minmaxed", "seeds"), SORTING=SORTING_OLD, NN_DICT=NN_DICT_OLD, NN_NAMES=NN_NAMES_OLD)
+    res = Results(os.path.join("results", "beta", "seeds"), SORTING=SORTING, NN_DICT=NN_DICT, NN_NAMES=NN_NAMES)
     
-    #res.load(suffix="")
-    #res.subset('ytrain',16)
-    #res.rename(['nn_name', "seed"])
-    #res.plot_ig_seeds(styling="relative", p=os.path.join(args.path_figures,"ig_seeds_relative.pdf"))
-    #res.plot_pr_seeds(styling="relative", p=os.path.join(args.path_figures,"pr_seeds_relative.pdf"))
-    #res.plot_mr_seeds(styling="relative", p=os.path.join(args.path_figures,"mr_seeds_relative.pdf"))
+    res.load(suffix="_test")
+    res.rename(['nn_name', "seed"])
+    res.plot_ig_seeds(styling="relative", p=os.path.join(args.path_figures,"ig_seeds_relative.pdf"))
+    res.plot_pr_seeds(styling="relative", p=os.path.join(args.path_figures,"pr_seeds_relative.pdf"))
+    res.plot_mr_seeds(styling="relative", p=os.path.join(args.path_figures,"mr_seeds_relative.pdf"))
 
-    #res.plot_ig_seeds(styling="blues", p=os.path.join(args.path_figures,"ig_seeds_blues.pdf"))
-    #res.plot_pr_seeds(styling="blues", p=os.path.join(args.path_figures,"pr_seeds_blues.pdf"))
-    #res.plot_mr_seeds(styling="blues", p=os.path.join(args.path_figures,"mr_seeds_blues.pdf"))
+    res.plot_ig_seeds(styling="blues", p=os.path.join(args.path_figures,"ig_seeds_blues.pdf"))
+    res.plot_pr_seeds(styling="blues", p=os.path.join(args.path_figures,"pr_seeds_blues.pdf"))
+    res.plot_mr_seeds(styling="blues", p=os.path.join(args.path_figures,"mr_seeds_blues.pdf"))
 
-    #res.plot_ig_seeds(styling="order", p=os.path.join(args.path_figures,"ig_seeds_order.pdf"))
-    #res.plot_pr_seeds(styling="order", p=os.path.join(args.path_figures,"pr_seeds_order.pdf"))
-    #res.plot_mr_seeds(styling="order", p=os.path.join(args.path_figures,"mr_seeds_order.pdf"))
+    res.plot_ig_seeds(styling="order", p=os.path.join(args.path_figures,"ig_seeds_order.pdf"))
+    res.plot_pr_seeds(styling="order", p=os.path.join(args.path_figures,"pr_seeds_order.pdf"))
+    res.plot_mr_seeds(styling="order", p=os.path.join(args.path_figures,"mr_seeds_order.pdf"))
     
+    """
     #==========================================================================================
     #                                     On ensemble simulation results
     #==========================================================================================
-    res = Results(os.path.join("results", "minmaxed", "ensembles"), SORTING=SORTING_OLD, NN_DICT=NN_DICT_OLD, NN_NAMES=NN_NAMES_OLD)
+    res = Results(os.path.join("results", "simulated", "ensembles"), SORTING=SORTING, NN_DICT=NN_DICT, NN_NAMES=NN_NAMES)
     
     res.load(suffix="_test", sort_features=False)
     res.tabulate_performance(p=os.path.join(args.path_tables,"sim_performance.tex"))
@@ -1056,11 +1106,11 @@ if __name__ == "__main__":
     #                                     On simulated seeds results
     #==========================================================================================
     # Remove LR (TODO Add)
-    nn_names = NN_NAMES_OLD[1:]
-    nn_dict = {k: v for k, v in NN_DICT_OLD.items() if k not in {"-1"}}
-    hidden_layers = HIDDEN_LAYERS_OLD[1:]
+    nn_names = NN_NAMES[1:]
+    nn_dict = {k: v for k, v in NN_DICT.items() if k not in {"-1"}}
+    hidden_layers = HIDDEN_LAYERS[1:]
     
-    res = Results(os.path.join("results", "simulated", "seeds"), SORTING=SORTING_OLD, NN_DICT=nn_dict, NN_NAMES=nn_names)
+    res = Results(os.path.join("results", "simulated", "seeds"), SORTING=SORTING, NN_DICT=nn_dict, NN_NAMES=nn_names)
     
     res.load(suffix="_test", sort_features=False)
     res.subset('ytrain',12)
@@ -1069,6 +1119,7 @@ if __name__ == "__main__":
     res.plot_ig_seeds(styling="relative", add_simulated=True,  p=os.path.join(args.path_figures,"sim_ig_seeds_relative.pdf"))
     res.plot_pr_seeds(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_pr_seeds_relative.pdf"))
     res.plot_mr_seeds(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_mr_seeds_relative.pdf"))
+    """
 
     #==========================================================================================
     #                                     On local integrated gradients - 
@@ -1077,6 +1128,6 @@ if __name__ == "__main__":
     locig.load(model_name='y=16,y=12,y=1,hl=32,nm=9,o=adam')
     
 
-    """
+    
     print("FINISHED")
-    """
+    

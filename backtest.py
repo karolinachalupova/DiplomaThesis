@@ -11,7 +11,7 @@ from empyrical.stats import cum_returns, aggregate_returns
 from scipy.stats import skew, kurtosis
 
 
-from figures import YTRAIN_NAMES, NN_DICT_OLD, HIDDEN_LAYERS_OLD, NN_NAMES_OLD, NN_DICT, HIDDEN_LAYERS, NN_NAMES
+from figures import YTRAIN_NAMES, NN_DICT, HIDDEN_LAYERS, NN_NAMES
 
 
 
@@ -24,7 +24,7 @@ def get_metrics_single_model(ret):
         "Sharpe Ratio": sharpe_ratio(ret,period='monthly'),
         "Skewness": skew(ret),
         "Kurtosis": kurtosis(ret),
-        "Max Drawdown": max_drawdown(ret)
+        "Max Drawdown": max_drawdown(ret),
     }
 
 def get_metrics_multiple_longshort(path_to_backtests, hidden_layers="32"):
@@ -32,24 +32,25 @@ def get_metrics_multiple_longshort(path_to_backtests, hidden_layers="32"):
     longs = [0.5, 1, 5, 10, 20]
     shorts = [0.5, 1, 5, 10, 20]
     for l, s in zip(longs, shorts):
-        ret = get_returns(path_to_backtests, hidden_layers, l, s)["Long-short"]
+        _, _, ret, market = get_returns(path_to_backtests, hidden_layers, l, s)
         m = get_metrics_single_model(ret)
+        m_market = get_metrics_single_model(market)
+        metrics["Market"] = m_market
         metrics["{}-{}".format(l, s)] = m
     return pd.DataFrame(metrics)
 
 def get_metrics_all_models(path_to_backtests, percent_long=10, percent_short=10, HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT):
     metrics = dict()
     for hidden_layers in HIDDEN_LAYERS: 
-        ret = get_returns(path_to_backtests, hidden_layers, percent_long, percent_short)["Long-short"]
+        _, _, ret, _  = get_returns(path_to_backtests, hidden_layers, percent_long, percent_short)
         m = get_metrics_single_model(ret)
         metrics[NN_DICT.get(hidden_layers)] = m
     return pd.DataFrame(metrics)
 
-
-def get_returns_all_models(path_to_backtests, percent_long=10, percent_short=10, HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT): 
+def get_cumulative_returns_all_models(path_to_backtests, percent_long=10, percent_short=10, HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT): 
     returns = dict() 
     for hidden_layers in HIDDEN_LAYERS:
-        ret = get_returns(path_to_backtests, hidden_layers, percent_long, percent_short)["Long-short"]
+        _, _, ret, _  = get_cumulative_returns(path_to_backtests, hidden_layers, percent_long, percent_short)
         returns[NN_DICT.get(hidden_layers)] = ret
     return pd.DataFrame(returns)
 
@@ -70,16 +71,10 @@ def get_portfolios(
     # of the network with specified hidden_layers
     dfs = []
     for ytrain in YTRAIN_NAMES: 
-        try:
-            df = pd.read_csv(os.path.join(
-                path_to_backtests, 
-                'y={},y=12,y=1,hl={},nm=9,o=adam'.format(ytrain, hidden_layers), 
-                'backtest.csv'),index_col=[0,1])
-        except: 
-            df = pd.read_csv(os.path.join(
-                path_to_backtests, 
-                'y={},y=12,y=1,hl={},nm=8,o=adam'.format(ytrain, hidden_layers), 
-                'backtest.csv'),index_col=[0,1])
+        df = pd.read_csv(os.path.join(
+            path_to_backtests, 
+            'y={},y=4,y=1,hl={},nm=10,o=adam'.format(ytrain, hidden_layers), 
+            'backtest.csv'),index_col=[0,1])
         df.index =df.index.set_levels([df.index.levels[0], pd.to_datetime(df.index.levels[1])])
         dfs.append(df)
     df = pd.concat(dfs)
@@ -112,7 +107,15 @@ def get_returns(
     ls = l - s
     al = df.groupby(pd.Grouper(level=1, freq="M")).apply(np.mean).actual
     
-    # Return dataframe with mean returns 
-    return pd.DataFrame(np.array([l.values, s.values, ls.values, al.values]).T,
-             columns = ["Long", "Short", "Long-short", "All Stocks"],
-             index = l.index)
+    return l, s, ls, al
+
+def get_cumulative_returns(path_to_backtests="models/selected/ensembles", 
+        hidden_layers="32,16,8,4,2", 
+        percent_long=10, percent_short=10):
+    l, s, ls, al = get_returns(path_to_backtests, hidden_layers, percent_long, percent_short)
+    cum_l = cum_returns(l)
+    cum_s = cum_returns(-s)
+    cum_ls = cum_l + cum_s
+    cum_al = cum_returns(al)
+
+    return cum_l, cum_s, cum_ls, cum_al

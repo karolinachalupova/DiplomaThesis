@@ -58,6 +58,7 @@ class Data():
                 [self.features, self.targets], 
                 [self.paths.get("features"), self.paths.get("targets")]): 
                     dataset.to_pickle(path)
+        print("Saved.")
         
 
 class Raw():
@@ -87,23 +88,19 @@ class Filtered(Data):
         """
         Recalculates the data using ancestors. 
         """
+        print("Calculating Filtered...")
         ancestor = Raw(paths = ancestor_paths)
         ancestor.load()
+
         # Removes examples that are not present in universe filter.
-        features = ancestor.features[ancestor.features['DTID'].isin(ancestor.universe_filter.DTID.unique().tolist())]
-        targets = ancestor.targets[ancestor.targets['DTID'].isin(ancestor.universe_filter.DTID.unique().tolist())]
-
-        for dataset, path in zip([features, targets], [self.paths.get("features"), self.paths.get("targets")]): 
-            dataset.set_index(['DTID', 'date'], inplace=True)
+        for dataset in [ancestor.targets, ancestor.features, ancestor.universe_filter]:
+            dataset.set_index(['DTID', 'date'],inplace=True)
             dataset.sort_index(inplace=True)
-        
-        features.drop("FTID", axis=1, inplace=True)
-
-        # Removes examples without target or without features.
-        self.features = features.loc[targets.index]
-        self.targets = targets.loc[features.index]
+        keep = ancestor.universe_filter.index.intersection(ancestor.features.index)
+        self.features = ancestor.features.loc[keep]
+        self.targets = ancestor.targets.loc[keep]        
+        self.features.drop("FTID", axis=1, inplace=True)
         assert (self.features.index == self.targets.index).all()
-
         self.save()
 
 
@@ -116,20 +113,12 @@ class Subset(Data):
         self.paths = paths 
 
     def calculate(self, ancestor_paths=Filtered.PATHS, nrow=None):
+        print("Calculating Subset...")
         ancestor = Filtered(paths=ancestor_paths)
         ancestor.load()
         self.features = ancestor.features[FEATURES]
         self.targets = ancestor.targets
         self.save()
-
-
-class Selected(Data):
-    PATHS = {
-        "features":  os.path.join(directory, 'data/selected/features.pkl'),
-        "targets":  os.path.join(directory, 'data/selected/targets.pkl')
-    }
-    def __init__(self, paths= PATHS):
-        self.paths = paths
 
 
 class Cleaned(Data):
@@ -200,11 +189,13 @@ class MinMaxed(Cleaned):
         self.paths = paths
     
     def clean(self, df):
+        print("Calculating MinMaxed...")
         df = self.replace_inf(df)
         df = self.impute_nan(df)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.winsorize)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.center)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.scale_minmax)
+        df = df.sort_index()
         return df
 
 
@@ -217,10 +208,12 @@ class Normalized(Cleaned):
         self.paths = paths
     
     def clean(self, df):
+        print("Calculating Normalized...")
         df = self.replace_inf(df)
         df = self.impute_nan(df)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.winsorize)
         df = df.groupby(pd.Grouper(level=1, freq="Y")).apply(self.normalize)
+        df = df.sort_index()
         return df
 
 
@@ -233,7 +226,7 @@ class Simulated(Data):
         self.paths = paths
 
     def calculate(self, ancestor_paths = None, N=4600, T=190, Pc=N_FEATURES, save=True):
-        print("Simulating data with N={}, T={}, Pc={}...".format(N, T, Pc))
+        print("Calculating Simulated data with N={}, T={}, Pc={}...".format(N, T, Pc))
         R, C = self.simulate_data(N=N, T=T, Pc=Pc)
         assert N == R.shape[0]
         assert T == R.shape[1]

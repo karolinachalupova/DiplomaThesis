@@ -238,6 +238,7 @@ class NetData():
 
         # Number of features per example 
         assert dataset.features.shape[1] == 30
+        assert (dataset.features.index == dataset.targets.index).all()
 
         # Create organizing masks 
         idx_year = dataset.targets.index.get_level_values('date').year

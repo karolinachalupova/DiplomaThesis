@@ -13,14 +13,12 @@ import pandas as pd
 import warnings
 import pandas as pd
 
-from ray import tune
 from alibi.explainers import IntegratedGradients
 
 from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError
 from train_network import RSquare
 
 from train_network import create_model, NetData, create_ensemble
-from utils import fix_folder_names
 
 
 class PermutationImportanceMeasure():
@@ -143,14 +141,6 @@ class Nets():
         if not np.array([isinstance(net, Net) for net in self.nets]).all():
             raise ValueError("nets must be a list of instances of Net.")
     
-    @classmethod
-    def from_logs(cls, logs):
-        logdirs = [os.path.join(logs, x) for x in os.listdir(logs)]
-        finished = [os.path.isfile(os.path.join(logdir, "args.pickle")) for logdir in logdirs]
-        logdirs = [logdir for f, logdir in zip(finished, logdirs) if f]  # use finished logdirs only 
-        nets = [Net.from_logdir(logdir) for logdir in logdirs]
-        return cls(nets)
-    
     @classmethod 
     def from_saved(cls, path_to_models):
         dirs = [os.path.join(path_to_models, x) for x in os.listdir(path_to_models)]
@@ -165,8 +155,16 @@ class Nets():
         """
         return pd.DataFrame(dict(zip(self.nets, [vars(net.args) for net in self.nets]))).transpose()
     
+    def decile_rsquare(self):
+        rsqrs = [net.decile_rsquare() for net in self.nets]
+        df = pd.DataFrame(rsqrs)
+        return df.median(axis=0)
+        
     def performance(self):
         return pd.concat([net.performance() for net in self.nets])
+    
+    def decile_performance(self):
+        return pd.concat([net.decile_performance() for net in self.nets])
     
     def model_reliance(self, on="test"):
         return pd.concat([net.model_reliance(on=on) for net in self.nets])
@@ -194,7 +192,7 @@ class Nets():
     def get_missing(self, 
                 wanted_ytrain = [12,13,14,15,16], 
                 wanted_hidden_layers = ["-1","16", "16,8", "16,8,4", "16,8,4,2"], 
-                wanted_seeds = [1,2,3,4,5,6,7,8,9]):
+                wanted_seeds = [1,2,3,4,5,6,7,8,9,10]):
         finished = self.dataframe.groupby(["ytrain", "hidden_layers"]).seed.apply(list)
         missing = dict()
         for ytrain in wanted_ytrain:
@@ -231,31 +229,6 @@ class Net():
         except AttributeError: 
             self.args.optimizer = "adam"
        
-    
-    @classmethod
-    def from_logdir(cls, logdir):
-        """
-        Best tf.keras.model 
-        (best: best performance on validation set out of all models in the logdir)
-        used to choose optimum hyperparameters. 
-        
-        Arguments: 
-            dataset: instance of data.Cleaned or data.Simulated
-            logdir(str): path to the logging folder of the model. 
-                The logging folder of a trained model contains:
-                1) folder "Training", witch contains logdirs 
-                of individual hyperparameter searches
-                2) pickle "args.pickle", which contains a dict of the network args. 
-        """
-        with open(os.path.join(logdir, "args.pickle"), "rb") as f: 
-            args = argparse.Namespace(**pickle.load(f))  # loads dict and converts it to namespace
-        analysis = tune.Analysis(os.path.join(logdir, "Training"))
-        best_config = analysis.get_best_config(metric="valid_rmse", mode="min")
-        best_logdir = analysis.get_best_logdir(metric="valid_rmse", mode="min")
-        model = create_model(args=args, **best_config)
-        checkpoint_folder_name = [s for s in os.listdir(best_logdir) if s.startswith("checkpoint")][0]
-        model.load_weights(os.path.join(best_logdir, checkpoint_folder_name, "model.h5"))
-        return cls(model, args)
     
     @classmethod
     def from_saved(cls, folder):
@@ -303,11 +276,50 @@ class Net():
             index = [s+"_"+n for s, n in itertools.product(["train", "valid", "test"],names)],
             columns=[self.__repr__()]).transpose()
     
+    def decile_performance(self, batch_size=100000000):
+        y_pred = pd.Series(self.model.predict(x=self.netdata.test.data["features"]).flatten())
+        decile_names = [str(i) for i in range(10,110,10)]
+        deciles = pd.qcut(y_pred,q=10, labels=decile_names)
+        performances = []
+        for s in decile_names: 
+            features = np.array(pd.DataFrame(self.netdata.test.data["features"]).loc[deciles==s])
+            targets = np.array(pd.DataFrame(self.netdata.test.data["targets"]).loc[deciles==s])
+            mse, rmse, mae, r = self.model.evaluate(x=features, y=targets, batch_size=batch_size)
+            m = targets.mean()
+            mse_r, rmse_r, mae_r = mse/np.abs(m), rmse/np.abs(m), mae/np.abs(m)
+            performances.append([mse, mse_r, rmse, rmse_r, mae, mae_r, r, m])
+        performances_flat_list = [item for sublist in performances for item in sublist]
+        names = ["mse", "mse_relative","rmse", "rmse_relative", "mae", "mae_relative", "r2", "mean_return"]  
+        return pd.DataFrame(
+            performances_flat_list,
+            index = [s+"_"+n for s, n in itertools.product(decile_names,names)],
+            columns=[self.__repr__()]).transpose()
+
+    
     def backtest(self):
         prediction = self.model.predict(x=self.netdata.test.data["features"])
         backtest = pd.DataFrame(prediction, index=self.netdata.test.index, columns=['prediction'])
         backtest["actual"] = self.netdata.test.data["targets"]
         return backtest
+    
+    @staticmethod
+    def rsquare(df): 
+        y_true = df.y_true 
+        y_pred = df.y_pred
+        total = np.sum(np.square(y_true))
+        unexplained = np.sum(np.square(np.subtract(y_true, y_pred))) # No demeaning - see Gu et al. (2020)
+        return np.subtract(1.0, np.divide(unexplained,total)) *100
+    
+    def decile_rsquare(self):
+        df = pd.DataFrame(self.model.predict(x=self.netdata.test.data["features"]),columns=["y_pred"])
+        df['y_true'] =  self.netdata.test.data["targets"]
+        rsq_overall = self.rsquare(df)
+        df["q10"] = pd.qcut(df.y_pred,q=10)
+        rsq = df.groupby("q10").apply(self.rsquare).round(3)
+        rsq.index= [str(i) for i in range(10,110,10)]
+        rsq["Overall"] = rsq_overall
+        return rsq
+
     
     def portfolio_reliance(self, percent_long, percent_short):
         dataset = self.netdata.test
@@ -395,44 +407,4 @@ class Net():
 
 
 
-
-if __name__ == "__main__":
-    ## Extract models from logdir, save them.
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--logdir", default="C://Users//HP//Google Drive//DiplomaThesisGDrive/logs_simulated", type=str, help="Path to logdir.")
-    parser.add_argument("--dataset", default="simulated", type=str, help="Which dataset class from data.py to use")
-    parser.add_argument("--ensemble", default=True, action="store_true", help="Whether to create ensemble models or seed models.")
-
-    args = parser.parse_args([] if "__file__" not in globals() else None)
-
-    path_ensembles =os.path.join("models", "{}".format(args.dataset),"ensembles")
-    path_seeds = os.path.join("models", "{}".format(args.dataset),"seeds")
-    for p in [path_ensembles, path_seeds]:
-        if not os.path.exists(p):
-                os.makedirs(p)
-
-    if args.ensemble:
-        # Create ensembles from already extracted seed models
-        seed_nets = Nets.from_saved(path_seeds)
-        ensemble_models = Nets(seed_nets.create_ensembles())
-
-        # Save the ensemble models
-        for net in ensemble_models.nets: 
-            path = net.__repr__().split(": ")[1]
-            net.save(os.path.join(path_ensembles, path))
-    
-    else: 
-        # Extract seed models from logdir
-        fix_folder_names(args.logdir)
-        seed_nets = Nets.from_logs(args.logdir)
-
-        # Check if there are some missing models
-        missing = seed_nets.get_missing()  # returns a dict
-        if missing:
-            warnings.warn("There are missing models (ytrain_hidden: [seeds]): {}".format(missing))
-
-        # Save the seed models
-        for net in seed_nets.nets:
-            path = net.__repr__().split(": ")[1]
-            net.save(os.path.join(path_seeds, os.path.dirname(path)))
         
