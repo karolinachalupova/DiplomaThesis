@@ -95,18 +95,43 @@
 		} % end of argument of `\afterpage` command
 		
 		
-		
 	\subsection{Descriptives of Predicted Variable}
 		The predicted variable is the return of stock $i$ in month $t$. The prediction is based on the predictors as available at the end of the previous month. (Borrowing from ML terminology, this thesis also uses the term \textit{target} to refer to the predicted variable.) 
 		
-		Figure \ref{fig:returns_histogram} shows histogram of monthly returns. 
+		Figure \ref{fig:return_descriptives} shows different aspects of the distribution of monthly returns. Panel (\subref{fig:returns_descriptives_plot}) shows histogram, boxplot and percentiles, and Panels 	\subref{fig:return_descriptives_table} and \subref{fig:return_deciles_table} summarize the same information numerically.  
+		
+		\begin{figure}	
+			\centering		
+			\begin{subfigure}[t]{\textwidth}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/returns_descriptives.pdf}
+				\caption{Histogram, Boxplot and Percentiles}
+				\label{fig:returns_descriptives_plot}
+			\end{subfigure}
+		
+			\bigskip
+			\begin{subfigure}[t]{\textwidth}
+				\centering
+				\input{Tables/return_descriptives.tex}
+				\caption{Summary Statistics}
+				\label{fig:return_descriptives_table}
+			\end{subfigure}
 			
-		\begin{figure}
-			\centering
-			\includegraphics{Figures/returns_histogram.pdf}
-			\caption{Histogram of Monthly Returns}
-			\label{fig:returns_histogram}
+			\bigskip
+			\begin{subfigure}[t]{\textwidth}
+				\centering
+				\input{Tables/return_deciles.tex}
+				\caption{Deciles}
+				\label{fig:return_deciles_table}
+			\end{subfigure}
+		
+			\caption{Descriptive Statistics of Monthly Returns}
+			\label{fig:return_descriptives}
+			\medskip
+			\small
+			All three panels show summary statistics of the predicted variable: monthly return (in percentage points). Note that three figures in Panel (\subref{fig:returns_descriptives_plot}) share the same horizontal axis. As is usual, the boxplot shows the 25\% and 75\% percentile as the "box", and values two standard deviations from these quantiles as "whiskers". While the histogram and boxplot can be thought of as the sample analogue of probability density, the last figure in Panel (\subref{fig:returns_descriptives_plot}) can be thought of as sample analogue of cumulative distribution function. 
 		\end{figure}
+
+	
 
 
 \section{Methodology}
@@ -308,6 +333,7 @@
 			and differs from RMSE just in taking absolute value of the error instead of square, which gives same weight to large errors as to the small ones, as opposed to RMSE where large errors have larger weights (rising with their square). 
 	
 		\subsubsection{Profitability of Trading Strategy (Backtest)}
+			\label{chap:met_backtest}
 			Another approach to evaluate the quality of models' predictions is to construct portfolios based on the predicted returns. A the beginning of each month, the network makes prediction of returns for all currently available stocks. The stocks are then sorted on the predicted return and top $l\%$ of them are considered as bought (long position) and bottom $s\%$ are shorted. A typical value for $l$ and $s$ is $10$, meaning that the top decile is the long position and the bottom decile the short one. At the end of the month, the true return is revealed. If the model is any good, the true return on the long (short) positions should be high (low), relative to the return on the entire universe of stocks. The performance of the long-short portfolio is then the return on all long positions minus the return on all short positions. In other words, the model should be able to predict winners and loosers and thus generate profits if acted upon. To see if this is the case, the properties of the returns on long-short portfolio can be evaluated using the usual financial metrics, such as mean, standard deviation, Sharpe Ratio, or Maximum Drawdown. 
 			
 			This approach is generally known as \textit{backtesting} and it approximates the situation of using the model of financial practice to trade equity. Note that since the backtest is performed on held-out (testing) data, which comes from the future that the model has not yet seen, this approximation may actually be considered quite faithful. A limitation, however, is that the backtesting return assumes no transaction costs, such as fees to the broker and shorting costs, which makes the backtesting return artificially slightly higher. Another limitation is that it may may be simply impossible to execute some of the trades in practice  due to illiquidity. However, both these limitations can be considered rather small in the case of this thesis, because all the stocks in the dataset are highly liquid and tradable thanks to filters by \cite{tobek2020does}. 
@@ -315,7 +341,30 @@
 	
 	\subsection{Interpretation}
 	
-		Possibly the most straightforward way of interpreting any model is to show how individual predictors contribute to the prediction, in other words, which explanatory variables matter the most and which are less important. This notion is called \textit{feature importance} and can be generally thought of as the ML counterpart to the size of coefficients in a linear regression. Feature importance can be measured locally or globally. The former approach studies why a particular observation is assigned its prediction: how can the prediction be attributed to individual predictors? The latter explains how the model decides overall, across all observations. This thesis investigates two methods of feature importance, Model Reliance \citep{fisher2019all} (which is a global measure) and Integrated Gradients \citep{sundararajan2017axiomatic} (a local measure). In addition, Integrated Gradients are also used here as a global measure, by taking their average of absolute values across observations. The reasons behind choosing these measures as well as their theoretical underpinnings are explained in detail in the Literature Review. This section describes the technical aspects of the measures' calculation.
+		Possibly the most straightforward way of interpreting any model is to show how individual predictors contribute to the prediction, in other words, which explanatory variables matter the most and which are less important. This notion is called \textit{feature importance} and can be generally thought of as the ML counterpart to the size of coefficients in a linear regression. Feature importance can be measured locally or globally. The former approach studies why a particular observation is assigned its prediction: how can the prediction be attributed to individual predictors? The latter explains how the model decides overall, across all observations. This thesis investigates two measures of feature importance, Model Reliance \citep{fisher2019all} (which is a global measure) and Integrated Gradients \citep{sundararajan2017axiomatic} (a local measure). The reasons behind choosing these measures as well as their theoretical underpinnings are explained in detail in the Literature Review. This section describes the technical aspects of the measures' calculation.
+		
+		To understand how Integrated Gradients can be transformed from local to global measure, consider Figure \ref{fig:local_ig}. Panel (\subref{fig:local_ig_1}) illustrates how Integrated Gradients can be used to decompose a single prediction into its drivers by feature, plainly as a local measure. Panel (\subref{fig:local_ig_100}), which shows 100 such local decompositions. Note that the average absolute size of Integrated Gradient differs across features (compare features with high absolute contributions, such as 52-Week High, to features with low absolute contributions, such as Earnings Predictability). This constitutes the notion of Global Integrated Gradient: features with high average contributions can be considered more important than features with low average contributions. Global Integrated Gradient of a feature is calculated as the average absolute Integrated Gradient across all observations in the testing sample. 
+		
+		\begin{figure}	
+			\centering		
+			\begin{subfigure}[t]{\textwidth}
+				\includegraphics[width=\textwidth]{Figures/local_ig_1.pdf}
+				\caption{Single Prediction}
+				\label{fig:local_ig_1}
+			\end{subfigure}
+			
+			\begin{subfigure}[t]{\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{Figures/local_ig_100.pdf}
+				\caption{100 Predictions}
+				\label{fig:local_ig_100}
+			\end{subfigure}
+			\caption{Example of Attributing the Prediction to Individual Features using Integrated Gradient}
+			\medskip
+			\small
+			Panel (\subref{fig:local_ig_1}) shows all values of Integrated Gradient for a single (randomly chosen) out-of-sample prediction. The prediction (return of a given stock in given month) can be attributed into individual features using Integrated Gradient. The predicted return is the sum of the shown Integrated Gradient values. Panel (\subref{fig:local_ig_100}) shows the same, but for 100 predictions. 
+			\label{fig:local_ig}
+		\end{figure}	
 		
 		\subsubsection{Model Reliance}
 			Model Reliance \citep{fisher2019all} is a global measure of feature importance. It is based on the idea that if a feature is important for making prediction, then distorting the feature by adding noise to it will damage prediction performance. Vice versa, if distorting a feature leaves the prediction performance relatively intact, that feature can be considered unimportant for the prediction. Thus, denoting  the prediction function (such as an ML model) $f$, Model Reliance of  $f$ on random variable $X$ can be \textit{informally} defined as
@@ -397,37 +446,11 @@
 			where $m$, called the \textit{step size}, is the number of the steps in the Reimman approximation of the integral, here, the number of points along the straightline path at which evaluate the gradient. 
 			
 			Two implementation decisions must be made when calculating the Integrated Gradients: first, choosing the right baseline input, and second, choosing the right the step size. First, the baseline input should be chosen such that it can be interpreted as "no signal". In this thesis, there are two possible baselines: random noise and all-zero input. The latter was chosen, as it lends itself well to the "no signal" interpretation: all the features are normalized between -1 and 1 and have a mean of 0, thus, an all-zero input can be considered a natural point of departure. Additionally, the authors recommend to check that the model's prediction at baseline is around zero. This is important because it allows to use Integrated Gradient to explain the prediction as a function of the input, and not as of the input and the baseline. Indeed, the predictions for the all-zero input are around zero, which confirms that the all-zero input is the correct baseline here. Second, the step size should be chosen such that the approximation is good enough: the authors recommend to check that the attributions approximately sum up to the difference between the prediction at $\vec{z}$ and at $\vec{z'}$. Given that the latter is around zero, it remains to check that the attributions for $\vec{z}$ sum up to the prediction at $\vec{z}$. (Note that this is a verification of passing the Completness Axiom, see Literature Review.) This thesis uses the step size of 50, which passes this summation check comfortably.  
+			
+			
+			
 		
-	\subsection{Simulations}
-		\label{chap:simulations}
-		All the results in this thesis are calculated twice: once on real data, and once on simulated data. There are several benefits of replicating the calculations on simulated data, as it allows for complete control of the data-generating process. Most notably, the true relationship between the returns and predictors is known, i.e., we know which variables have a relationship to returns, as well as the precise functional form of this relationship. In real data, on the other hand, the data generating process is unknown, and therefore it is impossible to know with certainty if the methods used to uncover the data generating process (model selection, interpretability measures) are appropriate or accurate enough. Calculating the results on simulated data, where the data generating process is fully known, is therefore is a suitable way to see whether the models and metrics used are appropriate. This, of course, is true only to the extent to which the simulation is faithful to the reality, namely, the amount of noise and the variances of the data should correspond to the real world. This section discloses how the simulations are calculated and also how the faithfulness of the simulation is achieved. 
-		
-		The simulations are performed exactly following \cite{gu2020empirical}, who study the identical prediction task and a very similar dataset. The simulation is adjusted to fit this thesis data by changing the number of simulated variables to 30 (as in the real data), the number of simulated firms to $N=4600$ (4618 in average month in real data) and the number of observations per firm to  $T=190$ (192 in average month in the real data). Other than that, the simulation follows exactly \cite{gu2020empirical} (see their Internet Appendix A for details). For each firm in $i=1, 2\dots,N$ and for each month $t=1, 2, \dots,T$, 30 predictive variables $c_ij,t$ are simulated, out of which 3 then determine the return in the next month:
-		
-		\begin{equation*}
-			r_{i,{t+1}} = g(z_{i,t}) + e_{i,t+1}.
-		\end{equation*}
-		
-		Specifically, the functional form $g$ is 
-		
-		\begin{equation*}
-			g(z_{i,t}) = \begin{pmatrix}
-			c_{i1,t}^2 & c_{i1,t}\cdot c_{i2,t} & \text{sgn}(c_{i1,t}\cdot x_t)
-			\end{pmatrix} \begin{pmatrix}
-			\theta_1 \\ \theta_2 \\ \theta_3
-			\end{pmatrix}, 
-		\end{equation*}
-		
-		where $\vec{\theta}$ is a vector of 3 scalars and $\vec{x}$ is a highly auto-correlated univariate time-series, which is used to introduce persistence to one of the simulated variables.   
-		
-		The noise terms $e_{i,t+1}$ are simulated using 
-		
-		\begin{equation*}
-			e_{i,t+1} = \begin{pmatrix} c_{i1,t} & c_{i2,t} & c_{i3,t} \end{pmatrix} \begin{pmatrix} v_{1,t+1} \\ v_{2,t+1} \\ v_{3,t+1}  \end{pmatrix} + \varepsilon_{i,t+1},
-		\end{equation*}  
-		
-		where $\vec{v_t}$ is vector of underlying risk factors, which are common to all firms. To achieve behavior similar to the real data, the values $\vec{\theta}$ as well as the parameters of the data-generating distributions are calibrated such that the noisiness of the data as given by $R^2$ (both in time and in cross-section) as well as volatility of returns reflects those in the real world. For example, $\vec{\theta}$ is calibrated to $(0.004, 0.03, 0.012)'$. For more technical details, particularly concerning the distributions used to draw the values $c_{i,j,t}$, $x_t$  and all the error terms, please refer to the Internet Appendix A of \cite{gu2020empirical}. 
-		
+	
 		  
 	
 	

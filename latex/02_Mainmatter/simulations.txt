@@ -1,0 +1,30 @@
+\subsection{Simulations}
+		\label{chap:simulations}
+		All the results in this thesis are calculated twice: once on real data, and once on simulated data. There are several benefits of replicating the calculations on simulated data, as it allows for complete control of the data-generating process. Most notably, the true relationship between the returns and predictors is known, i.e., we know which variables have a relationship to returns, as well as the precise functional form of this relationship. In real data, on the other hand, the data generating process is unknown, and therefore it is impossible to know with certainty if the methods used to uncover the data generating process (model selection, interpretability measures) are appropriate or accurate enough. Calculating the results on simulated data, where the data generating process is fully known, is therefore is a suitable way to see whether the models and metrics used are appropriate. This, of course, is true only to the extent to which the simulation is faithful to the reality, namely, the amount of noise and the variances of the data should correspond to the real world. This section discloses how the simulations are calculated and also how the faithfulness of the simulation is achieved. 
+		
+		The simulations are performed exactly following \cite{gu2020empirical}, who study the identical prediction task and a very similar dataset. The simulation is adjusted to fit this thesis data by changing the number of simulated variables to 30 (as in the real data), the number of simulated firms to $N=4600$ (4618 in average month in real data) and the number of observations per firm to  $T=190$ (192 in average month in the real data). Other than that, the simulation follows exactly \cite{gu2020empirical} (see their Internet Appendix A for details). For each firm in $i=1, 2\dots,N$ and for each month $t=1, 2, \dots,T$, 30 predictive variables $c_ij,t$ are simulated, out of which 3 then determine the return in the next month:
+		
+		\begin{equation*}
+			r_{i,{t+1}} = g(z_{i,t}) + e_{i,t+1}.
+		\end{equation*}
+		
+		Specifically, the functional form $g$ is 
+		
+		\begin{equation*}
+			g(z_{i,t}) = \begin{pmatrix}
+			c_{i1,t}^2 & c_{i1,t}\cdot c_{i2,t} & \text{sgn}(c_{i1,t}\cdot x_t)
+			\end{pmatrix} \begin{pmatrix}
+			\theta_1 \\ \theta_2 \\ \theta_3
+			\end{pmatrix}, 
+		\end{equation*}
+		
+		where $\vec{\theta}$ is a vector of 3 scalars and $\vec{x}$ is a highly auto-correlated univariate time-series, which is used to introduce persistence to one of the simulated variables.   
+		
+		The noise terms $e_{i,t+1}$ are simulated using 
+		
+		\begin{equation*}
+			e_{i,t+1} = \begin{pmatrix} c_{i1,t} & c_{i2,t} & c_{i3,t} \end{pmatrix} \begin{pmatrix} v_{1,t+1} \\ v_{2,t+1} \\ v_{3,t+1}  \end{pmatrix} + \varepsilon_{i,t+1},
+		\end{equation*}  
+		
+		where $\vec{v_t}$ is vector of underlying risk factors, which are common to all firms. To achieve behavior similar to the real data, the values $\vec{\theta}$ as well as the parameters of the data-generating distributions are calibrated such that the noisiness of the data as given by $R^2$ (both in time and in cross-section) as well as volatility of returns reflects those in the real world. For example, $\vec{\theta}$ is calibrated to $(0.004, 0.03, 0.012)'$. For more technical details, particularly concerning the distributions used to draw the values $c_{i,j,t}$, $x_t$  and all the error terms, please refer to the Internet Appendix A of \cite{gu2020empirical}. 
+		
