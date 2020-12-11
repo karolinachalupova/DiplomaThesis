@@ -672,7 +672,7 @@ class LocalIG():
 
 
     @staticmethod
-    def plot_all_observations(df, xlabel):
+    def plot_all_observations(df, xlabel, p=None):
         df_melted = pd.DataFrame([(colname, df[colname].iloc[i]) for i in range(len(df)) for colname in df.columns], 
                     columns=['col', 'values'])
         
@@ -691,6 +691,7 @@ class LocalIG():
         # Convert to LatexFigure to change font and figsize
         fig = LatexFigure(plt.gcf())
         fig.fit(scale=2)
+        fig.save(p)
 
 
 #==========================================================================================
