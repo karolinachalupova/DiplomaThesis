@@ -73,26 +73,27 @@
 				The figure shows pairwise correlation coefficients of all features. Each square represents the value of the particular correlation coefficient. The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red).
 			\end{figure}
 		\end{center}
-		 
-		% Correlation matrix and table showing 10 most correlated pairs
-		\afterpage{%    % defer execution until the next page break occurs anyway
-			\begin{center}
-				\begin{figure}
-					\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix_highest.pdf}
-					\caption{Features Correlation Matrix (Subset to Show 10 Most Correlated Pairs)}
-					\label{fig:correlation_matrix_highest}
-					\medskip
-					\small
-					The figure is a detail of the correlation matrix (Figure \ref{fig:correlation_matrix}), subset so as to show 10 most correlated features.  Same as in Figure \ref{fig:correlation_matrix}, each square represents the value of the particular correlation coefficient.The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red).
-				\end{figure}
-			\end{center}
+	
+		\begin{figure}	
+			\centering		
+			\begin{subfigure}[t]{\textwidth}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix_highest.pdf}
+				\caption{Correlation Matrix}
+				\label{fig:correlation_matrix_highest}
+			\end{subfigure}
 			
-			\begin{table}
+			\begin{subfigure}[t]{\textwidth}
 				\resizebox{\textwidth}{!}{\input{Tables/most_correlated_pairs.tex}}
-				\caption{10 Most Correlated Pairs of Features}
+				\caption{10 Highest Correlation Coefficients}
 				\label{tab:most_correlated_pairs}
-			\end{table}
-		} % end of argument of `\afterpage` command
+			\end{subfigure}
+			\caption{10 Most Correlated Pairs of Features}
+			\label{fig:correlation_highest}
+			\medskip
+			\small
+			Panel (\subref{fig:correlation_matrix_highest}) is a detail of the correlation matrix (Figure \ref{fig:correlation_matrix}), subset so as to show 10 most correlated features.  Same as in Figure \ref{fig:correlation_matrix}, each square represents the value of the particular correlation coefficient.The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red). Panel (\subref{tab:most_correlated_pairs}) shows the numerical values of the 10 highest correlation coefficients in the data. 
+		\end{figure}
+	
 		
 		
 	\subsection{Descriptives of Predicted Variable}
@@ -345,26 +346,6 @@
 		
 		To understand how Integrated Gradients can be transformed from local to global measure, consider Figure \ref{fig:local_ig}. Panel (\subref{fig:local_ig_1}) illustrates how Integrated Gradients can be used to decompose a single prediction into its drivers by feature, plainly as a local measure. Panel (\subref{fig:local_ig_100}), which shows 100 such local decompositions. Note that the average absolute size of Integrated Gradient differs across features (compare features with high absolute contributions, such as 52-Week High, to features with low absolute contributions, such as Earnings Predictability). This constitutes the notion of Global Integrated Gradient: features with high average contributions can be considered more important than features with low average contributions. Global Integrated Gradient of a feature is calculated as the average absolute Integrated Gradient across all observations in the testing sample. 
 		
-		\begin{figure}	
-			\centering		
-			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/local_ig_1.pdf}
-				\caption{Single Prediction}
-				\label{fig:local_ig_1}
-			\end{subfigure}
-			
-			\begin{subfigure}[t]{\textwidth}
-				\centering
-				\includegraphics[width=\textwidth]{Figures/local_ig_100.pdf}
-				\caption{100 Predictions}
-				\label{fig:local_ig_100}
-			\end{subfigure}
-			\caption{Example of Attributing the Prediction to Individual Features using Integrated Gradient}
-			\medskip
-			\small
-			Panel (\subref{fig:local_ig_1}) shows all values of Integrated Gradient for a single (randomly chosen) out-of-sample prediction. The prediction (return of a given stock in given month) can be attributed into individual features using Integrated Gradient. The predicted return is the sum of the shown Integrated Gradient values. Panel (\subref{fig:local_ig_100}) shows the same, but for 100 predictions. 
-			\label{fig:local_ig}
-		\end{figure}	
 		
 		\subsubsection{Model Reliance}
 			Model Reliance \citep{fisher2019all} is a global measure of feature importance. It is based on the idea that if a feature is important for making prediction, then distorting the feature by adding noise to it will damage prediction performance. Vice versa, if distorting a feature leaves the prediction performance relatively intact, that feature can be considered unimportant for the prediction. Thus, denoting  the prediction function (such as an ML model) $f$, Model Reliance of  $f$ on random variable $X$ can be \textit{informally} defined as
@@ -425,6 +406,7 @@
 		
 			
 		\subsubsection{Integrated Gradients}
+			\label{chap:integrated_gradient}
 			Integrated Gradients \citep{sundararajan2017axiomatic} is a local measure of feature importance, i.e., it is computed for each observation separately. It considers the gradient of the prediction with respect to the predictors. If a small change in a predictor's value has large effect on the prediction, the value of the gradient is large.
 			
 			Again, denote $f: \mathbb{R}^k \rightarrow \mathbb{R}$ the prediction function (here, the NN model). Further, denote $\vec{z} \in  \mathbb{R}^k$ a single input with $k$ scalar elements, where $k$ denotes the total number of features (here, 30). Let $\vec{z'} \in  \mathbb{R}^k$ be a \textit{baseline input}, an observation that can be considered as a point from which the other observations depart. (For example, in case of inputs being images, the baseline can be a black image. In this thesis, it is a vector of zeros, as motivated below.) 
