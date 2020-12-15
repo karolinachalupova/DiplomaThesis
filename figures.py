@@ -657,19 +657,23 @@ class Results():
 #==========================================================================================
 
 class LocalIG():
-    def __init__(self, path_to_models):
+    def __init__(self, path_to_models, hidden_layers):
         self.path_to_models = path_to_models
+        self.hidden_layers = hidden_layers
     
-    def load(self, model_name, sort_features=True, suffix="_test", SORTING=SORTING):
-        df = pd.read_csv(os.path.join(self.path_to_models, model_name, "integrated_gradients{}.csv".format(suffix)), index_col=[0,1])
-        if sort_features: 
-            df = df[SORTING]
+    def load(self, sorting=None):
+        dfs = []
+        for ytrain in YTRAIN_NAMES: 
+            df = pd.read_csv(os.path.join(
+                self.path_to_models, 
+                'y={},y=4,y=1,hl={},nm=10,o=adam'.format(ytrain, self.hidden_layers), 
+                'integrated_gradients_test.csv'), dtype={'DTID':str}, index_col=[0,1])
+            df.index =df.index.set_levels([df.index.levels[0], pd.to_datetime(df.index.levels[1])])
+            dfs.append(df)
+        df = pd.concat(dfs)
+        if sorting is not None: 
+            df = df[sorting]
         self.df = df
-    
-    def plot(self, nobs=100):
-        df = self.df.iloc[:nobs]
-        self.plot_all_observations(df, xlabel="Integrated Gradient")
-
 
     @staticmethod
     def plot_all_observations(df, xlabel, p=None):
