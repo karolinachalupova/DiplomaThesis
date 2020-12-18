@@ -1,4 +1,4 @@
-\begin{thebibliography}{60}
+\begin{thebibliography}{62}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -74,6 +74,11 @@
   expenditures.}
 \newblock \emph{The Journal of Finance} \textbf{56(6)}: pp. 2431--2456.
 
+\bibitem[{Chi \emph{et~al.}(2010)Chi, Liu, \& Lau}]{chi2010network}
+\textsc{Chi}, K.~T., J.~\textsc{Liu}, \& F.~C. \textsc{Lau} (2010): \enquote{A
+  network perspective of the stock market.}
+\newblock \emph{Journal of Empirical Finance} \textbf{17(4)}: pp. 659--667.
+
 \bibitem[{Chordia \emph{et~al.}(2001)Chordia, Subrahmanyam, \&
   Anshuman}]{chordia2001trading}
 \textsc{Chordia}, T., A.~\textsc{Subrahmanyam}, \& V.~R. \textsc{Anshuman}
@@ -111,19 +116,17 @@
 \newblock \emph{International journal of circuits, systems and signal
   processing} \textbf{10(2016)}: pp. 403--413.
 
-\bibitem[{Dimopoulos \emph{et~al.}(1995)Dimopoulos, Bourret, \&
-  Lek}]{dimopoulos1995use}
-\textsc{Dimopoulos}, Y., P.~\textsc{Bourret}, \& S.~\textsc{Lek} (1995):
-  \enquote{Use of some sensitivity criteria for choosing networks with good
-  generalization ability.}
-\newblock \emph{Neural Processing Letters} \textbf{2(6)}: pp. 1--4.
-
 \bibitem[{Elgers \emph{et~al.}(2001)Elgers, Lo, \&
   Pfeiffer~Jr}]{elgers2001delayed}
 \textsc{Elgers}, P.~T., M.~H. \textsc{Lo}, \& R.~J. \textsc{Pfeiffer~Jr}
   (2001): \enquote{Delayed security price adjustments to financial analysts'
   forecasts of annual earnings.}
 \newblock \emph{The Accounting Review} \textbf{76(4)}: pp. 613--632.
+
+\bibitem[{Fadlalla \& Lin(2001)}]{fadlalla2001analysis}
+\textsc{Fadlalla}, A. \& C.-H. \textsc{Lin} (2001): \enquote{An analysis of the
+  applications of neural networks in finance.}
+\newblock \emph{Interfaces} \textbf{31(4)}: pp. 112--122.
 
 \bibitem[{Fama \& French(1993)}]{fama1993common}
 \textsc{Fama}, E.~F. \& K.~R. \textsc{French} (1993): \enquote{Common risk
@@ -158,6 +161,13 @@
 \textsc{George}, T.~J. \& C.-Y. \textsc{Hwang} (2004): \enquote{The 52-week
   high and momentum investing.}
 \newblock \emph{The Journal of Finance} \textbf{59(5)}: pp. 2145--2176.
+
+\bibitem[{Ghorbani \emph{et~al.}(2019)Ghorbani, Abid, \&
+  Zou}]{ghorbani2019interpretation}
+\textsc{Ghorbani}, A., A.~\textsc{Abid}, \& J.~\textsc{Zou} (2019):
+  \enquote{Interpretation of neural networks is fragile.}
+\newblock In \enquote{Proceedings of the AAAI Conference on Artificial
+  Intelligence,} volume~33, pp. 3681--3688.
 
 \bibitem[{Giles \emph{et~al.}(1997)Giles, Lawrence, \& Tsoi}]{giles1997rule}
 \textsc{Giles}, C.~L., S.~\textsc{Lawrence}, \& A.~C. \textsc{Tsoi} (1997):

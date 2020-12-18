@@ -410,7 +410,7 @@
 		
 			Note that the metric is not a ratio, but a difference, which allows to interpret the metric directly as the decrease in the profitability of the trading strategy.   
 			
-			This means that $\hat{e}_{\text{switch}$ and $\hat{e}_{\text{switch}$ are calculated slightly differently, denote them $\hat{r}_{\text{switch}$ and $\hat{r}_{\text{switch}$:
+			This means that $\hat{e}_{\text{switch}}$ and $\hat{e}_{\text{switch}}$ are calculated slightly differently, denote them $\hat{r}_{\text{switch}}$ and $\hat{r}_{\text{switch}}$:
 							
 			\begin{equation*}
 				\hat{r}_{\text{orig}}(f):= \frac{1}{N} \sum_{i \in L_{orig}} y_i - \frac{1}{N} \sum_{i \in S_{orig}} y_i, 
@@ -423,7 +423,7 @@
 			where $L_{orig}$ ($S_{orig}$) is the long (short) portfolio constructed using predictions from the undisturbed data and $L_{switch}$ ($S_{switch}$) is the long (short) portfolio constructed using predictions from the disturbed data. The data distortion is done in the same manner as in Model Reliance, i.e., values of the particular features are swapped across halves, which makes the feature uninformative of the return while preserving its marginal distribution. The portfolios are constructed as described in \ref{chap:met_backtest}, using top 10\% of stocks for long and bottom 10\% for short, as ordered by out-of-sample predictions. 
 			   
 			
-		\subsubsection{Integrated Gradients}
+		\subsubsection{(Local) Integrated Gradients}
 			\label{chap:integrated_gradient}
 			Integrated Gradients \citep{sundararajan2017axiomatic} is a local measure of feature importance, i.e., it is computed for each observation separately. It considers the gradient of the prediction with respect to the predictors. If a small change in a predictor's value has large effect on the prediction, the value of the gradient is large.
 			
@@ -446,6 +446,9 @@
 			where $m$, called the \textit{step size}, is the number of the steps in the Reimman approximation of the integral, here, the number of points along the straightline path at which evaluate the gradient. 
 			
 			Two implementation decisions must be made when calculating the Integrated Gradients: first, choosing the right baseline input, and second, choosing the right the step size. First, the baseline input should be chosen such that it can be interpreted as "no signal". In this thesis, there are two possible baselines: random noise and all-zero input. The latter was chosen, as it lends itself well to the "no signal" interpretation: all the features are normalized between -1 and 1 and have a mean of 0, thus, an all-zero input can be considered a natural point of departure. Additionally, the authors recommend to check that the model's prediction at baseline is around zero. This is important because it allows to use Integrated Gradient to explain the prediction as a function of the input, and not as of the input and the baseline. Indeed, the predictions for the all-zero input are around zero, which confirms that the all-zero input is the correct baseline here. Second, the step size should be chosen such that the approximation is good enough: the authors recommend to check that the attributions approximately sum up to the difference between the prediction at $\vec{z}$ and at $\vec{z'}$. Given that the latter is around zero, it remains to check that the attributions for $\vec{z}$ sum up to the prediction at $\vec{z}$. (Note that this is a verification of passing the Completness Axiom, see Literature Review.) This thesis uses the step size of 50, which passes this summation check comfortably.  
+		
+		\subsubsection{Global Integrated Gradients}
+			Integrated Gradients, which is a local measure of feature importance by nature, are also used in this thesis as a global measure. (Recall that local measures answer the question of why was this particular prediction made, while global measures answer the question of which features are important for the model overall). The measure is turned global simply by averaging across all predictions. However, as both large negative and large positive local effects mean that the feature is important, it is necessary to take the average out of \textit{absolute} local values. The measure then says what is the average absolute size of the contribution of a feature to the predicted return. Thus, the features with large Global Integrated Gradient can be considered important for the model overall and used as a global feature importance measure.   
 			
 			
 			
