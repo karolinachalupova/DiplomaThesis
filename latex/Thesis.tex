@@ -13,7 +13,22 @@
 \usepackage{bm}
 \usepackage{dsfont}
 \usepackage{longtable}
+\usepackage{rotating} % rotating tables using sidewaystable
+\usepackage{afterpage} % keeping related figures and plots on the same page
+\usepackage{tikz} % plotting the neural network
+\usetikzlibrary{positioning}
+\usepackage{hyperref}
 
+\usepackage{adjustbox}
+\usepackage{array}
+
+\newcolumntype{R}[2]{%
+	>{\adjustbox{angle=#1,lap=\width-(#2)}\bgroup}%
+	l%
+	<{\egroup}%
+}
+
+\newcommand*\rot{\multicolumn{1}{R{45}{1em}}} % command for rotating column headers in tabular
 \renewcommand{\vec}[1]{\bm{#1}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 
@@ -39,11 +54,13 @@
 	\href{http://ideas.repec.org/j/C45.html}{C45},			%http://www.aeaweb.org/journal/elclasjn_hold.html
  	\href{http://ideas.repec.org/j/G12.html}{G12}
 }	
-\def \Thesisweb {\href{}}									%thesis webpage (leave empty if you use none)
+\def \Thesisweb {\href{https://github.com/KarolinaChalupova/DiplomaThesis}}		%thesis webpage
 \def \AcademicYear {2019/2020}
 \def \Supervisor {doc.\ PhDr.\ Jozef Barun\'{i}k, Ph.D.}
+\def \Consultant {Mgr. Martin Hronec}
 \def \StudyProgram {Economics and Finance}
 \def \EmailSup {barunik@fsv.cuni.cz}
+\def \EmailCon {martin.hronec@fsv.cuni.cz}
 \def \CUNI {Charles University}
 \def \FSS {Faculty of Social Sciences}
 \def \IES {Institute of Economic Studies}
@@ -166,6 +183,8 @@
 	\autohdr												%automatic headers     				
 	\input{03_Backmatter/01_App.tex}           				%input file
 	\input{03_Backmatter/02_App.tex}           				%input file
+	\input{03_Backmatter/03_App.tex}           				%input file
+	\input{03_Backmatter/99_App.tex}           				%input file
 	\clearpage
 	%-----<<< --------- >>>-----
 \end{document}

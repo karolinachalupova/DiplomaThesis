@@ -1,4 +1,35 @@
-\chapter{Title of Appendix A}
+\chapter{Additional Data Descriptives}
+\label{chap:additional_figures} 
+
+This Appendix gives additional descriptive statistics of the distributions of the predictors. Histograms of all feature distributions is given in Figure \ref{fig:histograms}. The same distributions are also summarized numerically in Table \ref{tab:descriptives}. The numerical values of the correlation matrix of the features is available in \ref{tab:correlation_matrix}.
  
+\begin{center}
+	\begin{sidewaysfigure}
+		\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/histograms.pdf}
+		\caption{Histograms of All Features}
+		\label{fig:histograms}
+		\medskip
+		\small
+		The figure shows how the values of observations are distributed within each feature. The horizontal axis shows the values of the features (which range between $-1$ and $1$), and the vertical axis shows number of observations (or examples in ML terminology) within each bin, in thousands.  
+	\end{sidewaysfigure}
+\end{center}  
+ 
+\begin{table}
+	\resizebox{\textwidth}{!}{\input{Tables/descriptives.tex}}
+	\caption{Descriptive Statistics of the Features}
+	\label{tab:descriptives}
+\end{table} 
+ 
+\begin{sidewaystable}
+	\begin{adjustbox}{scale=0.4,center}
+		\input{Tables/correlation_matrix.tex}
+	\end{adjustbox}
+	\caption{Features Correlation Matrix}
+	\label{tab:correlation_matrix}
+	\medspace
+	\small
+	The matrix shows pairwise correlation coefficients of all features. A visual version of this matrix is available in the main text in Figure \ref{fig:correlation_matrix}.
+\end{sidewaystable}
+
 
 

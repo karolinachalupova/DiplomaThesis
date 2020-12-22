@@ -21,4 +21,6 @@ __pycache__/
 *.doc
 *.ipynb
 
-!results_plots.ipynb
+!figures_data.ipynb
+!figures_results.ipynb
+!figures.ipynb
