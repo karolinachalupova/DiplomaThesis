@@ -74,11 +74,6 @@
   expenditures.}
 \newblock \emph{The Journal of Finance} \textbf{56(6)}: pp. 2431--2456.
 
-\bibitem[{Chi \emph{et~al.}(2010)Chi, Liu, \& Lau}]{chi2010network}
-\textsc{Chi}, K.~T., J.~\textsc{Liu}, \& F.~C. \textsc{Lau} (2010): \enquote{A
-  network perspective of the stock market.}
-\newblock \emph{Journal of Empirical Finance} \textbf{17(4)}: pp. 659--667.
-
 \bibitem[{Chordia \emph{et~al.}(2001)Chordia, Subrahmanyam, \&
   Anshuman}]{chordia2001trading}
 \textsc{Chordia}, T., A.~\textsc{Subrahmanyam}, \& V.~R. \textsc{Anshuman}
@@ -253,6 +248,13 @@
 \textsc{Kingma}, D.~P. \& J.~\textsc{Ba} (2014): \enquote{Adam: A method for
   stochastic optimization.}
 \newblock \emph{arXiv preprint arXiv:1412.6980} .
+
+\bibitem[{Li \emph{et~al.}(2020)Li, Turkington, \& Yazdani}]{li2020beyond}
+\textsc{Li}, Y., D.~\textsc{Turkington}, \& A.~\textsc{Yazdani} (2020):
+  \enquote{Beyond the black box: an intuitive approach to investment prediction
+  with machine learning.}
+\newblock \emph{The Journal of Financial Data Science} \textbf{2(1)}: pp.
+  61--75.
 
 \bibitem[{Liew \& Vassalou(2000)}]{liew2000can}
 \textsc{Liew}, J. \& M.~\textsc{Vassalou} (2000): \enquote{Can book-to-market,

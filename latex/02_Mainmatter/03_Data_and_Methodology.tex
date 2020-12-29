@@ -4,13 +4,13 @@
 \section{Data}
 
 	\subsection{Universe of Stocks}
-		The dataset, sourced at Reuters Datastream, comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 657,141 observations. An average firms is present for 6.5 years (79 monthly observations). The data are rather evenly distributed in time, with 1,888 observations (firms) in an average month. 
+		The dataset comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 657,141 observations. An average firms is present for 6.5 years (79 monthly observations). The data are rather evenly distributed in time, with 1,888 observations (firms) in an average month. 
 		
 		It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues. The liquidity filter is obtained from \cite{tobek2020does}.  
 	
 	\subsection{Predictors}
 	
-		A single observation (in ML terminology, an example), represents a single firm in a given month. An observation consists of 30 values of characteristics of that firm, as of the given month (calculated from underlying data from before and up the the month in question), and the predicted variable, return, in the next month. 
+		A single observation (in ML terminology, an example), represents a single firm in a given month. An observation consists of 30 values of characteristics of that firm, as of the given month (calculated from underlying data from before and up the the month in question), and the predicted variable, return, in the next month. All characteristics are calculated by \cite{tobek2020does}.   
 		
 		Table \ref{tab:meta} shows all 30 predictors studied in this thesis. According to \cite{tobek2020does}, these variables are the best predictors of equity returns out of 153  candidate variables from leading financial and accounting journals \footnote{See Figure 8 in \cite{tobek2020does}. Global liquid universe of stocks is considered.}. For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, the underlying underlying economic motivation of the variable (discussed in Section \ref{chap:economic_motivation_of_predictors}). The table also shows that most predictors are calculated using market data (19 of them), rather than the firms' accounting numbers (10 predictors); one predictor is calculated using I/B/E/S database on professional forecasters. Typically, the market variables are updated monthly, and the accounting predictors change values with yearly frequency.
 		
