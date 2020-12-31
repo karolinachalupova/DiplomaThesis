@@ -1,214 +1,45 @@
 \chapter{Literature Review}
 \label{chap:lit} 
 		 	
- 	The literature review proceeds as follows. First, I review the theory behind stock returns to explain the economic motivation of predictors used in this thesis. Second, I motivate the use of ML in stock returns prediction and review how ML interpretability has advanced in this field so far. Finally, I review ML interpretability literature with the aim of choosing a suitable feature importance measure.
+ 	The literature review proceeds as follows. TODO update. First, I review the theory behind stock returns to explain the economic motivation of predictors used in this thesis. Second, I motivate the use of ML in stock returns prediction and review how ML interpretability has advanced in this field so far. Finally, I review ML interpretability literature with the aim of choosing a suitable feature importance measure.
  	
- 	\section{Modeling Stock Returns -- Which Predictors Should Matter?}
+ 	\section {Approaches to Modeling Stock Returns}
+ 	
+ 	There are two major approaches in literature to modeling stock returns: factor models and characteristics models. Factor models, exemplified by \cite{fama1996multifactor, fama2015five}, model the returns as  
+ 	
+ 	\begin{equation}
+ 		E_t(R^i_{t+1}) = R^f_{t+1} + \beta_{1,i,t} \lambda_{1,t} + \beta_{2,i,t} \lambda_{2,t} + \ldots +  \beta_{K,i,t} \lambda_{K,t} 
+ 	\end{equation}
+ 	
+ 	The \textit{factor loadings} $\vec{\beta}'_{i,t}$ of size $1\times K$ are exposures to $K$ risk factors.  They represent the amount of risk inherent in asset $i$ due to its correlation to the corresponding risk factor. The $\vec{\lambda}_{t}$ of size $K \times 1$ are interpretable as the risk prices at time $t$ \citep{kelly2019characteristics}. (Note that the CAPM and consumption-based models are special cases of the multiple-factor models, where $K$, the number of factors, is 1.) 
+ 	
+ 	
+ 	
+ 	\section{Modeling Stock Returns With Characteristics}
 	 	
 	 	\setlength{\epigraphwidth}{0.8\textwidth}
-	 	\epigraph{We have a lot of questions to answer: First, which characteristics really provide 	independent information about average returns?}{\cite{cochrane2011presidential}}
- 	
-	 	Valuing a stock amounts to putting a price tag on a stream of future payoffs. The field concerned with doing just that is called asset pricing. Consider the following basic asset-pricing equation \citep{cochrane2009asset}:
-	 	
-	 	\begin{equation}
-	 		p_t^i = E_t(m_{t+1} x_{t+1}^i ) \label{eq:pEmx}
-	 	\end{equation}
-	 	
-	 	In words, the price of an asset $i$ at time $t$ ($p_t^i$) is proportional to the expected asset's payoff at time $t+1$ ($x_{t+1}^i$). However, since the payoff does not come now ($t$), but in future ($t+1$), we discount it to present by the factor $m_{t+1}$, called the \textit{stochastic discount factor}. The term stochastic stands to express the idea that $m_{t+1}$ is not known with certainty at time $t$. There is only one assumption made in order to write the equation: it can be shown that $m_{t+1}$ exists if and only if the \textit{law of one price} holds, that is, if two assets generate the exact same payoff in all possible states of nature have the same price. If this is the case, there is a discount factor such that the equation holds for all assets $i$ \citep{cochrane2009asset}.
-	 	
-	 	In the stock market, equation \ref{eq:pEmx} translates to:
-	 	
-	 	\begin{equation}
-	 		1 = E_t(m_{t+1} R_{t+1}^i ) \label{eq:1EmR}
-	 	\end{equation} 
-	 	
-	 	In words, an investor pays 1 dollar now to collect $R_{t+1}^i$ dollars in the future. The payoff is called gross return and is the sum of future price and dividend $R_{t+1}^i = p_{t+1}^i+ d_{t+1}^i$. 
-	 	Using the definition of covariance, we can rearrange \ref{eq:1EmR} \citep{cochrane2009asset}:
-	 	
-	 	\begin{equation}
-	 		1 = E_t(m_{t+1}) E_t(R_{t+1}^i) + Cov_t(m_{t+1},R_{t+1}^i) 
-	 	\end{equation} 
- 	
- 		Defining the \textit{risk-free gross return} as $R_{t+1}^f=\frac{1}{E_t(m_{t+1})}$ and using it to further rearrange \citep{cochrane2009asset}:
- 		
- 		\begin{equation}
- 			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov_t(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
- 		\end{equation} 
- 		
- 		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. Returns positively correlated to the discount factor should be low, and vice versa. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
- 		
- 		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var_t(m_{t+1})/Var_t(m_{t+1})$ to obtain:
- 		
- 		\begin{align}
-	 		E_t(R_{t+1}^i) 
-	 		& = {R_{t+1}^f} + 
-	 		\underbrace{
-	 			\frac{Cov_t(m_{t+1},R_{t+1}^i)}{Var_t(m_{t+1})}
-	 			}_\text{denote $\beta_{i,t}$} 
- 			\cdot 
- 			\underbrace{
- 				\left(-\frac{Var_t(m_{t+1})}{E_t(m_{t+1})}\right)
- 				}_\text{denote $\lambda_{t}$} \label{eq:factor_model} \\
- 			& = \underbrace{{R_{t+1}^f}
- 				}_\text{risk-free return} 
- 				+ 
- 				\underbrace{\beta_{i,t} \cdot \lambda_{t}
- 				}_\text{risk adjustment} \label{eq:beta_reprezentation}
- 		\end{align} 
- 		
- 		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,t}$ and $\lambda_t$. $\lambda_t$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,t}$ can be interpreted as the amount of the risk inherent in asset $i$. Empirically, it can be obtained as the coefficient from regressing asset $i$'s returns on the discount factor: 
- 		
- 		\begin{equation}
- 		R_{t+1}^i = a_i + \beta_{i}m_{t+1} + \epsilon_{i,t+1}
- 		\end{equation} 
- 		
- 		Equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation} show that the discount factor is the key to explaining stock returns, as the latter is nothing but compensation for correlation with the former. The following special cases (consumption-based models, Capital Asset Pricing Model, multi-factor and characteristics-based models) offer further insights about the drivers of the stock returns.    
- 			 	
-	 	\subsection{Consumption-Based Model}
-	 	
-		 	The consumption-based model takes the additional assumption that the investor's preferences can be captured by her utility from consumption. The investor needs to decide how much to consume today and how much to save for tomorrow. First order conditions for this problem lead to the following specification of the discount factor \cite{cochrane2009asset}: 
-		 	
-		 	\begin{equation}
-		 		m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \label{consumtion_based_model}
-		 	\end{equation}
-		 	
-		 	where $u'(c_{t+1})$ denotes marginal utility from consumption. That is, the discount factor is the consumer's  marginal rate of substitution between consumption at time $t$ and $t+1$ and captures the willingness to trade consumption today for consumption tomorrow, where parameter $\kappa$ is the weight placed on future utility.  This means that such an investor would demand a high return for stock that perform badly at times when she is unwilling to give up today's consumption, and a low return for stock that performs badly at times she is willing to give up today's consumption. 
-		 	
-		 	There are many variables that can affect the rate at which the consumer is willing to swap current for future consumption: for instance, the current state of the economy, such as GDP growth, interest rate and current asset returns, as well as news of the \textit{future} states of the economy. 
-		 	
-		 	For simplification, one can assume constant relative risk aversion:
-		 	
-		 	\begin{equation}
-		 		u(c_t) = \frac{c^{1-\gamma}-1}{1-\gamma}
-		 	\end{equation}
-		 	
-		 	where $\gamma$ is a parameter positive for risk-averse individuals, and plug in to \ref{consumtion_based_model}: 
-		 	
-		 	\begin{equation}
-		 	m_{t+1} = \kappa \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma} 
-		 	\end{equation}
-		 	
-		 	That is, the discount factor is inversely proportionate to consumption growth. \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should have lower returns, so it follows that assets highly correlated with consumption growth should earn high returns. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks that perform well during bad times.
-		 	 
-		 	However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the aggregate consumption data are imperfectly measured, or the assumption that the investor's decision making can be described by maximization of utility from consumption is off. The two criticisms are addressed respectively by Capital Asset Pricing Model (or multifactor models) and  
-	 	
-	 	\subsection{Capital Asset Pricing Model}
-	 	
-	 		The Capital Asset Pricing Model (CAPM) is a special case of the consumption-based model, making the additional assumption that the utility from consumption is logarithmic \citep{rubinstein1976valuation}:
-	 		
-	 		\begin{equation}
-	 			u(c_t) = ln(c_t)
-	 		\end{equation}
-	 		
-	 		Plugging this to \ref{consumtion_based_model}, one obtains 
-	 		
-	 		\begin{equation}
-	 			m_{t+1} = \kappa \frac{c_t}{c_{t+j}}
-	 		\end{equation}
-	 		
-	 		The CAPM operates with the concept of wealth portfolio, which comprises all world's wealth, including real estate, metals, machinery or art. The price of this portfolio is (by \ref{eq:pEmx} and plugging in for the discount factor):  
-	 		
-	 		\begin{equation}
-	 		p_t^W  = E_t \sum_{j=1}^{\infty} m_{t+j}c_{t+1} = \frac{\kappa}{1-\kappa}c_t
-	 		\end{equation}
-	 		
-	 		and the return on wealth portfolio is therefore 
-	 		
-	 		\begin{equation}
-	 		R_{t+1}^W  = \frac{p_{t+1}^W + c_{t+1}}{p_t^W} = \frac{1}{\kappa} \frac{c_{t+1}}{c_t} = \frac{1}{m_{t+1}}
-	 		\end{equation}
-	 		
-	 		Thus, according to CAPM, the discount factor is the inverse of the return on the wealth portfolio. As \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should earn low returns, if follows that assets positively correlated with the wealth portfolio should earn higher returns. Again, this makes sense: an investor who only cares about consumption demands a higher return for stocks that perform badly when other sources of wealth perform badly, and vice versa, she is willing to forgo some average return in exchange for good performance at times when all else fails. Since the return on wealth portfolio is unobservable, it is empirically often replaced by return on market portfolio of stocks. This may be problematic, as wealth comprises many more assets than just stocks, so the approximation is likely too crude \citep{roll1977critique}.  
-	 		
-	 		
-	 	\subsection{Multi-factor Models}
-	 		
-	 		Multi-factor models are motivated by the notions that consumption growth and return on wealth portfolio do not proxy the discount factor empirically very well (in the consumption-based model and CAPM respectively), and they try to find other proxies for the discount factor $m_{t+1}$, factors $\vec{f}_{t+1}$. 
-	 		
-	 		\begin{equation*}
-	 		m_{t+1} = \approx a+\vec{b}'\vec{f}_{t+1}
-	 		\end{equation*}
-	 		
-	 		
-	 		If we retain the idea that investor maximizes her utility from consumption, then the factors  should proxy the rate at which investors are willing to swap current for future consumption \citep{cochrane2009asset}:  
-	 		
-	 		\begin{equation*}
-	 			m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \approx a+\vec{b}'\vec{f}_{t+1}
-	 		\end{equation*}
-	 		
-	 		Multi-factor models explain returns as	 
-	 	
-			 	\begin{align}
-			 		& E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t} \\
-			 		& R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \label{multifactor model}
-			 	\end{align}
-			 
-			 The \textit{factor loadings} $\vec{\beta}'_{i,t}$ of size $1\times K$ are exposures to risk factors $\vec{f}_{t+1}$ of size $K \times 1$, where $K$ is the number of risk factors. They represent the amount of risk inherent in asset $i$ due to its correlation to the corresponding risk factor. The $\vec{\lambda}_{t}$ of size $K \times 1$ are interpretable as the risk prices at time $t$ \citep{kelly2019characteristics}. (Note that the CAPM and consumption-based models are special cases of the multiple-factor models, where $K$, the number of factors, is 1.) 			
-			 
-			 First multi-factor model is \cite{fama1996multifactor}:
-			 
-			 \begin{align}
-			 	& E(R^i) = R^f + \vec{\beta}'_{i} \vec{\lambda} \\
-			 	& R^i_{t+1} = \alpha_{i} + \vec{\beta}'_{i} \vec{f}_{t+1} + \epsilon_{i,t+1}
-			 \end{align}
-		 
-		 	with factors  
-			  		
-				\begin{equation}
-					\vec{f}_{t+1} = 
-						\begin{pmatrix}
-							R^M_{t+1}-R^f_{t+1} \\
-							SMB_{t+1} \\
-							HML_{t+1}				
-						\end{pmatrix}
-				\end{equation}
+	 	\epigraph{We have a lot of questions to answer: First, which characteristics really provide	independent information about average returns?}{\cite{cochrane2011presidential}}
 			
-			and with factor prices 
-			
-			\begin{equation}
-			  \vec{\lambda} =
-				\begin{pmatrix}
-					E(R^M)-R^f \\
-					E(SMB) \\
-					E(HML)				
-				\end{pmatrix} 
-			\end{equation}
-			 
-			The $R^M_{t+1}-R^f_{t+1}$ is the return on market portfolio above risk-free rate (as in CAPM), $SMB_{t+1}$ is the return on small-cap portfolio minus the return on big-cap portfolio, and $HML_{t+1}$ is the return on portfolio of stocks with small market values relative to book value, minus the return on portfolio of stocks with high market values relative to book value. A possible explanation why $SMB$ and $HML$ should be correlated to the discount factor is that they forecast the future state of the economy \citep{liew2000can}.		
-			\cite{fama2015five} augment this three-factor model to five factors. 
-			
-			
-		\subsection{Modeling Stock Returns with Characteristics}
-			
-			It is difficult to empirically estimate a multifactor model. The main challenge is that both $\vec{f}_{t+1}$ and $\vec{\beta}'_{i,t}$ are unobserved, so we have no directly observed variables at the right hand side of the estimated equation. Some researchers tackle the issue by using prior empirical knowledge to pre-specify the factors  \citep{fama1993common, fama2015five}, others use instrumental variable approach \citep{kelly2019characteristics} to uncover the unobserved factor loadings using firm-level variables, commonly called \textit{characteristics}, which serve as proxies for exposure to systematic risks \cite{kelly2019characteristics}:  
-			
-			\begin{align}
-				E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t}  \label{eq:ER_betalambda} \\
-				R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \\
-				\vec{\beta}'_{i,t} = g(\vec{z}'_{i,t}) \label{eq:instrumented_betas}
-			\end{align}
-			 
-						
-			An important distinction between characteristics and factors is that characteristics are firm-specific variables, such as firm size, returns momentum or book-to-market ratio, while factors are common to all firms, such as the market return. Additionally, while characteristics proxy a firm's \textit{exposure} to risk (equation \ref{eq:instrumented_betas}), factors are the risk sources themselves. 
-			
-			Often, characteristics alone are used to model returns (e.g., \cite{gu2020empirical, bryzgalova2019forest, tobek2020does}). This is typically done when the focus of the research is returns prediction rather than the factor structure:
-			
-			\begin{equation}
-				E_t(R^i_{t+1}) = f(\vec{z}'_{i,t})
-			\end{equation}
-			
-			
-			There are hundreds of published factors and characteristics suggested as explanation of average stock returns. \cite{harvey2016and} count 313 variables, considering the top journals only and calling the count "surely too low". Indeed, \cite{cochrane2011presidential} refers to the state of asset pricing as a "zoo of factors". At the same time, the number of factors should be low in theory \citep{cochrane2011presidential} and empirically \citep{ahn2012determining}. Actually, many of these published return predictors are spurious. As \cite[p.~5]{harvey2016and} put it rather famously: "most claimed research findings in financial economics are likely false". Main reasons for this include publication bias and data-snooping bias (multiple-hypothesis testing bias, in-sample overfitting) and lack of replication studies in finance \citep{harvey2016and, mclean2016does}. 12\% of variables cannot be replicated even in-sample, the rest is biased by about 10\% \citep{mclean2016does}. \cite{harvey2016and} show that out of 296 published significant factors 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used.
-			
-			\citeauthor{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in stock returns prediction in his "multidimensional challenge" \citep[p.~1060]{cochrane2011presidential}: "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns?" In response to this challenge, studies emerged that study all the published characteristics in a single model, which allows to their effects to crows each other out in a 'survival of the fittest', such as \cite{gu2020empirical} and \cite{tobek2020does}. 
+		One of the common approaches to model stock returns is to use firm-specific variables, called characteristics, as predictors of the return. These characteristics are time-variant, for example, if net income is used as a characteristic, its values for a given company change as often as the firm in question issues its financial reports. To produce a prediction of a stock's return for the next month, the currently available characteristics for that firm enter the prediction function $f$, which outputs the predicted return. In equation, this modeling approach can be summarized as 
 		
-			\cite{gu2020empirical} and \cite{tobek2020does} study 94 (153) characteristics proposed by prior literature and use them in various return-prediction models (linear regression, gradient-boosting regression trees, random forests and neural networks). Their results suggest that some categories of characteristics are consistently more important than others across time and model specifications. This finding presents a crucial stepping stone for this thesis, for two reasons. First it narrows down the search for return predictors to a set that is more feasible to work with: this thesis selects 30 most important variables from \cite{tobek2020does} as stock return predictors. \footnote{There are three advantages of \cite{tobek2020does} over \cite{gu2020empirical} for this purpose: First, like this thesis,  \cite{tobek2020does} use a liquid universe of stocks, which means that their results are less likely to be driven by transactions costs. Second, their data are global, rather than US only, which allows to uncover more generally applicable findings. Finally, they use larger set of characteristics (153 rather than 93), which makes it less likely that important information is omitted.} Second, the different models (gradient-boosting regression trees, random forests, and neural networks) agree on important variables, which allows this thesis to focus on neural networks (and its comparison to linear regression) without loss of generality. 
+		\begin{equation}
+			E_t(r^i_{t+1}) = f(\vec{x}'_{i,t})
+			\label{eq:expected_return}
+		\end{equation}
+	
+		where the $E_t(r^i_{t+1})$ is the expected return of stock $i$ in the next period ($t+1$) as a function $f$ of the characteristics of stock $i$ at time $t$ ($x_{i,t}$). Empirical examples include e.g.,  \cite{gu2020empirical, tobek2020does, bryzgalova2019forest}. This is also the approach taken by this thesis. Equation \ref{eq:expected_return} shows that the task of the researcher is to determine which characteristics ($\vec{x}$) to use, and the general functional form $f$ in which they should interact to produce the prediction. The parameters which pin down the particular manifestation of the functional form are then estimated empirically using data, which completes the model. The choice of the characteristics and of the functional form is now discussed in turn using existing literature. 
 		
-		\subsection {Economic Motivation of Predictors Used in This Thesis}
-			\label{chap:economic_motivation_of_predictors}
-			The predictors used in this thesis fall into several categories by their economic motivation. These categories come up very consistently across literature as important for predicting stock returns \cite{gu2020empirical, tobek2020does, harvey2016and, mclean2016does} and can be considered the current answer to Cochrane's multidimensional challenge of which characteristics provide information about stock returns. This section presents these categories and their economic rationale and at the same time introduces the particular characteristics used in this thesis as members of these broader categories. (The term characteristics, predictors, and features is used interchangeably throughout the thesis.)
+		\subsection{Choosing the Characteristics}	
 			
-			The content of the section is summarized in Table \ref{tab:characteristics_motivation}. It shows all the predictors used in this thesis (column Features), together with their authors and publishing journal, categorized by their economic motivation (column Category). Each category is discussed in detail its own paragraph below. 
+			Literature has accumulated hundreds of variables that purportedly predict stock returns. \cite{harvey2016and} count 313 variables, considering the top journals only and calling the count "surely too low". Indeed, \cite{cochrane2011presidential} refers to the state of asset pricing as a "zoo". Actually, many of these published predictors are spurious. As \cite[p.~5]{harvey2016and} put it rather famously: "most claimed research findings in financial economics are likely false". Main reasons for this include publication bias and data-snooping bias (multiple-hypothesis testing bias, in-sample overfitting) and lack of replication studies in finance \citep{harvey2016and, mclean2016does}. 12\% of variables cannot be replicated even in-sample, the rest is biased by about 10\% \citep{mclean2016does}. \cite{harvey2016and} show that out of 296 published significant factors 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used.
+			
+			\citeauthor{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in stock returns prediction in his "multidimensional challenge" \citep[p.~1060]{cochrane2011presidential}: "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns?" In response to this challenge, studies emerged that consider all the published characteristics in a single model, which allows to their effects to crowd each other out in a 'survival of the fittest', such as \cite{gu2020empirical} and \cite{tobek2020does}. 
+			
+			\cite{gu2020empirical} and \cite{tobek2020does} study 94 (153) characteristics proposed by prior literature and use them in various return-prediction models. Their results suggest that some categories of characteristics are consistently more important than others across time and model specifications. This finding presents a crucial stepping stone for this thesis, allowing it to select 30 most important variables from \cite{tobek2020does} as stock return predictors, which can be considered a distillation of the current literature's answer to the Cochrane's multidimensional challenge.\footnote{There are three advantages of \cite{tobek2020does} over \cite{gu2020empirical} for this purpose: First, like this thesis,  \cite{tobek2020does} use a liquid universe of stocks, which means that their results are less likely to be driven by transactions costs. Second, their data are global, rather than US only, which allows to uncover more generally applicable findings. Finally, they use larger set of characteristics (153 rather than 93), which makes it less likely that important information is omitted.} 
+			
+		\subsection{Economic Motivation of the Characteristics Used in This Thesis}
+			
+			All characteristics have economic motivation that suggests a particular mechanism of why they should predict stock returns. When we inspect this economic rationale, several broader categories emerge consistently. The remainder of this subsection reviews these economic mechanisms and at the same time presents the 30 variables used in this thesis as members of these broader categories. This is summarized in Table \ref{tab:characteristics_motivation}, which shows all characteristics used in this thesis (column Features), together with their authors and publishing journal, categorized by their economic motivation (column Category). Each category is discussed in detail its own paragraph below. 
 			
 			\begin{table}
 				\resizebox{\textwidth}{!}{\input{Tables/characteristics_motivation.tex}}
@@ -216,7 +47,7 @@
 				\label{tab:characteristics_motivation}
 				\medskip
 				\small 
-				The table shows all the characteristics (features) used in this thesis grouped by their underlying economic motivation as predictors of stock returns. Column Category gives the main economic motivation of the variable and is discussed in detail in the text of this section (\ref{chap:economic_motivation_of_predictors}). 
+				The table shows all the characteristics (features) used in this thesis grouped by their underlying economic motivation as predictors of stock returns. Column Category gives the main economic motivation of the variable and is discussed in detail in the text of this subsection.
 			\end{table}
 			
 			A first group of characteristics relates to how investors approach volatility. Traditional asset pricing theory assumes investor's approach to risk is symmetrical in gains and losses \citep{cochrane2009asset}. However, psychology suggests that people are at the same time risk-averse (case of insurance) and risk-loving (case of lottery) and have asymmetrical utility in gains and in losses \citep{kahneman2013prospect}. This is in contrast to the standard utility maximization assumption of the Consumption-Based model and Capital Asset Pricing Model discussed above. This has direct implications for stock returns: it seems that lottery-like stocks, stocks with right skew and stocks with low correlation with market volatility can afford to pay lower average returns in exchange for their appealing risk profile (predictors \textit{Maximum Return} \citep{bali2011maxing}, \textit{Coskewness} \citep{harvey2000conditional} and \textit{Idiosyncratic Risk} \citep{ang2006cross}, respectively).
@@ -228,10 +59,102 @@
 			A fifth group of characteristics focuses is due to limited attention of investors, which can result in mis-pricing. First, it seems that investors tend to overlook artificially bloated (manipulated or "dressed") balance sheets, and tend to over-price firms with high accruals (predictors \textit{Accruals} \citep{sloan1996create}, \textit{Net Operating Assets} \citep{hirshleifer2004investors}, \textit{Operating Profits to Assets} \citep{ball2016accruals}, and \textit{Change in Common Equity} \cite{richardson2006implications}). Similarly, they tend to under-value firms with high research and development costs (which are not present on the balance sheets) (predictor \textit{ RD Over Market Equity} \cite{chan2001stock}). Finally, limited attention of investors manifests in overlooking important decompositions of profit margin (predictor \textit{Profit Margin} \cite{soliman2008use}).
 			
 			A sixth group of characteristics reflects the empirically observed seasonal patterns in stock returns. While the theoretical underpinning of these characteristics is still a matter of academic debate, the phenomenon is very strong and robust empirically (\textit{Seasonality} predictors from \cite{heston2008seasonality}). 
+			
+			A seventh group of characteristics are proxies for the well-known value effect \cite{fama1993common}, which shows that empirically, firms with high Book to Market ratio tend to have higher returns. The predictors used here are \textit{ Duration of Equity }\citep{dechow2004implied}) and \textit{Leverage Component of Book to Price} \citep{penman2007book}, and their original papers discuss also the theoretical underpinnings of the phenomenon.
+			
+			Finally, financially constrained firms tend to co-move, and since financial constraints are typically market-wide during economic crises, this risk is not diversified, and therefore priced. The predictor \textit{Whited-Wu Index} \citep{whited2006financial} measures the extent to which a stock is impacted by financial constraints. 
+		
+		
+		\subsection{Choosing the Functional Form}
+		
+			A second modeling decision to be made is choosing the general functional form $f$ in which the characteristics should interact in equation \ref{eq:expected_return}. The classical approach is to assume a linear function: 
+			
+			TODO describe 
+			
+			Second, the different models (gradient-boosting regression trees, random forests, and neural networks) agree on important variables, which allows this thesis to focus on neural networks (and its comparison to linear regression) without loss of generality.
+	
+ 		
+ 		\section{Alternative Approaches}
+ 		
+ 			TODO rewrite
  			
- 			A seventh group of characteristics are proxies for the well-known value effect \cite{fama1993common}, which shows that empirically, firms with high Book to Market ratio tend to have higher returns. The predictors used here are \textit{ Duration of Equity }\citep{dechow2004implied}) and \textit{Leverage Component of Book to Price} \citep{penman2007book}, and their original papers discuss also the theoretical underpinnings of the phenomenon.
- 			
- 			Finally, financially constrained firms tend to co-move, and since financial constraints are typically market-wide during economic crises, this risk is not diversified, and therefore priced. The predictor \textit{Whited-Wu Index} \citep{whited2006financial} measures the extent to which a stock is impacted by financial constraints.  
+	 		It is difficult to empirically estimate a multifactor model. The main challenge is that both $\vec{f}_{t+1}$ and $\vec{\beta}'_{i,t}$ are unobserved, so we have no directly observed variables at the right hand side of the estimated equation. Some researchers tackle the issue by using prior empirical knowledge to pre-specify the factors  \citep{fama1993common, fama2015five}, others use instrumental variable approach \citep{kelly2019characteristics} to uncover the unobserved factor loadings using firm-level variables, commonly called \textit{characteristics}, which serve as proxies for exposure to systematic risks \cite{kelly2019characteristics}:  
+	 		
+	 		\begin{align}
+	 			E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t}  \label{eq:ER_betalambda} \\
+	 			R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \\
+	 			\vec{\beta}'_{i,t} = g(\vec{z}'_{i,t}) \label{eq:instrumented_betas}
+	 		\end{align}
+	 		
+	 		
+	 		An important distinction between characteristics and factors is that characteristics are firm-specific variables, such as firm size, returns momentum or book-to-market ratio, while factors are common to all firms, such as the market return. Additionally, while characteristics proxy a firm's \textit{exposure} to risk (equation \ref{eq:instrumented_betas}), factors are the risk sources themselves. 
+	 		
+		 		  Consider the following basic asset-pricing equation \citep{cochrane2009asset}:
+	 		
+	 		\begin{equation}
+	 			1 = E_t(m_{t+1} R_{t+1}^i ) \label{eq:1EmR}
+	 		\end{equation} 
+	 		
+	 		In words, an investor pays 1 dollar now to collect $R_{t+1}^i$ dollars in the future. The payoff is called gross return and is the sum of future price and dividend $R_{t+1}^i = p_{t+1}^i+ d_{t+1}^i$.  Since the payoff does not come now ($t$), but in future ($t+1$), we discount it to present by the factor $m_{t+1}$, called the \textit{stochastic discount factor}. The term stochastic stands to express the idea that $m_{t+1}$ is not known with certainty at time $t$ \citep{cochrane2009asset}.
+	 		Using the definition of covariance, we can rearrange \ref{eq:1EmR} \citep{cochrane2009asset}:
+	 		
+	 		\begin{equation}
+	 			1 = E_t(m_{t+1}) E_t(R_{t+1}^i) + Cov_t(m_{t+1},R_{t+1}^i) 
+	 		\end{equation} 
+	 		
+	 		Defining the \textit{risk-free gross return} as $R_{t+1}^f=\frac{1}{E_t(m_{t+1})}$ and using it to further rearrange \citep{cochrane2009asset}:
+	 		
+	 		\begin{equation}
+	 			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov_t(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
+	 		\end{equation} 
+	 		
+	 		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. Returns positively correlated to the discount factor should be low, and vice versa. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
+	 		
+	 		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var_t(m_{t+1})/Var_t(m_{t+1})$ to obtain:
+	 		
+	 		\begin{align}
+	 			E_t(R_{t+1}^i) 
+	 			& = {R_{t+1}^f} + 
+	 			\underbrace{
+	 				\frac{Cov_t(m_{t+1},R_{t+1}^i)}{Var_t(m_{t+1})}
+	 			}_\text{$\beta_{i,t}$} 
+	 			\cdot 
+	 			\underbrace{
+	 				\left(-\frac{Var_t(m_{t+1})}{E_t(m_{t+1})}\right)
+	 			}_\text{$\lambda_{t}$} \label{eq:factor_model} \\
+	 			& = \underbrace{{R_{t+1}^f}
+	 			}_\text{risk-free return} 
+	 			+ 
+	 			\underbrace{\beta_{i,t} \cdot \lambda_{t}
+	 			}_\text{risk adjustment} \label{eq:beta_reprezentation}
+	 		\end{align} 
+	 		
+	 		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,t}$ and $\lambda_t$. $\lambda_t$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,t}$ can be interpreted as the amount of the risk inherent in asset $i$. 
+	 		
+	 		
+	 				
+	 		
+	 		First multi-factor model is \cite{fama1996multifactor}:
+	 		
+	 		\begin{align}
+	 			& E(R^i) = R^f + \vec{\beta}'_{i} \vec{\lambda} \\
+	 			& R^i_{t+1} = \alpha_{i} + \vec{\beta}'_{i} \vec{f}_{t+1} + \epsilon_{i,t+1}
+	 		\end{align}
+	 		
+	 		with factors  
+	 		
+	 		\begin{equation}
+	 			\vec{f}_{t+1} = 
+	 			\begin{pmatrix}
+	 				R^M_{t+1}-R^f_{t+1} \\
+	 				SMB_{t+1} \\
+	 				HML_{t+1}				
+	 			\end{pmatrix}
+	 		\end{equation}
+	 		
+	 		
+	 		The $R^M_{t+1}-R^f_{t+1}$ is the return on market portfolio above risk-free rate (as in CAPM), $SMB_{t+1}$ is the return on small-cap portfolio minus the return on big-cap portfolio, and $HML_{t+1}$ is the return on portfolio of stocks with small market values relative to book value, minus the return on portfolio of stocks with high market values relative to book value.
+	 		
 			
 		\section{Machine Learning and Stock Returns}		
 		
