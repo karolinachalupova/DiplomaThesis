@@ -1,7 +1,7 @@
 # DiplomaThesis
 Can Machines Explain Stock Returns? 
 - Available [here](https://drive.google.com/file/d/1rciQdri9fzO-j4MJyfnE9W1_bOb7MP04/view?usp=sharing)
-- Defense: February 2021, Charles University, Faculty of Social Sciences, Institute of Economic Studies
+- Defense: February 2021, Charles University, Faculty of Social Sciences, [Institute of Economic Studies](http://ies.fsv.cuni.cz/content/tree/index/lang/en)
 - Supervisor: [doc. PhdDr. Jozef Baruník, Ph.D.](http://ies.fsv.cuni.cz/en/staff/barunik)
 - Consultant: [Mgr. Martin Hronec](http://ies.fsv.cuni.cz/en/staff/hronec)
 
