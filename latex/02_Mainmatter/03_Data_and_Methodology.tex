@@ -4,15 +4,16 @@
 \section{Data}
 
 	\subsection{Universe of Stocks}
-		The dataset comprises of liquid publicly traded shares from developed countries of Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore). The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 657,141 observations. An average firms is present for 6.5 years (79 monthly observations). The data are rather evenly distributed in time, with 1,888 observations (firms) in an average month. 
+		The dataset comprises of liquid publicly traded shares from global developed countries. These include Europe, Japan and Asia-Pacific (Australia, New Zealand, Hong Kong, and Singapore).\footnote{Note that the United States are not included. Research shows there is regional specificity in the data, for example due to different accounting standards in the U.S. \citep{tobek2020does}. It is therefore prudent to perform estimations on U.S. and international data separately. Thus, to bring insights about U.S. stock market, the analysis in this thesis could be extended by replication on U.S. data. For further discussion on the value of international vs. U.S. evidence, see \cite{tobek2020does}.} The data is monthly and spans from 1990 to 2018. It comprises 8,350 companies, totaling 657,141 observations. An average firms is present for 6.5 years (79 monthly observations). The data are rather evenly distributed in time, with 1,888 observations (firms) in an average month. 
 		
-		It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues. The liquidity filter is obtained from \cite{tobek2020does}.  
+		It is advantageous that the universe of these stocks is highly liquid, because it means that the firms are easily tradable with high volume and low transaction costs. This makes the results of this thesis more realistic (in terms of profitability of the trading strategy) and relevant (in terms of model interpretability), as the findings are not likely to be driven by illiquidity issues and microstructure noise \citep{asparouhova2010liquidity}. The liquidity filter is obtained from \cite{tobek2020does}.
+		
 	
 	\subsection{Predictors}
 	
-		A single observation (in ML terminology, an example), represents a single firm in a given month. An observation consists of 30 values of characteristics of that firm, as of the given month (calculated from underlying data from before and up the the month in question), and the predicted variable, return, in the next month. All characteristics are calculated by \cite{tobek2020does}.   
+		A single observation (in ML terminology, an example), represents a single firm in a given month. An observation consists of 30 predictors  (characteristics of that firm, as of the given month, calculated from underlying past data), and the predicted variable, the stock's return, in the next month. All characteristics are calculated by \cite{tobek2020does}.   
 		
-		Table \ref{tab:meta} shows all 30 predictors studied in this thesis. According to \cite{tobek2020does}, these variables are the best predictors of equity returns out of 153  candidate variables from leading financial and accounting journals \footnote{See Figure 8 in \cite{tobek2020does}. Global liquid universe of stocks is considered.}. For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, the underlying underlying economic motivation of the variable (discussed in Section \ref{chap:economic_motivation_of_predictors}). The table also shows that most predictors are calculated using market data (19 of them), rather than the firms' accounting numbers (10 predictors); one predictor is calculated using I/B/E/S database on professional forecasters. Typically, the market variables are updated monthly, and the accounting predictors change values with yearly frequency.
+		Table \ref{tab:meta} shows all 30 predictors studied in this thesis. According to measures employed in \cite{tobek2020does}, these variables are the most important predictors of equity returns out of 153 candidate variables from leading financial and accounting journals.\footnote{See Figure 8 in \cite{tobek2020does}. Global liquid universe of stocks is considered. \cite{tobek2020does} serve as a pre-selection of important variables for this thesis, which leaves the remaining 123 variables outside the scope of this work. The results in \cite{tobek2020does} suggest that these excluded variables are considerably less important, which allows to omit them in this thesis without loosing too much information.} For each variable, Table \ref{tab:meta} gives the bibliographic reference to the original paper that proposed it as equity return predictor, the underlying economic motivation of the variable (discussed in Section \ref{chap:economic_motivation_of_predictors}). The table also shows that most predictors are calculated using market data (19 of them), rather than the firms' accounting numbers (10 predictors); one predictor is calculated using analysts' expectations from Institutional Brokers Estimate System. Typically, the market variables are updated monthly, and the accounting predictors change values with yearly frequency.
 		
 		\begin{table}
 			\resizebox{\textwidth}{!}{\input{Tables/meta.tex}}
@@ -20,8 +21,8 @@
 			\label{tab:meta}
 			\medskip
 			\small
-			The table is a list of all predictors used in this thesis. Column Features gives the names of the variables, (the naming comes from \cite{tobek2020does}, which is the source of the dataset used in this thesis).  
-			Column Data Source informs whether the variable is calculated using the firm's accounting data, market data, or data on forecasts of analysts. Column Category presents the categorization of the features by the underlying economic motivation of the variable (discussed in Section \ref{chap:economic_motivation_of_predictors}). Column Frequency shows how often the feature changes values (is updated as new underlying data becomes available): yearly (Y) or monthly (M). All the variables are calculated by \cite{tobek2020does}, which offer more information on their construction. 
+			The table is a list of all predictors used in this thesis. Column \textit{Feature} gives the names of the variables, (the naming comes from \cite{tobek2020does}, which is the source of the dataset used in this thesis).  
+			Column \textit{Data Source} informs whether the variable is calculated using the firm's accounting data, market data, or data on forecasts of analysts. Column \textit{Category} presents the categorization of the features by the underlying economic motivation of the variable (discussed in Section \ref{chap:economic_motivation_of_predictors}). Column \textit{Frequency} shows how often the feature changes values (is updated as new underlying data becomes available): yearly (Y) or monthly (M). All the variables are calculated by \cite{tobek2020does}, which offer more information on their construction. The \textit{Journal} shortcuts stand for, in alphabetic order: The Accounting Review (AR), Journal of Accounting and Economics (JAE), Journal of Accounting Research (JAR), Journal of Finance (JF), Journal of Financial Economics (JFE), Journal of Financial Markets (JFM), Review of Accounting Studies (RAS), and Review of Financial Studies (RFS). 
 		\end{table}
 	
 	\subsection{Data Cleaning}
@@ -30,54 +31,46 @@
 		
 		Outliers are treated using winsorization, which preserves the observation being treated, but clips it to the value of the corresponding percentile (1\% and 99\%). This approach to treating outliers was selected by inspecting the resulting histograms of all variables.     
 		
-		Since all data fed to the neural network must be real numbers, missing observations must be imputed. Here, the missing data are replaced by 0, which is suitable, since the scaling between $-1$ and $1$ allows to interpret the value of $0$ as "no signal". The predictors vary considerably as to the percentage of missing data, as documented in Figure \ref{fig:missing_observations}. This is important, as the predictors with many missing values are likely to be less informative, as they offer less space for learning. The variables calculated directly from past returns, such as 52-Week High, Short-Term Reversal, Idiosyncratic Risk and Maximum, have almost no missing values. On the other hand, the ratio of research and development expenses to market value (RD / Market Equity) has more than 60\% of values missing. Other variables with many missing values are Earnings Predictability and Earnings Forecast-to-Price (around 50\% and 40\%). These are calculated based on analysts' forecasts, that are sometimes unavailable. The rest of variables have typically between 5\% and 20\% of missing values.  
-		
-		These data-cleaning operations must be employed in a suitable order, which is: imputing missing values by $0$, winsorizing, centering and scaling into the $-1$ and $1$ interval. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years.  
-		
+		Since all data fed to the neural network must be real numbers, missing observations must be imputed. Here, the missing data are replaced by 0, which is suitable, since the scaling between $-1$ and $1$ allows to interpret the value of $0$ as "no signal". The predictors vary considerably as to the percentage of missing data, as documented in Figure \ref{fig:missing_observations}. This is important, as the predictors with many missing values are likely to be less informative, as they offer less space for learning. The variables calculated directly from past returns, such as \textit{52-Week High}, \textit{Short-Term Reversal}, \textit{Idiosyncratic Risk} and \textit{Maximum}, have almost no missing values. On the other hand, the ratio of research and development expenses to market value (\textit{RD / Market Equity}) has more than 60\% of values missing. Other variables with many missing values are \textit{Earnings Predictability} and \textit{Earnings Forecast-to-Price} (around 50\% and 40\%). The rest of variables have typically between 5\% and 20\% of missing values.
 		\begin{center}
-			\begin{figure}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/missing_observations.pdf}
+			\begin{figure}[!htb]
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/missing_observations.pdf}
 				\caption{Amount of Missing Values in Individual Features}
 				\label{fig:missing_observations}
 			\end{figure}
-		\end{center}
-		
+		\end{center} 		  
 	
-	
+		These data-cleaning operations must be employed in a suitable order, which is: imputing missing values by $0$, winsorizing, centering and scaling into the $-1$ and $1$ interval. Of course, all the transformations are performed feature-wise, that is, always considering a single feature at a time. Less obviously, the transformations are performed on data grouped by years, that is, first splitting the data into groups by year, then applying the transformations and finally combining back into single dataset. The main motivation for this is to prevent information from spilling between training, validation and test sets, which are also organized by years. 
+
 	\subsection{Predictor Descriptives}   	
-	
-		This subsection describes basic statistical properties of individual predictors (features) after cleaning, which is precisely the data entering the neural network. (The terms \textit{predictors}, \textit{variables} and \textit{features} are used interchangeably.) 
-		 
-		Since all the features are scaled to have 0 mean and to fit into the interval $-1$ and $1$, possibly the most important statistic to describe their distribution is standard deviation, plotted in Figure \ref{fig:standard_deviation}. It typically ranges between 0.2 and 0.35, which is quite high. Having large enough standard deviation is an important aspect of an informative feature: since the values are very different across observations, there is room for the model to learn from these differences.
+		This section describes the basic statistical properties of individual predictors after cleaning, i.e., the properties of data entering the neural network. The terms \textit{predictors} and \textit{features} are used interchangeably. 
 		
+		It is particularly important to focus on the standard deviation of the features, as it is crucial for them to be informative of future returns. To appreciate this, consider a degenerate example of a feature with all values equal to zero: since the feature values are the same irrespective of the return, the data offer no room for the model to learn. Thus, features with very low standard deviation may offer too little space for learning and be unimportant as consequence. Figure \ref{fig:standard_deviation} shows the standard deviations of all features. It typically ranges between 0.2 and 0.35, which makes that the within-feature variability large enough for learning. \textit{Whited-Wu Index}, \textit{Liquidity Beta 5}, \textit{Coskewness} and \textit{52-Week High} are the variables with highest dispersion, while \textit{Earnings Predictability},\textit{ Amihud's Measure} and\textit{ Liquidity Shocks} are the most narrowly distributed around mean. However, the predictors have rather similar standard deviations overall.
 		\begin{center}
-			\begin{figure}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/standard_deviation.pdf}
+			\begin{figure}[htb]
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/standard_deviation.pdf}
 				\caption{Standard Deviation of the Features}
 				\label{fig:standard_deviation}
 			\end{figure}
 		\end{center}
 		
-		Other aspects of unconditional distributions of the features are given in the Appendix \ref{chap:additional_figures}. Specifically, the distributions are summarized visually using histograms in Figure \ref{fig:histograms} and the precise values of the descriptives (mean, standard deviation, minimum, maximum, and 25th, 50th and 75th percentile) are in the table Table \ref{tab:descriptives}.
-	
-			
-		Figure \ref{fig:correlation_matrix} shows the correlations of all features. The correlation matrix is also presented in a table form in the Appendix \ref{chap:additional_figures}. Figure \ref{fig:correlation_matrix_highest} shows a smaller part of this matrix, subset so that the 10 most correlated feature pairs are shown. The correlation coefficients of these pairs are listed in Table \ref{tab:most_correlated_pairs}.
-		
+		Figure \ref{fig:correlation_matrix} shows the correlations of all features. For the purposes of interpretation, correlation is an important aspect of the predictors' distribution. If a pair of predictors is highly correlated, they might substitute each other in the model. As a result, one predictor can appear important and the other unimportant depending on chance. A similar issue is well-known in linear regression as multicollinearity: even though both correlated predictors are important, their statistical significance may be low. Therefore, in order to ascertain importance of the predictors, it is more desirable that they be little correlated. The correlations are shown in Figure \ref{fig:correlation_matrix}. The diagonal of the matrix is the correlation of each feature with itself, which is 1 by definition. The rest of the matrix visualizes the pairwise correlation coefficients of all features, where negative (positive) correlations are represented with red (blue) squares. The strength of the correlation is represented both by the hue and size of the squares: the stronger the relationship between two predictors, the darker and larger the square. The numerical values are given in the Appendix \ref{chap:additional_figures}. Overall, the figure shows that the correlation in the data is small: vast majority of correlations is around 0, which is advantageous.
 		\begin{center}
-			\begin{figure}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix.pdf}
+			\begin{figure}[!htb]
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/correlation_matrix.pdf}
 				\caption{Features Correlation Matrix}
 				\label{fig:correlation_matrix}
 				\medskip
 				\small 
 				The figure shows pairwise correlation coefficients of all features. Each square represents the value of the particular correlation coefficient. The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red).
 			\end{figure}
-		\end{center}
-	
-		\begin{figure}	
+		\end{center}  
+		
+		Figure \ref{fig:correlation_highest} shows a smaller part of the correlation matrix, subset so that the 10 most correlated feature pairs are more clearly visible. Panel (\subref{fig:correlation_matrix_highest}) visualizes the correlation coefficients, while Panel (\subref{tab:most_correlated_pairs}) gives their precise numerical values. Looking at the 10 most correlated pairs, it is quite expected that these variables have strong correlation, as they capture similar economic phenomena and are calculated using similar raw variables (see Table \ref{tab:meta}) For example, \textit{Idiosyncratic Risk} and \textit{Maximum Return}, which constitute the most correlated pair, both capture attitude of investors to risk and are calculated using market return. Other examples include \textit{Short-Term Reversal} and \textit{52-Week High} -- both capture behavioral biases of investors and are again calculated using past market returns -- and \textit{Duration of Equity} and \textit{Leverage Component of Book to Price}, where both variables capture the value effect. To summarize, even though there are some rather correlated variables, their number is very small and their economic interpretation is close, which makes the data quite well-suited for assessing importance of individual economic effects. 
+		\begin{figure}[!htb]	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/correlation_matrix_highest.pdf}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/correlation_matrix_highest.pdf}
 				\caption{Correlation Matrix}
 				\label{fig:correlation_matrix_highest}
 			\end{subfigure}
@@ -94,17 +87,15 @@
 			Panel (\subref{fig:correlation_matrix_highest}) is a detail of the correlation matrix (Figure \ref{fig:correlation_matrix}), subset so as to show 10 most correlated features.  Same as in Figure \ref{fig:correlation_matrix}, each square represents the value of the particular correlation coefficient.The value of the coefficient is represented both by size of the square (large absolute values are shown with large squares) and by the square's color (large absolute values have higher intensity, positive correlation is plotted with blue, negative with red). Panel (\subref{tab:most_correlated_pairs}) shows the numerical values of the 10 highest correlation coefficients in the data. 
 		\end{figure}
 	
-		
+		More details about distributions of the features are provided in the Appendix \ref{chap:additional_figures}: Figure \ref{fig:histograms} shows histograms of all features and Table \ref{tab:descriptives} lists the mean, standard deviation, minimum, maximum, and 25th, 50th and 75th percentile. As described in the previous section, all the features are scaled to have 0 mean and to fit into the interval $-1$ and $1$. This is clearly visible in the descriptives given in the Appendix. 
 		
 	\subsection{Descriptives of Predicted Variable}
-		The predicted variable is the return of stock $i$ in month $t$. The prediction is based on the predictors as available at the end of the previous month. (Borrowing from ML terminology, this thesis also uses the term \textit{target} to refer to the predicted variable.) 
-		
-		Figure \ref{fig:return_descriptives} shows different aspects of the distribution of monthly returns. Panel (\subref{fig:returns_descriptives_plot}) shows histogram, boxplot and percentiles, and Panels 	\subref{fig:return_descriptives_table} and \subref{fig:return_deciles_table} summarize the same information numerically.  
+		The predicted variable is the return of stock $i$ in a given month. Figure \ref{fig:return_descriptives} shows different aspects of the distribution of monthly returns. Panel (\subref{fig:returns_descriptives_plot}) shows histogram, boxplot and percentiles, and Panels 	(\subref{fig:return_descriptives_table}) and (\subref{fig:return_deciles_table}) summarize the same information numerically.  The Figure shows that the monthly stock returns typically range between -6 and 6 percentage points (25th and 75th percentile), and that values outside the range of -25 and 25 percentage points are uncommon. The mean monthly return is small, but positive, around 0.4 percentage points. 
 		
 		\begin{figure}	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/returns_descriptives.pdf}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/returns_descriptives.pdf}
 				\caption{Histogram, Boxplot and Percentiles}
 				\label{fig:returns_descriptives_plot}
 			\end{subfigure}
@@ -137,65 +128,27 @@
 
 \section{Methodology}
 
-	I train 4 feed-forward neural networks, each with 10 different random seeds. The architecture and training follows closely \cite{gu2020empirical}, which represents very standard neural networks used in the task of equity return prediction from anomaly data. I compare the performance to that reached in the very same paper. Next, I interpret the neural networks using feature importance and investigate whether this interpretability is robust across different random seeds and in time. This  section describes the methodological issues related, in this order, to the model's architecture, training, performance evaluation and interpretation of the neural networks employed in this thesis.
+	This  section describes the methodological issues related to the architecture, training, performance evaluation and interpretation of the neural networks employed in this thesis. The architecture and training of the networks follows closely \cite{gu2020empirical}, who study the same problem as this thesis of stock return prediction from characteristics. The predictive performance is also compared to their paper. Finally, construction of the measures used here for neural network interpretation is discussed. 
+	
+	\subsection{The Prediction Task}
+	
+		The task is to predict stocks' returns in the following month based on a set of the stocks' characteristics calculated as of the current month. In equation:
+		
+		\begin{equation}
+			E_t(r^i_{t+1}) = f(x_{1,i,t}, x_{2,i,t}, \ldots, x_{K,i,t})		
+		\end{equation}
+		
+		These characteristics are time-variant, for example, if net income is used as a characteristic, its values for a given company change as often as the firm in question issues its financial reports. To produce a return prediction for stock $i$ for the next month ($t+1$), the currently available characteristics for stock $i$ enter the prediction function $f$ (neural network), which outputs the predicted return. In other words, the $K$ characteristics $x_{1,i,t}, x_{2,i,t}, \ldots, x_{K,i,t}$ are referred to as predictors or, in ML terminology, \textit{features}, and represent the inputs to the neural network, while the predicted return constitutes the network's \textit{output}. As explained in the Literature Review, the network is able to combine the characteristics in a non-linear fashion, creating their interactions and general functional forms, to produce the prediction.
 	
 	\subsection{Architecture of the Neural Networks}
 		\label{chap:architecture}
 	
-		The prediction task is a regression of a stocks' returns in the following month on a set of the stocks' charasteristics calculated as of the current month. My neural networks' architecture follows closely \cite{gu2020empirical}, which studies the very same prediction task. In brief summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 4 different depths are used, with 1, 2, 3, and hidden layers consisting of 32, 16, 8, and 4 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
+	 	The neural networks' architecture employed in this thesis follows closely \cite{gu2020empirical}, which studies the very same prediction task. In brief summary: all networks are feed-forward with the input dimension 30 and the output dimension 1; models of 4 different depths are used, with 1, 2, 3, and hidden layers consisting of 32, 16, 8, and 4 neurons each respectively; all layers are fully connected, with batch-normalization \citep{ioffe2015batch} and ReLU activations on all hidden layers. As this is a regression problem, there is no activation on the output layer. The weights are regularized using L1 penalty. The following explains and motivates these choices in detail.
 		
 		First, let us describe a feed-forward neural network in general terms (e.g., \cite{goodfellow2016deep}). A feed-forward neural network can be represented as directed graph, consisting of several \textit{layers}. An example of such a graph is given in Figure \ref{fig:computation_graph}. The input layer consists of several \textit{neurons} (nodes in the graph). This layer is connected to the next layer of neurons (the first hidden layer) by edges going from each input neuron to each hidden layer neuron. When each neuron of a layer is connected to each neuron in the next layer, we say that the two layers are fully connected. Each edge connecting two neurons is parametrized by a single trainable weight. More hidden layers can be connected to the previous hidden layer in the same fashion. Finally, the last hidden layer is connected, again, fully, to the output layer, which is the final prediction.
 		
-		This directed graph is a representation of the computation performed by the neural network to get from the input to the output. The values of a given hidden layer, $\vec{h}$, are computed using the previous layer's values $\vec{x}$, and the matrix of weights on the edges $\vec{W}$ using sum of products: 
-		
-		\begin{equation}
-			\label{eqn:hidden_layer}
-			\vec{h} = f(\vec{W}\vec{x}),
-		\end{equation}
-		
-		or written element-wise, the value of neuron $h_i$ in the hidden layer is computed as 
-		
-		\begin{equation*}
-			h_i = f \left( \sum_{j}w_{i,j}x_j \right),
-		\end{equation*}
-		
-		where the function $f$ is a non-linear activation function, such as the rectified linear unit (ReLU):
-		
-		\[
-			f(z) = \text{ReLU}(z) =   
-				\begin{cases}
-					1 & \text{if } z \geq 0\\
-					0 & \text{otherwise}
-				\end{cases}.
-		\]. 
-		
-		
-		The output layer is computed using the last hidden layer in the same manner, except there is no activation function (in case of a regression problem at least). That is, denoting $\vec{V}$ the weights on the last edges and $\vec{h}$ the output of the last hidden layer, the output of the neural network $\vec{o}$ has the elements: 
-		
-		\begin{equation*}
-			o_i = \sum_{j}v_{i,j} h_j.
-		\end{equation*}
-		
-		In this thesis, the output is a scalar, so this further simplifies to 
-		
-		\begin{equation}
-			o = \sum_{j}v_{j} h_j.
-		\end{equation}
-		
-		In the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract information from them. This information then enters the next hidden layer and the information is made yet more concentrated. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 4 hidden layers, where the most abstract or high-level information is extracted.
-		
-		In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point, dimension of the input layer) and propagates it through the series of hidden layers to produce the return prediction. This is visible as the 30 $x$ inputs in Figure \ref{fig:computation_graph}. A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is not necessary, as reaching the best possible performance is not the goal of this thesis. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons. I train models of 4 different depths: 1, 2, 3, and 4 hidden layers. The first hidden layer comprises of 32 neurons. Subsequent layers, if used, contains 16, 8 and 4 neurons for the second, third and fourth layer respectively. Note that the decreasing number of neurons is why we say the information is becoming more and more concentrated the deeper the hidden layer. Throughout the thesis, these 4 distinct neural networks are referred to as NN1, NN2, NN3 and NN4, the number standing for the respective number of hidden layers in the network.  Figure \ref{fig:computation_graph} shows the computation graph of NN2.
-		
-		In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer, again in line with  \cite{gu2020empirical}. This changes the formula for hidden layer values from \ref{eqn:hidden_layer} to to: 
-		
-		\begin{equation}
-			\vec{h} = \text{ReLU}(\text{BN}(\vec{W}\vec{x}))
-		\end{equation}
-		
-		where $\text{BN}$ represents the batch-normalization operation. The operation simply normalizes its input data (subtracts sample mean and divides by sample variance). The data is split to batches to improve computing speed of the operation. The operation helps with multiple aspects of training the neural networks, as it prevents the values coming out of a hidden layer from being extreme. This helps to regularize the network and also speeds up the training. Importantly, it helps with the problem of "internal covariate shift", where the distributions of inputs to hidden layers are shifted relative to their validation and testing counterparts, which harms the predictive power and the convergence. By demeaning and standardizing the data, batch normalization preserves the information contained in the hidden layer while preventing the covariate shift \citep{ioffe2015batch}. 
-		
 		\begin{center}
-			\begin{figure}
+			\begin{figure}[!htb]
 				\tikzset{%
 					every neuron/.style={
 						circle,
@@ -268,12 +221,54 @@
 				\label{fig:computation_graph}
 			\end{figure}
 		\end{center}
+		
+		This directed graph is a representation of the computation performed by the neural network to get from the input to the output. The values of a given hidden layer, $\vec{h}$, are computed using the previous layer's values $\vec{x}$, and the matrix of weights on the edges $\vec{W}$ using sum of products: 
+		
+		\begin{equation}
+			\label{eqn:hidden_layer}
+			\vec{h} = a(\vec{W}\vec{x}),
+		\end{equation}
+		
+		or written element-wise, the value of neuron $h_i$ in the hidden layer is computed as 
+		
+		\begin{equation*}
+			h_i = a \left( \sum_{j}w_{i,j}x_j \right),
+		\end{equation*}
+		
+		where the function $a$ is a non-linear activation function, such as the rectified linear unit (ReLU) used in this thesis:
+		
+		\[
+			a(z) = \text{ReLU}(z) =   
+				\begin{cases}
+					1 & \text{if } z \geq 0\\
+					0 & \text{otherwise.}
+				\end{cases}
+		\]. 
+		
+		
+		The output layer is computed using the last hidden layer in the same manner, except there is no activation function (in case of a regression problem at least). That is, denoting $\vec{v}$ the weights on the last edges and $\vec{l}$ the output of the last hidden layer, the output of the neural network $o$ (here, the prediction of return of stock $i$ at time $t+1$) is 
+		
+		\begin{equation}
+			o = \sum_{j}v_{j} l_j.
+		\end{equation}
+		
+		In the case of neural network without hidden layers, the model simplifies to linear regression. Adding a hidden layer, which is a non-linear interaction of the previous layer's neurons, the input features are allowed to interact in any manner. Essentially, a hidden layer represents the input features in a sparser manner, generating more abstract information from them. This information then enters the next hidden layer and the information is made yet more concentrated. This continues until the output layer, which produces the most high-level information: the prediction. In this way, the network learns to find relationships between the features such that they predict the target (here, the return) well. The network's depth corresponds to the complexity of the model: the model with a single hidden layer can be considered the least complex one, as the inputs only enter one non-linear interaction, and the complexity increases up to 4 hidden layers, where the most abstract or high-level information is extracted.
+		
+		In this thesis, a neural network takes input of 30 real numbers (the stock's characteristics at given time point) and propagates it through the series of hidden layers to produce the return prediction. The are displayed as the 30 $x$ nodes in the input layer in Figure \ref{fig:computation_graph}. A choice must be made as to the number of hidden layers and number of neurons in each layer. While on optimal architecture can be searched for, here it is sufficient to use architectures from prior literature, as the goal of this thesis is not to devise a new, superior model. Instead, I follow \cite{gu2020empirical} and use the same numbers of layers and neurons. I train models of 4 different depths: 1, 2, 3, and 4 hidden layers. The first hidden layer comprises of 32 neurons. Subsequent layers, if used, contains 16, 8 and 4 neurons for the second, third and fourth layer respectively. Note that the decreasing number of neurons is why we say the information is becoming more and more concentrated the deeper the hidden layer. Throughout the thesis, these 4 distinct neural networks are referred to as NN1, NN2, NN3 and NN4, the number standing for the respective number of hidden layers in the network.  Figure \ref{fig:computation_graph} shows the computation graph of NN2.
+		
+		In addition, I add a batch-normalization layer \citep{ioffe2015batch} after every hidden layer, again in line with  \cite{gu2020empirical}. This changes the formula for hidden layer values from \ref{eqn:hidden_layer} to to: 
+		
+		\begin{equation}
+			\vec{h} = \text{ReLU}(\text{BN}(\vec{W}\vec{x}))
+		\end{equation}
+		
+		where $\text{BN}$ represents the batch-normalization operation. The operation simply normalizes its input data (subtracts sample mean and divides by sample variance). The data is split to batches to improve computing speed of the operation. The operation helps with multiple aspects of training the neural networks, as it prevents the values coming out of a hidden layer from being extreme. This helps to regularize the network and cuts the training time. Importantly, it helps with the problem of "internal covariate shift", where the distributions of inputs to hidden layers are shifted relative to their validation and testing counterparts, which harms the predictive power and the convergence. By demeaning and standardizing the data, batch normalization preserves the information contained in the hidden layer while preventing the covariate shift \citep{ioffe2015batch}. 
 	
 	
 	\subsection{Training, Regularization and Hyperparameter Tuning}
 		\label{chap:train_regularize_tune}
 	
-		In general terms, training any neural network amounts to searching for such weights on its edges such that the loss on the training data (typically reflecting the prediction error) is small. The optimization is done numerically, by iteratively adjusting the weights so that a loss is gradually decreasing. At the beginning of training, the model is initialized with small random weights, where the random state is determined using the so-called random seed. Prediction is computed using these weights, which are then adjusted using the negative gradient of the loss \citep{kingma2014adam}. This is applied iteratively until a stopping criterion is met and the final weights are extracted. This thesis uses mean squared error as the loss, as the prediction task is a regression.
+		In general, training any neural network amounts to searching for such weights on its edges such that the loss on the training data (typically reflecting the prediction error) is small. The optimization is done numerically, by iteratively adjusting the weights to gradually decrease the resulting loss value. At the beginning of training, the model is initialized with small random weights, where the random state is determined using the so-called random seed. Prediction is computed using these weights, which are then adjusted using the negative gradient of the loss \citep{kingma2014adam}. This is applied iteratively until a stopping criterion is met and the final weights are extracted. This thesis uses mean squared error as the loss.
 		
 		The data is fed to the network in so-called batches, meaning that several inputs are processed together and the weight update is calculated across the whole batch. When all training data-points have been fed to the network exactly once, we say one epoch has passed. This is repeated for a number of epochs. I use batch size of 5,000, which is enough for processing the data reasonably fast while not overflowing the memory. I use 100 epochs in line with \cite{gu2020empirical}, but this number is seldom reached during the training (it works just as an upper limit), due to early stopping, as explained below.
 		
@@ -285,9 +280,9 @@
 		
 		Early stopping amounts to ceasing the training at some earlier point than reaching the pre-specified number of epochs. To determine that point, one can evaluate the model's predictive power after each epoch. A subsample of the data disjoint from training data (called validation sample) is used for the evaluation. This simulates the out-of-sample performance. When the validation loss increases for $k$ consecutive epochs ($k$ is called \textit{patience}), training is stopped. In line with \cite{gu2020empirical}, I use patience of 5. 
 		
-		Weight regularization allows to punish the model for finding too big weights, as large weights are a symptom of overfitting. The size of weights can be measured as their L2 or L1 norm; L1 norm is used here. The strength of the weight regularization is chosen as a hyperparameter on validation data and line with \cite{gu2020empirical}, as described in this section in a paragraph below, devoted to hyperparameter tuning. 
+		Weight regularization allows to punish the model for finding too big weights, as large weights are a symptom of overfitting. The size of weights can be measured as their L2 or L1 norm; L1 norm is used here. The strength of the weight regularization is chosen as a hyperparameter on validation data and in line with \cite{gu2020empirical}. The hyperparameter tuning itself is detailed in the following paragraph.
 		
-		The remaining modeling choices (starting learning rate and strength of L1 regularization) are done using hyperparameter tuning. The hyperparameters discussed so far are not very data-specific, so it suffices to choose them using prior literature: I use \cite{gu2020empirical}, as we share the exact same prediction task. However, there are parameters that are very data-specific, and must therefore be chosen using the data. Choosing the parameters on the training data would lead to overfitting, which is why they are selected using a sample disjoint from training data, called validation sample. This is called hyperparameter tuning. Specifically, I tune the learning rate and the strength of L1 regularization. Each model (each of its 10 random seeds) is run 10 independent times, each time sampling the learning rate and the L1 hyperparameters randomly from pre-specified intervals using logarithmic distribution. The intervals are $\left[1\mathrm{e}{-3}, 1\mathrm{e}{-2}\right]$ and $\left[1\mathrm{e}{-5}, 1\mathrm{e}{-3}\right]$ respectively, again in line with \cite{gu2020empirical}. A single best instance is then selected, as determined by predictive performance of the model on the validation set.
+		The remaining modeling choices (starting learning rate and strength of L1 regularization) are done using hyperparameter tuning. The hyperparameters discussed so far are not very data-specific, so it suffices to choose them using prior literature (\cite{gu2020empirical} is used as it is closest to this thesis). However, there are parameters that are very data-specific, and must therefore be chosen using the data. Choosing the parameters on the training data would lead to overfitting, which is why they are selected using a sample disjoint from training data, called validation sample. This is called hyperparameter tuning. In this thesis, the learning rate and the strength of L1 regularization are tuned. Each model (each of its 10 random seeds) is run 10 independent times, each time sampling the learning rate and the L1 hyperparameters randomly from pre-specified intervals using logarithmic distribution. The intervals are $\left[1\mathrm{e}{-3}, 1\mathrm{e}{-2}\right]$ and $\left[1\mathrm{e}{-5}, 1\mathrm{e}{-3}\right]$ respectively, again in line with \cite{gu2020empirical}. A single best instance (of each random seed) is then selected, as determined by predictive performance of the model on the validation set.
 		
 		The train-validation-test split is done as follows. There are 29 years of data in the entire dataset, with rather evenly distributed observations from 1990 to 2018. Multiple train-validation-test splits are performed. The first split uses the first 6 years of data are used as training set. The next 4 years are used as the validation set, and the year after that as the test set. The remaining splits are done similarly, each year, the training data is rolled forward using expanding window (that is, taking 7 years from the beginning of the dataset, 8, 9 etc.). Validation set is rolled forward using fixed window (always consisting of 4 years) and starts directly at the end of the corresponding training set, and the test set is rolled forward also using fixed window (always consisting of 1 year) and starts directly at the end of the corresponding validation set. The train-validation-test split can be therefore summarized as 6--4--1, 7--4--1, \ldots, 24--4--1,  where the last split uses all years in the dataset. Each time a different split is taken, the model is retrained from scratch. This approach reflects that of \cite{gu2020empirical}, adjusted appropriately to my shorter dataset (30 years instead of 60) and is used instead of cross-validation so that the temporal ordering of the data is preserved (the model is trained on the past and evaluated on the future, never in the reverse).    
 	
@@ -303,7 +298,7 @@
 		\label{chap:model_evaluation}
 		The quality of the models is evaluated using two common approaches. First, the accuracy of the models' predictions is measured using three out-of-sample metrics – $R^2$, root-mean-squared error (RMSE) and mean-absolute error (MAE). Second, long-short portfolios are constructed based on model's out-of-sample predictions, and the returns of the trading portfolios are studied. Note that the former approach focuses on the \textit{predictability} (whether the model predicts cross-section of stocks well enough), while the latter focuses on the \textit{profitability} of a trading strategy based on the predictions. The latter approach is known as backtesting, and approximates the situation of using the model in financial practice to trade equity. This section describes the methodological details of the two approaches in turn. 
 		
-		Both evaluation approaches are executed on the held-out (testing) sample, so that the network does not see the testing observations while learning. As described in Subsection \ref{chap:train_regularize_tune}, each model (NN1 to NN4) is completely re-trained at the beginning of each testing year to make sure that the model is up-to-date with the current state of the world. As this re-training does not start from the year 1 of the dataset (models need more than 1 year of data to train and validate meaningfully), we are left with 19 testing years end of the data for performance evaluation and backtesting: 2000 to 2018, both inclusive. (The model is update yearly and not monthly due to the high computational intensity of re-training. In other words, the model itself (the weights) remain unchanged for the entire year, both the model receives the up-to-date testing data each month. At the beginning of the next testing year, the re-training takes place and the evaluation procedure is repeated.) This is the same approach as in \cite{gu2020empirical, tobek2020does}.
+		Both evaluation approaches are executed on the held-out (testing) sample, so that the network does not see the testing observations while learning. As described in Subsection \ref{chap:train_regularize_tune}, each model (NN1 to NN4) is completely re-trained at the beginning of each testing year to make sure that the model is up-to-date with the current state of the world. As this re-training does not start from the year 1 of the dataset (models need more than 1 year of data to train and validate meaningfully), we are left with 19 testing years end of the data for performance evaluation and backtesting: 2000 to 2018, both inclusive. (The model is updated yearly and not monthly due to the high computational intensity of re-training. In other words, the model itself (the weights) remains unchanged for the entire year, but it receives up-to-date data each month. At the beginning of the next testing year, the re-training takes place and the evaluation procedure is repeated.) This is the same approach as in \cite{gu2020empirical, tobek2020does}.
 		
 		\subsubsection{Predictive Ability} 
 		
@@ -342,10 +337,42 @@
 	
 	\subsection{Interpretation}
 	
-		Possibly the most straightforward way of interpreting any model is to show how individual predictors contribute to the prediction, in other words, which explanatory variables matter the most and which are less important. This notion is called \textit{feature importance} and can be generally thought of as the ML counterpart to the size of coefficients in a linear regression. Feature importance can be measured locally or globally. The former approach studies why a particular observation is assigned its prediction: how can the prediction be attributed to individual predictors? The latter explains how the model decides overall, across all observations. This thesis investigates two measures of feature importance, Model Reliance \citep{fisher2019all} (which is a global measure) and Integrated Gradients \citep{sundararajan2017axiomatic} (a local measure). The reasons behind choosing these measures as well as their theoretical underpinnings are explained in detail in the Literature Review. This section describes the technical aspects of the measures' calculation.		
+		Possibly the most straightforward way of interpreting any model is to show how individual predictors contribute to the prediction, in other words, which explanatory variables matter the most and which are less important. This notion is called \textit{feature importance}.\footnote{There is as of now no existing approach to extract statistical significance in ML, although \cite{fisher2019all} provide some development in this direction.} Feature importance can be measured locally or globally. The former approach studies why a particular observation is assigned its prediction: how can the prediction be attributed to individual predictors? The latter explains how the model decides overall, across all observations. This thesis investigates both, using Integrated Gradients \citep{sundararajan2017axiomatic} as both local and global measure. The reasons behind choosing this metric as well as its theoretical underpinnings are explained in detail in the Literature Review. This section describes the technical aspects of the measure's calculation.	
+		
+		In addition, this thesis proposes a novel metric, called Portfolio Reliance, to uncover the sources behind the superior ability of networks to form long-short portfolios (predict winners and losers among the stocks in the market). This is in contrast to the Integrated Gradients in that it focuses on the tails of the returns distribution only (prediction of the very high and very low returns), while Integrated Gradients considers the entire distribution. The metric shows how return of the long-short portfolio decreases when a given feature is distorted. Intuitively, if the portfolio relies heavily on a feature, the long-short return decreases notably when this feature is rendered uninformative. Conversely, if distorting a feature leaves the long-short return intact, the feature can be considered unimportant for the portfolio. The distortion is performed by swapping halves of data for that feature while leaving the rest of the dataset intact, which renders the feature completely uninformative of return while it does \textit{not} change its marginal distribution. Preserving the marginal distribution is an advantage, since the values are still reasonable, just uninformative. This distortion method is developed by  \cite{fisher2019all} in their Model Reliance measure.\footnote{Model Reliance, like Integrated Gradients, focuses on the entire distribution of returns, and is therefore likewise unsuitable for the purpose of focusing on the tails.}
+		
+		For purposes of completeness, Model Reliance is calculated as an additional global feature importance metric. However, since it measures mean squared error decreases, which are very noisy in this prediction task, it is much less informative than Integrated Gradients. Nevertheless, the methodology is described here in detail as well, as it forms the basis for Portfolio Reliance method. 
+		
+		\subsubsection{(Local) Integrated Gradients}
+			\label{chap:integrated_gradient}
+			Integrated Gradients \citep{sundararajan2017axiomatic} is a local measure of feature importance, i.e., it is computed for each observation separately. It considers the gradient of the prediction with respect to the predictors. If a small change in a predictor's value has large effect on the prediction, the value of the gradient is large.
+			
+			Again, denote $f: \mathbb{R}^k \rightarrow \mathbb{R}$ the prediction function (here, the NN model). Further, denote $\vec{z} \in  \mathbb{R}^k$ a single input with $k$ scalar elements, where $k$ denotes the total number of features (here, 30). Let $\vec{z'} \in  \mathbb{R}^k$ be a \textit{baseline input}, an observation that can be considered as a point from which the other observations depart. (For example, in case of inputs being images, the baseline can be a black image. In this thesis, it is a vector of zeros, as motivated below.) 
+			
+			For simplicity of the notation, assume that $f: \mathbb{R}^k \rightarrow [0,1]$. The Integrated Gradient of $i^{th}$ feature of the input $\vec{z}$ is defined as 
+			
+			\begin{equation*}
+				IG_i(\vec{z}) := (z_i - z_i') \int_{\alpha=0}^{1} \frac{\partial f(\vec{z'} + \alpha(\vec{z}-\vec{z'}))}{\partial z_i}d\alpha,
+			\end{equation*}
+			
+			where $\frac{\partial f(\vec{z})}{\partial z_i}$ stands for the gradient of $f(\vec{z})$ along the $i^{th}$ dimension. This means that the measure considers a straight path in $\mathbb{R}^k$ from the baseline input ${\vec{z}'}$ to the given input ${\vec{z}}$ and calculates the gradient of prediction at all points along that path. The Integrated Gradient measure cumulates these gradients by taking the integral across the path.  
+			
+			To calculate the Integrated Gradient of $i^{th}$ feature of the input $\vec{z}$ empirically, it is necessary to approximate the integral by summation across several points along the straightline path  \citep{sundararajan2017axiomatic}. That is:  
+			
+			\begin{equation*}
+				IG_i^{\text{approx}}(\vec{z}) := (z_i - z_i') \sum_{k=1}^{m} \frac{\partial f(\vec{z'} + \frac{k}{m}(\vec{z}-\vec{z'}))}{\partial z_i}\frac{1}{m},
+			\end{equation*} 
+			
+			where $m$, called the \textit{step size}, is the number of the steps in the Reimman approximation of the integral, here, the number of points along the straightline path at which evaluate the gradient. 
+			
+			Two implementation decisions must be made when calculating the Integrated Gradients: first, choosing the right baseline input, and second, choosing the right the step size. First, the baseline input should be chosen such that it can be interpreted as "no signal". In this thesis, there are two possible baselines: random noise and all-zero input. The latter was chosen, as it lends itself well to the "no signal" interpretation: all the features are normalized between -1 and 1 and have a mean of 0, thus, an all-zero input can be considered a natural point of departure. Additionally, the authors recommend to check that the model's prediction at baseline is around zero. This is important because it allows to use Integrated Gradient to explain the prediction as a function of the input, and not as of the input and the baseline. Indeed, the predictions for the all-zero input are around zero, which confirms that the all-zero input is the correct baseline here. Second, the step size should be chosen such that the approximation is sufficiently accurate: the authors recommend to check that the attributions approximately sum up to the difference between the prediction at $\vec{z}$ and at $\vec{z'}$. Given that the latter is around zero, it remains to check that the attributions for $\vec{z}$ sum up to the prediction at $\vec{z}$ (note that this is a verification of passing the Completeness Axiom, see Literature Review). This thesis uses the step size of 50, which passes this summation check comfortably.  
+			
+		\subsubsection{Global Integrated Gradients}
+			Integrated Gradients, which is a local measure of feature importance by nature, are also used in this thesis as a global measure. (Recall that local measures answer the question of why was a particular prediction made, while global measures answer the question of which features are important for the model overall.) The measure is turned global simply by averaging across all predictions. However, as both large negative and large positive local effects mean that the feature is important, it is necessary to take the average out of \textit{absolute} local values. The measure then says what is the average absolute size of the contribution of a feature to the predicted return. Thus, the features with large Global Integrated Gradient can be considered important for the model overall and used as a global feature importance measure.  
+			
 		
 		\subsubsection{Model Reliance}
-			Model Reliance \citep{fisher2019all} is a global measure of feature importance. It is based on the idea that if a feature is important for making prediction, then distorting the feature by adding noise to it will damage prediction performance. Vice versa, if distorting a feature leaves the prediction performance relatively intact, that feature can be considered unimportant for the prediction. Thus, denoting  the prediction function (such as an ML model) $f$, Model Reliance of  $f$ on random variable $X$ can be \textit{informally} defined as
+			Model Reliance \citep{fisher2019all} is a global measure of feature importance. It is based on the idea that if a feature is important for making prediction, then distorting the feature by adding noise to it will damage prediction performance. Conversely, if distorting a feature leaves the prediction performance relatively intact, that feature can be considered unimportant for the prediction. Thus, denoting  the prediction function (such as an ML model) $f$, Model Reliance of  $f$ on random variable $X$ can be \textit{informally} defined as
 			
 			\begin{equation*}
 				MR(f):=\frac{\text{Expected loss of \textit{f} under noise}}{\text{Expected loss of \textit{f} without noise}},
@@ -379,7 +406,7 @@
 				\hat{e}_{\text{orig}}(f):= \frac{1}{N} \sum_{i=1}^{N} L\left(f, (y_i, x_{1_i}, x_{2_i}) \right).
 			\end{equation*} 
 			
-			The sample estimate of $e_{\text{switch}}(f)$ can be done in two different ways, either by randomly permuting the values of the given feature or by dividing the feature's values in halves and the switching the halves. This thesis uses the latter, as it is computationally less demanding. (In both cases, the rest of the features and the predicted variables are intact.) It follows that the sample estimate of $e_{\text{switch}}(f)$ can be calculated as
+			The sample estimate of $e_{\text{switch}}(f)$ can be done in two different ways, either by randomly permuting the values of the given feature or by dividing the feature's values in halves and then switching the halves. This thesis uses the latter, as it is computationally less demanding. (In both cases, the rest of the features and the predicted variables are intact.) It follows that the sample estimate of $e_{\text{switch}}(f)$ can be calculated as
 			
 			
 			\begin{equation*}
@@ -397,7 +424,7 @@
 				\widehat{MR}(f):=\frac{\hat{e}_{\text{switch}}(f)}{\hat{e}_{\text{orig}}(f)}.
 			\end{equation*}
 				
-			That is, when calculating reliance of the model on a given feature, two predictions are made using the model: one is the usual one, with all features as well as the target undisturbed, the other is almost the same, except that we have disturbed the given feature (and the given feature only) by swapping halves of its values. The loss of both predictions is then computed as usual. Model Reliance is then the ratio of these two losses, the disturbed loss divided by the undisturbed one.   
+			That is, when calculating reliance of the model on a given feature, two predictions are made using the model: the usual one, with all features as well as the target undisturbed, and the other one, identical in all aspects except for the disturbance in the assessed feature. The loss of both predictions is then computed as usual. Model Reliance is then the ratio of these two losses, the disturbed loss divided by the undisturbed one.   
 			
 		\subsubsection{Portfolio Reliance}
 			\label{chap:portfolio_reliance}
@@ -410,7 +437,7 @@
 		
 			Note that the metric is not a ratio, but a difference, which allows to interpret the metric directly as the decrease in the profitability of the trading strategy.   
 			
-			This means that $\hat{e}_{\text{switch}}$ and $\hat{e}_{\text{switch}}$ are calculated slightly differently, denote them $\hat{r}_{\text{switch}}$ and $\hat{r}_{\text{switch}}$:
+			This means that $\hat{e}_{\text{orig}}$ and $\hat{e}_{\text{switch}}$ are calculated slightly differently, denote them $\hat{r}_{\text{orig}}$ and $\hat{r}_{\text{switch}}$:
 							
 			\begin{equation*}
 				\hat{r}_{\text{orig}}(f):= \frac{1}{N} \sum_{i \in L_{orig}} y_i - \frac{1}{N} \sum_{i \in S_{orig}} y_i, 
@@ -423,32 +450,7 @@
 			where $L_{orig}$ ($S_{orig}$) is the long (short) portfolio constructed using predictions from the undisturbed data and $L_{switch}$ ($S_{switch}$) is the long (short) portfolio constructed using predictions from the disturbed data. The data distortion is done in the same manner as in Model Reliance, i.e., values of the particular features are swapped across halves, which makes the feature uninformative of the return while preserving its marginal distribution. The portfolios are constructed as described in \ref{chap:met_backtest}, using top 10\% of stocks for long and bottom 10\% for short, as ordered by out-of-sample predictions. 
 			   
 			
-		\subsubsection{(Local) Integrated Gradients}
-			\label{chap:integrated_gradient}
-			Integrated Gradients \citep{sundararajan2017axiomatic} is a local measure of feature importance, i.e., it is computed for each observation separately. It considers the gradient of the prediction with respect to the predictors. If a small change in a predictor's value has large effect on the prediction, the value of the gradient is large.
-			
-			Again, denote $f: \mathbb{R}^k \rightarrow \mathbb{R}$ the prediction function (here, the NN model). Further, denote $\vec{z} \in  \mathbb{R}^k$ a single input with $k$ scalar elements, where $k$ denotes the total number of features (here, 30). Let $\vec{z'} \in  \mathbb{R}^k$ be a \textit{baseline input}, an observation that can be considered as a point from which the other observations depart. (For example, in case of inputs being images, the baseline can be a black image. In this thesis, it is a vector of zeros, as motivated below.) 
-			
-			For simplicity of the notation, assume that $f: \mathbb{R}^k \rightarrow [0,1]$. The Integrated Gradient of $i^{th}$ feature of the input $\vec{z}$ is defined as 
-			
-			\begin{equation*}
-				IG_i(\vec{z}) := (z_i - z_i') \int_{\alpha=0}^{1} \frac{\partial f(\vec{z'} + \alpha(\vec{z}-\vec{z'}))}{\partial z_i}d\alpha,
-			\end{equation*}
-			
-			where $\frac{\partial f(\vec{z})}{\partial z_i}$ stands for the gradient of $f(\vec{z})$ along the $i^{th}$ dimension. This means that the measure considers a straight path in $\mathbb{R}^k$ from the baseline input ${\vec{z}'}$ to the given input ${\vec{z}}$ and calculates the gradient of prediction at all points along that path. The Integrated Gradient measure cumulates these gradients by taking the integral across the path.  
-			
-			To calculate the Integrated Gradient of $i^{th}$ feature of the input $\vec{z}$ empirically, it is necessary to approximate the integral by summation across several points along the straightline path  \citep{sundararajan2017axiomatic}. That is:  
-			
-			\begin{equation*}
-				IG_i^{\text{approx}}(\vec{z}) := (z_i - z_i') \sum_{k=1}^{m} \frac{\partial f(\vec{z'} + \frac{k}{m}(\vec{z}-\vec{z'}))}{\partial z_i}\frac{1}{m},
-			\end{equation*} 
-	
-			where $m$, called the \textit{step size}, is the number of the steps in the Reimman approximation of the integral, here, the number of points along the straightline path at which evaluate the gradient. 
-			
-			Two implementation decisions must be made when calculating the Integrated Gradients: first, choosing the right baseline input, and second, choosing the right the step size. First, the baseline input should be chosen such that it can be interpreted as "no signal". In this thesis, there are two possible baselines: random noise and all-zero input. The latter was chosen, as it lends itself well to the "no signal" interpretation: all the features are normalized between -1 and 1 and have a mean of 0, thus, an all-zero input can be considered a natural point of departure. Additionally, the authors recommend to check that the model's prediction at baseline is around zero. This is important because it allows to use Integrated Gradient to explain the prediction as a function of the input, and not as of the input and the baseline. Indeed, the predictions for the all-zero input are around zero, which confirms that the all-zero input is the correct baseline here. Second, the step size should be chosen such that the approximation is good enough: the authors recommend to check that the attributions approximately sum up to the difference between the prediction at $\vec{z}$ and at $\vec{z'}$. Given that the latter is around zero, it remains to check that the attributions for $\vec{z}$ sum up to the prediction at $\vec{z}$. (Note that this is a verification of passing the Completness Axiom, see Literature Review.) This thesis uses the step size of 50, which passes this summation check comfortably.  
-		
-		\subsubsection{Global Integrated Gradients}
-			Integrated Gradients, which is a local measure of feature importance by nature, are also used in this thesis as a global measure. (Recall that local measures answer the question of why was this particular prediction made, while global measures answer the question of which features are important for the model overall). The measure is turned global simply by averaging across all predictions. However, as both large negative and large positive local effects mean that the feature is important, it is necessary to take the average out of \textit{absolute} local values. The measure then says what is the average absolute size of the contribution of a feature to the predicted return. Thus, the features with large Global Integrated Gradient can be considered important for the model overall and used as a global feature importance measure.   
+	 
 			
 			
 			

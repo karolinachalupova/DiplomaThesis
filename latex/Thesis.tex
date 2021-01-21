@@ -41,7 +41,7 @@
 \def \FirstNameDP {Karolina} 				
 \def \LastNameDP {Chalupova} 							
 \def \Email {chalupova.karolina@gmail.com}
-\def \Year {2020}
+\def \Year {2021}
 \def \Place {Prague}
 \def \Subject {Can Machines Explain Stock Returns?}
 \def \Keywords {(interpretable) machine learning, neural networks, stock returns}
@@ -55,7 +55,7 @@
  	\href{http://ideas.repec.org/j/G12.html}{G12}
 }	
 \def \Thesisweb {\href{https://github.com/KarolinaChalupova/DiplomaThesis}}		%thesis webpage
-\def \AcademicYear {2019/2020}
+\def \AcademicYear {2020/2021}
 \def \Supervisor {doc.\ PhDr.\ Jozef Barun\'{i}k, Ph.D.}
 \def \Consultant {Mgr. Martin Hronec}
 \def \StudyProgram {Economics and Finance}
@@ -155,18 +155,18 @@
 	\fancyhead[LO]{\sffamily Master's Thesis Proposal}
 	\phantomsection											%bookmark anchor
 	\addcontentsline{toc}{chapter}{Thesis Proposal}			%add Proposal to the Table of Contents
-	\input{01_Frontmatter/prop.tex}							%Thesis proposal
+	\input{01_Frontmatter/prop.tex}						%Thesis proposal
 	\clearpage
 	%-----<<< ---------------- >>>-----
 	
 	%-----<<< MAIN MATTER >>>-----
 	\mainmatter                   							%start arabic pagination from 1
 	\autohdr												%automatic headers for main matter
-	\input{02_Mainmatter/01_Introduction.tex}              		%input field
-	\input{02_Mainmatter/02_Literature.tex}
-	\input{02_Mainmatter/03_Data_and_Methodology.tex}
-	\input{02_Mainmatter/04_Results.tex}
-	\input{02_Mainmatter/05_Conclusion.tex}
+	\input{02_Mainmatter/01_Introduction.tex}              	%pdfa ok
+	\input{02_Mainmatter/02_Literature.tex}					%pdfa ok
+	\input{02_Mainmatter/03_Data_and_Methodology.tex}		% NOT OK
+	\input{02_Mainmatter/04_Results.tex}					% NOT OK
+	\input{02_Mainmatter/05_Conclusion.tex}					%pdfa ok
 	\clearpage
 	%-----<<< -------- >>>-----
 	
@@ -181,10 +181,10 @@
 	%-----<<< APPENDIXES >>>-----
 	\backmatter												%uppercase roman pagination for back matter; appendices start
 	\autohdr												%automatic headers     				
-	\input{03_Backmatter/01_App.tex}           				%input file
-	\input{03_Backmatter/02_App.tex}           				%input file
-	\input{03_Backmatter/03_App.tex}           				%input file
-	\input{03_Backmatter/99_App.tex}           				%input file
+	\input{03_Backmatter/01_App.tex}           				% NOT OK 
+	\input{03_Backmatter/02_App.tex}           				%numerical results, pdfa ok
+	\input{03_Backmatter/03_App.tex}           			    %model reliance figure, pdfa ok
+	\input{03_Backmatter/99_App.tex}           				%internet appendix, pdfa ok
 	\clearpage
 	%-----<<< --------- >>>-----
 \end{document}

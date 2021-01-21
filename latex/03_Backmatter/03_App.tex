@@ -1,67 +1,19 @@
-\chapter{Additional Metrics}
+\chapter{Model Reliance: Additional Feature Importance Metric}
 \label{chap:additional_metrics} 
 
-As described in \ref{chap:met}, Portfolio Reliance metric is a close cousin of Model Reliance \cite{fisher2019all}. Both measure global importance of a feature by permuting the feature randomly and observing the deterioration in model performance. Intuitively, if a feature is important, making it uninformative should decrease performance. The metrics differ in how performance is defined. Portfolio Reliance looks at the deterioration in mean return on long-short portfolios based on the model's prediction, while Model Reliance looks at the decrease in the model's loss (here, the Mean Squared Error). As presented in Section \ref{chap:res}, the main predictive ability of the models stems from predicting well-performing stocks, while the models are not very useful for predicting the entire universe of stocks. Another issue is that Mean Squared Error is rather noisy, which is likely due to low signal-to-noise ratio of the data. Both of these factors cause Model Reliance to be rather uninformative relative to Portfolio Reliance. This is why Portfolio Reliance is presented in the main results, while Model Reliance is given here in the Appendix. 
+As described in Chapter \ref{chap:met}, Portfolio Reliance metric proposed in this thesis is a close cousin of Model Reliance \citep{fisher2019all}. Both measure global importance of a feature by permuting the feature and observing the resulting deterioration in model performance. Intuitively, if a feature is important, making it uninformative should decrease performance. The metrics differ in how performance is defined. Portfolio Reliance looks at the deterioration in mean return on long-short portfolios formed based on the model's prediction, while Model Reliance looks at the decrease in the model's loss (here, the Mean Squared Error). As presented in Section \ref{chap:res}, the main predictive ability of the models stems from predicting extreme returns, which motivates Portfolio Reliance as a metric which studies the interpretation of the predictions at the tails of the return distribution. Model Reliance, on the other hand, studies the entire distribution of returns.
+
+The values of Model Reliance have a ready interpretation: recall from Chapter \ref{chap:met} that Model Reliance is a ratio of the Mean Squared Error of the prediction without and with feature distortion. The values of Model Reliance are here above 1, meaning that distorting features harms the prediction. The higher the Model Reliance value, the more the Mean Squared Error is harmed by the distortion and the distorted feature is thus more important.
+
+Since Model Reliance studies global feature importance in the entire returns distribution, its results can be compared to Global Integrated Gradients, the global feature importance measure employed in this thesis. The results for Model Reliance shown in Figure \ref{fig:mr_blues} provide a further support for the main result as a robustness check. The order of features by importance is similar if computed with two very different measures (Integrated Gradients and Model Reliance). However, Model Reliance seems to have a lower "sensitivity" in distinguishing feature importance, that is, many features, especially the unimportant ones, have very similar values of Model Reliance. On the other hand, Integrated Gradients appear more sensitive. A possible cause of the Model Reliance's lower "sensitivity" could be that Mean Squared Error of the predictions is quite noisy in the task of forecasting stock returns.
+ 
 
 \begin{figure}	
 	\centering		
-	\begin{subfigure}[t]{\textwidth}
-		\includegraphics[width=\textwidth]{Figures/mr_blues.pdf}
-		\caption{Values of Model Reliance}
-		\label{fig:mr_blues}
-	\end{subfigure}
-	
-	\begin{subfigure}[t]{\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{Figures/mr_relative.pdf}
-		\caption{Relative Values of Model Reliance}
-		\label{fig:mr_relative}
-	\end{subfigure}
+	\includegraphics[width=\textwidth]{Figures/mr_blues.pdf}
 	\caption{Global Feature Importance Measured with Model Reliance.}
+	\label{fig:mr_blues}
 	\medskip
 	\small
-	Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Panel (\subref{fig:mr_blues}) shows values of the Model Reliance for all features, for all models.  Panel (\subref{fig:mr_relative}) shows relative importance of the features: values of Model Reliance are divided by the value for the most important feature, so as to unify the scale across the different models. The features are ordered in descending order by mean value computed across models.
-	\label{fig:mr_ensemble}
-\end{figure}
-
-\begin{figure}	
-	\centering		
-	\begin{subfigure}[t]{\textwidth}
-		\includegraphics[width=\textwidth]{Figures/mr_relative.pdf}
-		\caption{Main Result}
-		\label{fig:mr_time_main}
-	\end{subfigure}
-	
-	\begin{subfigure}[t]{\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{Figures/mr_time_relative.pdf}
-		\caption{Time Decomposition}
-		\label{fig:mr_time_relative}
-	\end{subfigure}
-	\caption{Global Feature Importance in Time as Measured by Integrated Gradients}
-	\label{fig:mr_time}
-	\medskip
-	\small
-	Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Both panels show relative values of Model Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models and time periods. 
-\end{figure}
-
-\begin{figure}	
-	\centering		
-	\begin{subfigure}[t]{\textwidth}
-		\includegraphics[width=\textwidth]{Figures/mr_relative_without_lr.pdf}
-		\caption{Main Result}
-		\label{fig:mr_seeds_main}
-	\end{subfigure}
-	
-	\begin{subfigure}[t]{\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{Figures/mr_seeds_relative.pdf}
-		\caption{Decomposition Into Random Seeds}
-		\label{fig:mr_seeds_relative}
-	\end{subfigure}
-	\caption{Global Feature Importance across Random Seeds as Measured by Model Reliance}
-	\label{fig:mr_seeds}
-	\medskip
-	\small
-	Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Both panels show relative values of Model Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models.
+	Column \textit{LR} shows feature importance in linear regression and columns \textit{NN1} to \textit{NN4} the neural networks of respective depths. The figure shows values of the Model Reliance for all features. The features are ordered in descending order by mean value computed across the four neural networks (column \textit{Mean}).
 \end{figure}

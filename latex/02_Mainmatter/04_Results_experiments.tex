@@ -1,0 +1,51 @@
+\chapter{Results}
+\label{chap:res} 
+	
+	\begin{figure}	
+	\centering		
+	\begin{subfigure}[t]{\textwidth}
+		\includegraphics[width=\textwidth]{Figures/pdfa/ig_relative_without_lr.pdf}
+		\caption{Main Result}
+		\label{fig:ig_seeds_main}
+	\end{subfigure}
+	
+	\begin{subfigure}[t]{\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{Figures/pdfa/ig_seeds_relative.pdf}
+		\caption{Decomposition into Random Seeds}
+		\label{fig:ig_seeds_relative}
+	\end{subfigure}
+	\caption{Feature Importance across Random Seeds as Measured by Integrated Gradients}
+	\label{fig:ig_seeds}
+	\medskip
+	\small
+	NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Global Integrated Gradient: all values are divided by the value for the most important feature, so as to unify the scale across the different models. 
+\end{figure}
+
+\begin{figure}	
+	\centering		
+	\begin{subfigure}[t]{\textwidth}
+		\includegraphics[width=\textwidth]{Figures/pdfa/pr_relative_without_lr.pdf}
+		\caption{Main Result}
+		\label{fig:pr_seeds_main}
+	\end{subfigure}
+	
+	\begin{subfigure}[t]{\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{Figures/pdfa/pr_seeds_relative.pdf}
+		\caption{Decomposition Into Random Seeds}
+		\label{fig:pr_seeds_relative}
+	\end{subfigure}
+	\caption{Feature Importance across Random Seeds as Measured by Portfolio Reliance}
+	\label{fig:pr_seeds}
+	\medskip
+	\small
+	NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Portfolio Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models.
+\end{figure}
+
+
+
+	 
+
+	
+	

@@ -1,12 +1,14 @@
 \chapter{Results}
 \label{chap:res}
 
+This chapter presents the results in two distinct halves. First, Section \ref{chap:predictive_ability} reviews shows how the performance of the networks compares to the state of the art. Both accuracy of the predictions and ability to form profitable long-short portfolios used for trading is considered. This assessment forms a necessary background for the main analysis: the neural network interpretation, which is presented in the second half, Sections \ref{chap:local_feature_importance} and \ref{chap:global_feature_importance}. While the first half merely establishes that the performance of the networks is comparable to prior literature, the second half presents the original contribution of this thesis. 
+
 \section{Performance Evaluation}
 	
 	\subsection{Predictive Ability}
 		\label{chap:predictive_ability}
 	
-		Table \ref{tab:performance} shows the predictive ability of the networks. All four nets (NN1 to NN4) are rather similar in the mean errors of their predictions. The Mean Absolute Error is around 0.075, which is a rather high portion of the variability in monthly return (mean monthly return is 0.005 with 0.051 standard deviation).  However, these relatively high prediction errors are a commonplace in stock returns prediction and are due to the low signal-to noise ratio of financial data in general. The $R^2$ shows the fraction of variability in data explained by the model, above that of the naive forecast of zero return. The values range from 0.022\% for NN4 across 0.039\% for NN3 to 0.21\% for NN1 and finally 0.25\% for NN2. These numbers are somewhat lower than in \cite{gu2020empirical}, who report $R^2$ of around 0.35\%, but discussion with the authors of \cite{tobek2020does} reveals that the $R^2$ values found in this thesis are actually commonplace in the stock returns prediction task [TODO I can't find a proper citation, nobody seems to report R2].    
+		Table \ref{tab:performance} shows the predictive ability of the networks. All four nets (NN1 to NN4) are rather similar in the mean errors of their predictions. The Mean Absolute Error is around 0.075, which is a rather high portion of the variability in monthly return (mean monthly return is 0.005 with 0.051 standard deviation).  However, these relatively high prediction errors are a commonplace in stock returns prediction and are due to the low signal-to noise ratio of financial data in general. The $R^2$ shows the fraction of variability in data explained by the model, above that of the naive forecast of zero return. The values range from 0.022\% for NN4 across 0.039\% for NN3 to 0.21\% for NN1 and finally 0.25\% for NN2, which is a commonplace in the stock return prediction task, albeit somewhat lower than in \cite{gu2020empirical}, reporting $R^2$ of around 0.35\%. 
 		
 		Figure \ref{fig:r2} shows a decomposition of $R^2$ into deciles by return: the stocks are grouped into 10 groups, corresponding to the decile of their return, and $R^2$ is calculated separately for each decile. The results show that the predictive ability of the networks is higher the higher the return: put simply, the networks are good at predicting returns of stocks that end up performing very well and bad at predicting mediocre returns. In the top 10\% of stocks (decile 100), the networks explain as much as  0.5\% to 1\% of returns variability above naive forecast of 0. The performance is similarly good in the 80th and the 90th decile, but seems to be decreasing. For the 60th, 50th, 40th decile, the performance ranges around 0, meaning that the models explain as much variance as the naive forecast of 0 around the center of the returns distribution. For 30th decile, all models actually under-perform the naive 0 forecast (negative values of $R^2$). Some models (NN1 and NN3) seem to improve in the lowest decile, (barely) climbing out of the negative $R^2$ territory. This generally indicates that the models may be better at predicting returns of winners than mediocre and poorly-performing stocks, at least in terms of the explained variance of the data.    
 		
@@ -20,7 +22,8 @@
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/r2.pdf}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/r2.pdf}
+				%\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/mr_blues.pdf}
 				\caption{Decomposition of Out-of-Sample $R^2$ into Deciles}
 				\label{fig:r2}
 			\end{subfigure}
@@ -39,20 +42,22 @@
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
 				\centering	
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/backtest_cumreturns_models.pdf}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/backtest_cumreturns_models.pdf}
+				%\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/mr_blues.pdf}
 				\caption{Cumulative Returns on the Long-Short Portfolios}
 				\label{fig:backtest_cumreturns_models}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/backtest_cumreturns_ls.pdf}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/backtest_cumreturns_ls.pdf}
+				%\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/mr_blues.pdf}
 				\caption{Long and Short Legs of the Portfolio (NN1)}
 				\label{fig:backtest_cumreturns_ls}
 			\end{subfigure}
 			\caption{Cumulative Returns on the Long-Short Portfolio}
 			\medskip
 			\small
-			[TODO change labels in Panel b: Remove word Gross from ylabel, change label All Stocks to Market in legend]. NN1 to NN4 stand for neural networks of respective depths. As described in \ref{chap:met_backtest}, the portfolios are constructed by letting each network make out-of-sample prediction of returns in the next month, ordering the stocks by predicted return from highest to lowest, buying the top 10\% of stocks and short-selling the bottom 10\%. The Market portfolio is constructed by buying the entire universe of stocks available in the given month. All portfolios are equal-weighted. Panel (\subref{fig:backtest_cumreturns_models}) shows the long-short portfolios of all models, while Panel (\subref{fig:backtest_cumreturns_ls}) decomposes the long-short return of NN1 into the long and short legs. 
+			NN1 to NN4 stand for neural networks of respective depths. As described in \ref{chap:met_backtest}, the portfolios are constructed by letting each network make out-of-sample prediction of returns in the next month, ordering the stocks by predicted return from highest to lowest, buying the top 10\% of stocks and short-selling the bottom 10\%. The Market portfolio is constructed by buying the entire universe of stocks available in the given month. All portfolios are equal-weighted. Panel (\subref{fig:backtest_cumreturns_models}) shows the long-short portfolios of all models, while Panel (\subref{fig:backtest_cumreturns_ls}) decomposes the long-short return of NN1 into the long and short legs. 
 			\label{fig:cumulative_return}
 		\end{figure}     
 		
@@ -67,7 +72,8 @@
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/backtest_histogram.pdf}
+				\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/backtest_histogram.pdf}
+				%\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/mr_blues.pdf}
 				\caption{Histogram of Monthly Returns on the Long-Short Portfolio Generated by NN1}
 				\label{fig:backtest_histogram}
 			\end{subfigure}
@@ -80,16 +86,16 @@
 			
 		Table \ref{tab:backtest_descriptives_models} Figure \ref{fig:backtest_histogram}  and describe the distribution of monthly returns earned on long-short portfolios generated by the individual networks. As described in \ref{chap:met_backtest}, the portfolios are constructed by letting a network make out-of-sample prediction of returns in the next month, ordering the stocks by predicted return from highest to lowest, buying the top 10\% of stocks and short-selling the bottom 10\%. The figures also show the market return, which serves as a benchmark. All three figures show that all the networks beat the market returns by a large margin, which gives a clear sign of their ability to identify winners and losers ex ante, resulting in a profitable long-short trading strategy. The two figures are now discussed in turn in more detail.
 		
-		Table \ref{tab:backtest_descriptives_models} shows the descriptive statistics of monthly returns on the long-short portfolio. While the market earns 0.5\% in an average months, the networks earn more than double: 0.9\% for the worst-performing net (NN3) and 1.4\% for the best networks (NN1 and NN4). This translates to yearly return of 12, 15, 18 and 19\% (in NN3, NN2, NN4 and NN1 respectively), which comfortably beats the 7\% earned by the market. While beating the market in average return, the networks exhibit \textit{less} return volatility at the same time: the standard deviation of the market return is 0.05, while the networks' is around 0.04. This favorable risk-return trade-off is summarized in Sharpe Ratio of around 1 (compared to market's 0.3). This gives very similar performance to the prior literature: compare the Sharpe Ratios to \cite{gu2020empirical} (in brackets): 1.16 (1.16) for NN1, 1.05 (1.15) for NN2 and  1.23 (1.35) for NN4. The only exception is NN3, which has a considerably poorer Sharpe Ratio of 0.7 (1.20). \cite{tobek2020does} report Sharpe Ratios of the networks from 0.88 to 1.58, which further confirms that the performance of the networks in this thesis is state-of-the-art. The remaining rows in Table \ref{tab:backtest_descriptives_models} summarize the skewness and kurtosis of the distributions of monthly returns: NN1 and NN3 are skewed to the right, NN3 and NN4 to the left, and the tails are generally only somewhat lighter than that of standard normal distribution for all models (kurtosis from 2.5 to 3.0). Maximum Drawdown shows the loss a trader would suffer if she started trading in 2000 and existed in the least favorable moment possible: again, the networks beat the market (-0.27 to -0.32 compared to markets' -0.58), and are close to state-of-the-art (-0.15 to -0.26 in \cite{gu2020empirical} and -0.19 to -0.38 in \cite{tobek2020does}.)   
+		Table \ref{tab:backtest_descriptives_models} shows the descriptive statistics of monthly returns on the long-short portfolio. While the market earns 0.5\% in an average months, the networks earn more than double: 0.9\% for the worst-performing net (NN3) and 1.4\% for the best networks (NN1 and NN4). This translates to yearly return of 12, 15, 18 and 19\% (in NN3, NN2, NN4 and NN1 respectively), which comfortably beats the 7\% earned by the market. While beating the market in average return, the networks exhibit \textit{less} return volatility at the same time: the standard deviation of the market return is 0.05, while the networks' is around 0.04. This favorable risk-return trade-off is summarized in Sharpe Ratio of around 1 (compared to market's 0.3). This gives very similar performance to the prior literature: compare the Sharpe Ratios to \cite{gu2020empirical} (in brackets): 1.16 (1.16) for NN1, 1.05 (1.15) for NN2 and  1.23 (1.35) for NN4. The only exception is NN3, which has a considerably poorer Sharpe Ratio of 0.7 (1.20). \cite{tobek2020does} report Sharpe Ratios of the networks from 0.88 to 1.58, which further confirms that the performance of the networks in this thesis is state-of-the-art. The remaining rows in Table \ref{tab:backtest_descriptives_models} summarize the skewness and kurtosis of the distributions of monthly returns: NN1 and NN3 are skewed to the right, NN3 and NN4 to the left, and the tails are generally only somewhat lighter than that of standard normal distribution for all models (kurtosis from 2.5 to 3.0). Maximum Drawdown shows the loss a trader would suffer if she started trading in 2000 and exited in the least favorable moment possible: again, the networks beat the market (-0.27 to -0.32 compared to markets' -0.58), and are close to state-of-the-art (-0.15 to -0.26 in \cite{gu2020empirical} and -0.19 to -0.38 in \cite{tobek2020does}.)   
 		
-		Figure \ref{fig:backtest_histogram} visual illustrate the more favorable mean, standard deviation, skewness and kurtosis of the networks' return distributions than that of market's: the mean (and also all the deciles) are more to the right, the left tail is less pronounced and the right tail is also more favorable (meaning that investors experience less terrible months and more great months than when investing to the market). The somewhat lower standard deviation is also visible in the figure. Most months see a return of 0 to 2.5\%.       
+		Figure \ref{fig:backtest_histogram} further illustrates the more favorable mean, standard deviation, skewness and kurtosis of the networks' return distributions than that of market's: the mean (and also all the deciles) are more to the right, the left tail is less pronounced and the right tail is also more favorable (meaning that investors experience less terrible months and more great months than when investing to the market). The somewhat lower standard deviation is also visible in the figure. Most months see a return of 0 to 2.5\%.       
 		
 		Figure \ref{fig:backtest_cumreturns_models} shows the returns on the very same portfolios from a time-series perspective: it shows cumulative return earned at any time point since 2000 (beginning of the out-of-sample data). Again, market return is plotted as a benchmark. All networks consistently outperform the market (again, with a slight exception of the rather poorly performing NN3 in the early years). If trading from 2000 and exiting in 2018, an investor would pocket around 400\% of the initial investment (200\% from the poorly performing NN3 and 120\% for the market). The recessions are also visible: 2003, 2008 and 2018 saw negative returns, showing as decreasing cumulative return in the figure.      
 		 
 		Figure \ref{fig:backtest_cumreturns_ls} shows the decomposition of the cumulative return on the long-short portfolio\footnote{The portfolio is generated by NN1. Other architectures give similar results.} to its long and short legs. The figure also shows the market return, which serves as a benchmark. IT shows that the short-sold stocks are consistently below the market and in negative numbers, which translates to profits for the short position, while the long position is at par or better than the market. The short and long position combined result in a consistent out-performance. Also note that the short position helps to protect the portfolio in the recessions: The network was able to predict the losers if 2002 and 2008 recessions, which meant that the return of the long-short portfolio was partially insulated from the economic downturn.     
 		
 		
-		All the backtesting performance described to this point assumes that the long (short) position is created as top (bottom) 10\%  of the stocks, as ordered by predicted return. Table \ref{tab:backtest_descriptives_ls} describes how the results change if the focus of the positions would be more or less narrow (resulting in lower or higher number of firms in both positions: 8, 17, 88, 177, 177, and 355 from right to left).\footnote{The portfolio is generated by NN1. Other architectures give similar results.} The results reviewed until now are in the column 10--10 (meaning 10\% of the market is bought and 10\% short-sold). The column 20--20 represents the situation if the positions would be distributed into more firms (broader portfolios) and the columns 5--5 1--1 and 0.5--0.5 represent progressively narrower positions (less firms bought and sold). As is expected, the mean returns are higher for the narrower portfolios (as much as 44\% yearly for 1--1), but this comes at the cost of higher standard deviation (more volatile returns) and worse Maximum Drawdown. It appears that the optimum risk-return trade-off is with 5--5, which gives the highest Sharpe Ratio of 1.2. While all variants still beat the market in mean return, only 10--10 and 20--20 are less volatile than the market, which is because there are too little firms in the smaller portfolios  to ensure a decrease in volatility (e.g., 17 firms in the long and 17 in the short position for the 1--1).
+		All the backtesting performance described to this point assumes that the long (short) position is created as top (bottom) 10\%  of the stocks, as ordered by predicted return. Table \ref{tab:backtest_descriptives_ls} describes how the results change if the focus of the positions would be more or less narrow (resulting in lower or higher number of firms in both positions: 8, 17, 88, 177, 177, and 355 from right to left).\footnote{The portfolio is generated by NN1. Other architectures give similar results.} The results reviewed until now are in column \textit{10--10} (meaning 10\% of the market is bought and 10\% short-sold). Column \textit{20--20} represents the situation if the positions would be distributed into more firms (broader portfolios) and columns \textit{5--5}, \textit{1--1} and \textit{0.5--0.5} represent progressively narrower positions (less firms bought and sold). As is expected, the mean returns are higher for the narrower portfolios (as much as 44\% yearly for 1--1 allocation), but this comes at the cost of higher standard deviation (more volatile returns) and worse Maximum Drawdown. It appears that the optimum risk-return trade-off is with 5--5 allocation, which gives the highest Sharpe Ratio of 1.2. While all variants still beat the market in mean return, only 10--10 and 20--20 allocations are less volatile than the market, which is because there are too little firms in the smaller portfolios  to ensure a decrease in volatility (e.g., 17 firms in the long and 17 in the short position for the 1--1 allocation).
 		
 		\begin{table}
 			\centering
@@ -107,21 +113,21 @@
 	Panel (\subref{fig:local_ig_1}) of Figure \ref{fig:local_ig} illustrates how individual predictions of the networks can be interpreted. Particularly, any single prediction can be decomposed in an additive manner into the effects of individual features. The measure used for this decomposition is called Integrated Gradient; its use its motivated in Section \ref{chap:local_measures} and the methodological details are discussed in Section \ref{chap:integrated_gradient}. The Panel shows the values of Integrated Gradient for a single out-of-sample prediction of NN1. The predicted return is the sum of the values of Integrated Gradient across features. In other words, the Integrated Gradient of a single feature is exactly the change in the prediction (return) that is due to (or attributed to) that feature. For example, in the case of the particular prediction analyzed in Panel (\subref{fig:local_ig_1}),\textit{ Whited-Wu Index} increases the predicted return by 0.4 percentage points, \textit{52-Week High} decreases it by 0.4 percentage points (i.e., back to 0), \textit{Earnings Forecast-to-Price} decrease it further by 0.1 percentage points, etc. for all features. 
 	
 	Panel (\subref{fig:local_ig_boxplot}) of the same figure shows the same, but for all out-of-sample predictions of NN1. For each feature, the boxplot shows the distribution of the values of Integrated Gradient across predictions. 
-	A striking pattern emerges: some features clearly have more influence on the predictions than others. The most influential features appear on the top and include \textit{Whited-Wu Index}, \textit{52-Week High}, and \textit{Earnings Forecast-to-Price}, while the least influential features appear on the bottom, and their influence on the predicted return is usually 0. The next section, \ref{chap:global_feature_importance}, investigates this notion in much detail. 
+	A striking pattern emerges: some features clearly have more influence on the predictions than others. The most influential features appear on the top and include \textit{Whited-Wu Index}, \textit{52-Week High}, and \textit{Earnings Forecast-to-Price}, while the least influential features appear on the bottom, and their influence on the predicted return is usually 0. The next section, \ref{chap:global_feature_importance}, investigates this notion in detail. 
 	
 	It is important to understand why a feature can contribute both negatively and positively to the predicted return. This is not to be confused with the sign of the effect as we are used to it from linear regression: the values are not coefficients, but additive portions of the prediction. Say that the effect of \textit{Whited-Wu Index} is strictly linear and positive. Then, large positive returns would be due to large positive\textit{ Whited-Wu Index} (the feature contributes \textit{positively} to the predicted return in the sense of Figure \ref{fig:local_ig}) and, \textit{at the same time}, large negative returns would be due to large negative \textit{Whited-Wu Index} (the feature contributes \textit{negatively} to predicted return in the sense of Figure \ref{fig:local_ig}), while the association is positive in the classical linear regression sense. 
 		
 	\begin{figure}	
 		\centering		
 		\begin{subfigure}[t]{\textwidth}
-			\includegraphics[width=\textwidth]{Figures/local_ig_1.pdf}
+			\includegraphics[width=\textwidth]{Figures/pdfa/local_ig_1.pdf}
 			\caption{Single Prediction}
 			\label{fig:local_ig_1}
 		\end{subfigure}
 		
 		\begin{subfigure}[t]{\textwidth}
 			\centering
-			\includegraphics[width=\textwidth]{Figures/ig_boxplot.pdf}
+			\includegraphics[width=\textwidth]{Figures/pdfa/ig_boxplot.pdf}
 			\caption{All Predictions}
 			\label{fig:local_ig_boxplot}
 		\end{subfigure}
@@ -133,15 +139,15 @@
 	\end{figure}
 
 	
-	Figure \ref{fig:coefs} and Table \ref{tab:coefs} show again the contribution of features to the predicted return, but this time in terms of multiples of feature values: a feature contributes $x$ times its value to the predicted return (in other words, the feature value times $x$ equals the Local Integrated Gradient). The figure reports the distribution of these values across observations, while Column \textit{Mean} and \textit{Std} report the average and standard deviation of these distributions.  
+	Figure \ref{fig:coefs} and Table \ref{tab:coefs} show again the contribution of features to the predicted return, but this time in terms of multiples of feature values: a feature contributes $x$ times its value to the predicted return (in other words, the feature value times $x$ equals the Local Integrated Gradient). The figure reports the distribution of these values across observations, while columns \textit{Mean} and \textit{Std} report the average and standard deviation of these distributions.  
 	
 	Crudely speaking, this is an analogue of the "coefficients" from linear regression. 
 	However, there are two crucial differences. First, the "coefficient" is different across observations, and not the same for all like in linear regression. (The distribution of the values is seen in Figure \ref{fig:coefs}.) Second, the interpretation is slightly different as well. In linear regression, we can say that prediction changes by $x$ units in response to unit increase in value of a feature. Here, we do not operate with unit increases in features. Rather, we can say that on average (across observations), a feature contributes $x$ times the feature value to the predicted return. (It is useful to become familiar with the interpretation of Local Integrated Gradient first -- above -- then, this rephrasing in terms of multiples of feature values becomes more natural.) Also note that there are absolutely no established statistical properties of the \textit{Mean / Std} column in Table \ref{tab:coefs}, so the column cannot be interpreted as is usual in linear regression in terms of statistical significance of the effect. It merely says how much the mean is away from zero in terms of standard deviations. 
 	
-	Keeping these two differences in mind, Figure \ref{fig:coefs} and Table \ref{tab:coefs} allow to see the typical sign of the effect of a feature. For example, \textit{52-Week High} contributes on average 0.457 times its value to the predicted return (column Mean of the table), and the effect is usually positive across all observations (second boxplot from top in the figure). Indeed, the effect of \textit{52-Week High} is expected to be positive using prior literature (column \textit{Sign (Original)} of the table). Other features can be interpreted similarly.  
+	Keeping these two differences in mind, Figure \ref{fig:coefs} and Table \ref{tab:coefs} allow to see the typical sign of the effect of a feature. For example, \textit{52-Week High} contributes on average 0.457 times its value to the predicted return (column \textit{Mean}), and the effect is usually positive across all observations (second boxplot from top in the figure). Indeed, the effect of \textit{52-Week High} is expected to be positive according to prior literature (column \textit{Sign (Original)} of the table). Other features can be interpreted similarly. It is useful to compare the distribution of the effects in Figure \ref{fig:coefs} to the column \textit{Sign (Original)} of the table \ref{tab:coefs}. In some cases, the direction suggested by prior literature is overwhelmingly confirmed (for example, see the notably positive impact of \textit{Earnings Forecast-to-Price} or the negative impact of \textit{Duration of Equity}, visible as boxplots clearly to the right (left) of 0 in the figure). Many similar examples can be found in the figure. In addition, there are several interesting cases where the variable appears to influence returns in both positive and negative direction, both with large magnitudes: notably, \textit{Whited-Wu Index}, \textit{Short-Term Reversal}, and \textit{Maximum Return}. While these variables clearly influence the predictions to a large extent, the effect appears to be non-monotonous. This is further supported in \ref{chap:global_feature_importance}, which shows that these variables are precisely those which the networks consider important and linear regression unimportant. This offers additional evidence of their non-linear (e.g., U-shaped, or interaction-intensive) relationship to returns. This offers some indication that these variables might have a more complex relationship to returns than previously thought. 
 	
 	\begin{figure}
-		\includegraphics[width=\textwidth]{Figures/ig_coefs.pdf}
+		\includegraphics[width=\textwidth]{Figures/pdfa/ig_coefs.pdf}
 		\caption{Distribution of Feature Effects}
 		\label{fig:coefs}
 		\medskip
@@ -155,40 +161,40 @@
 		\label{tab:coefs}
 		\medskip
 		\small
-		Column \textit{Mean} shows how on average (across observations) a feature contributes to the predicted return in terms of multiple of the values of the observation. For each feature, the value is obtained by first calculating, for each observation, the feature's contribution to the prediction (Local Integrated Gradient) divided by the value of the feature, and second, averaging across all observations. Column \textit{Std} is calculated in the same manner, but standard deviation is computed instead of average in the second step. Column \textit{Sign (Original)} shows the sign of the feature as per its original paper (all original papers assume linear relationship between the feature and the return, and the sign is the sign of the coefficient in linear regression). Column \textit{Sign (Here)} shows simply the sign of the column \textit{Mean}. The results are calculated using all out-of-sample predictions of NN1.
+		Column \textit{Mean} shows how on average (across observations) a feature contributes to the predicted return in terms of multiple of the values of the observation. For each feature, the value is obtained by first calculating, for each observation, the feature's contribution to the prediction (Local Integrated Gradient) divided by the value of the feature, and second, averaging across all observations. Column \textit{Std} is calculated in the same manner, but standard deviation is computed instead of average in the second step. Column \textit{Sign (Original)} shows the sign of the feature as per its original paper (all original papers assume linear relationship between the feature and the return, and the sign is the sign of the coefficient in linear regression). Column \textit{Sign (Here)} shows simply the sign of the \textit{Mean} column. The results are calculated using all out-of-sample predictions of NN1.
 	\end{table}
 	
 	Columns \textit{Sign (Original)} and \textit{Sign (Here)} of the table give direction of the effect in the original paper that published the feature and here. The original papers all assume linear relationship, so the sign is that of the coefficient from linear regression of returns on the feature and control variables. The sign found in this thesis is simply the sign of the \textit{Mean} column, i.e., the direction in which the feature influences predicted return on average in network NN1. 
 	
-	In 22 cases out of 30, the signs found in this thesis agrees with sign published in the respective original paper, which is quite notable. First, it confirms that the results are not off, but rather follow the economic intuitions and findings of prior literature (Table \ref{tab:characteristics_motivation}). Second, it indicates that although non-linearity is often cited as the driving force of network's performance in predicting stock returns (\cite{gu2020empirical}), there still seems to be at least some trace of \textit{direction} in the effect of the features on the returns.   
+	In 22 cases out of 30, the sign found in this thesis agrees with sign published in the respective original paper, which is quite notable. First, it confirms that the results are not off, but rather follow the economic intuitions and findings of prior literature (Table \ref{tab:characteristics_motivation}). Second, it appears that the relationships between the predictors and returns are monotonous (albeit possibly non-linear), in other words, it seems that predictors' effects have a general direction, either positive, or negative, and moreover, that this direction agrees with economic theory. To the best of my knowledge, this work is the first to offer this insight: it appears that return-predicting neural networks overwhelmingly agree with the economic mechanisms proposed over the past 50 years of asset-pricing research.
 	
-	In only 8 cases out of 30, the signs do not agree with the original paper. 4 of these cases are the least important variables (4 bottom rows of the table), so this discrepancy can be considered of little import, since the effect of the variables on returns is close to 0 anyway. The remaining 4 discrepancies are more interesting: \textit{Whited-Wu Index}, \textit{Short-Term Reversal}, \textit{Maximum Return}, and \textit{Coefficient of Variation of Share Turnover}. As discussed later, these are precisely the 4 variables which the networks consider important and linear regression unimportant, which indicates their likely non-linear relationship to returns. Since the relationships are likely non-linear, summarizing their "direction" with a "sign" is not meaningful. This can explain their discrepancy in sign between the original paper and the neural network in this thesis. 
+	In only 8 cases out of 30, the signs do not agree with the original paper. 4 of these cases are the least important variables (4 bottom rows of the table), so this discrepancy can be considered of little import, since the effect of the variables on returns is close to 0 anyway. The remaining 4 discrepancies are more interesting: \textit{Whited-Wu Index}, \textit{Short-Term Reversal}, \textit{Maximum Return}, and \textit{Coefficient of Variation of Share Turnover}: we already noted that these variables appear to have a non-monotonous relationship to returns according to Figure \ref{fig:coefs}. As a result, summarizing these relationships' direction with a sign may not be meaningful, which can explain their discrepancy in sign between the original paper and the neural network employed in this thesis. 
 	
 	
 \section{Global Feature Importance}
 	\label{chap:global_feature_importance}
 	
-	Figures \ref{fig:ig_ensemble} and \ref{fig:pr_ensemble} shows the values of feature importance for all features, as measured respectively by Global Integrated Gradients and Portfolio Reliance. First two subsections now discuss the results for the two measures in turn, the third subsection compares the results of the two measures, and the following subsections discuss stability of the results in time and across random seeds. 
+	This section offers insight into what variables the neural networks consider important for stock return prediction. The insight is called global, as it focuses on the overall workings of the model, rather than on explaining individual predictions. Figures \ref{fig:ig_ensemble} and \ref{fig:pr_ensemble} shows the values of feature importance for all features, as measured respectively by Global Integrated Gradients and Portfolio Reliance. The former shows feature importance across the entire returns' distribution and offers new insights into the old asset-pricing question of which variables explain differences across stock returns, while the latter focuses on the long-short profitability in the tails of the returns' distribution, which offers implications for financial practice. First two subsections now discuss the results for the two measures in turn, the third subsection compares the results of the two measures, and the following subsections discuss stability of the results in time and across random seeds. 
 	
 	\subsection{Integrated Gradient}
 	
 		\begin{figure}	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/ig_blues.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/ig_blues.pdf}
 				\caption{Values of Global Integrated Gradient}
 				\label{fig:ig_blues}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/ig_order.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/ig_order.pdf}
 				\caption{Order of Features by Importance}
 				\label{fig:ig_order}
 			\end{subfigure}
 			\caption{Feature Importance Measured with Global Integrated Gradient}
 			\medskip
 			\small
-			Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Column Mean gives the average value across the neural networks. Panel (\subref{fig:ig_blues}) shows values of the Global Integrated Gradient for all features, for all models and shows an average share of predicted return attributed to the feature (in same scale as the return itself, i.e., percentage points).  Numerical values for Panel (\subref{fig:ig_blues}) are given in the Appendix \ref{chap:numerical_results} in Figure \ref{tab:ig_blues}. Panel (\subref{fig:ig_order}) shows ordering of features by their importance, with bright colors corresponding to high order. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Global Integrated Gradient. 
+			Column \textit{LR} shows linear regression and columns \textit{NN1} to \textit{NN4} the neural networks of respective depths. Column \textit{Mean} gives the average value across the neural networks. Panel (\subref{fig:ig_blues}) shows values of the Global Integrated Gradient for all features, for all models and shows an average share of predicted return attributed to the feature (in same scale as the return itself, i.e., percentage points).  Numerical values for Panel (\subref{fig:ig_blues}) are given in the Appendix \ref{chap:numerical_results} in Figure \ref{tab:ig_blues}. Panel (\subref{fig:ig_order}) shows ordering of features by their importance, with bright colors corresponding to high order. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Global Integrated Gradient. 
 			\label{fig:ig_ensemble}
 		\end{figure}
 	
@@ -199,7 +205,7 @@
 		
 		In light of economic motivation behind the features (Table \ref{tab:characteristics_motivation}), the most important categories seem to be financial constraints (\textit{Whited-Wu Index}), limited attention and behavioral biases of investors (\textit{Earnings Forecast-to-Price}, \textit{52-Week High and Short-Term Reversal}), risk of illiquidity (\textit{Liquidity Beta 3 and Liquidity Beta 5}), seasonality (\textit{Seasonality 6-10 A}), and value effect (\textit{Duration of Equity}). 
 		
-		The figure also shows that all neural networks agree on the importance to a great extent, both in values of the measure and in the implied order of the features. This is visible in both panels as same color across a row. Additionally, the figure shows that linear regression (column LR) does not agree with the neural networks on the importance of some features, most notably, \textit{Whited-Wu Index}, \textit{Liquidity Beta 5} and \textit{Short-Term Reversal} are considered important by the networks, but very marginal by the linear regression. This is most likely because the impact of the features is not linear: either, their relationship with returns is not well-fitted by linear function, or they only impact the return through an interaction with other features. (Both the non-linearities and interaction terms are captured by the hidden layers of the networks but not by the linear regression due to the architecture of the respective models.)  	
+		The figure also shows that all neural networks agree on the importance to a great extent, both in values of the measure and in the implied order of the features. This is visible in both panels as same color across a row. Additionally, the figure shows that linear regression (column \textit{LR}) does not agree with the neural networks on the importance of some features, most notably, \textit{Whited-Wu Index}, \textit{Liquidity Beta 5} and \textit{Short-Term Reversal} are considered important by the networks, but very marginal by the linear regression. This is most likely because the impact of the features is not linear: either, their relationship with returns is not well-fitted by linear function, or they only impact the return through an interaction with other features. (Both the non-linearities and interaction terms are captured by the hidden layers of the networks but not by the linear regression due to the architecture of the respective models.)  	
 	
 
 	
@@ -208,70 +214,67 @@
 		\begin{figure}	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/pr_blues.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/pr_blues.pdf}
 				\caption{Values of Portfolio Reliance}
 				\label{fig:pr_blues}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
 				\centering
-				\includegraphics[width=\textwidth]{Figures/pr_order.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/pr_order.pdf}
 				\caption{Order of Features by Importance}
 				\label{fig:pr_order}
 			\end{subfigure}
 			\caption{Feature Importance Measured with Portfolio Reliance.}
 			\medskip
 			\small
-			Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. Column Mean gives the average value across the neural networks. Panel (\subref{fig:pr_blues}) shows values of the Portfolio Reliance for all features, for all models.  Panel (\subref{fig:pr_order}) shows ordering of features by their importance, with bright colors corresponding to high order. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Portfolio Reliance. 
+			Column \textit{LR} shows linear regression and columns \textit{NN1} to \textit{NN4} the neural networks of respective depths. Column \textit{Mean} gives the average value across the neural networks. Panel (\subref{fig:pr_blues}) shows values of the Portfolio Reliance for all features, for all models.  Panel (\subref{fig:pr_order}) shows ordering of features by their importance, with bright colors corresponding to high order. Label 1 --- bright yellow (30 --- black) corresponds to most (least) important feature in given model, as measured by highest (lowest) Portfolio Reliance. 
 			\label{fig:pr_ensemble}
 		\end{figure}
 		
-		Figure \ref{fig:pr_ensemble} shows importance of all features, for all models as measured by Portfolio Reliance. The measure shows how important a feature is for performance of the long-short portfolios (see \ref{chap:backtest}). Specifically, values represent the decrease in return on the long-short portfolio resulting from corrupting the feature (rendering it completely uninformative by permutation of its values; the methodology behind is discussed in Chapter \ref{chap:met)). Intuitively, if the mean return on the long-short portfolio decreases a lot when the feature is corrupted, the value of Portfolio Reliance is high and the feature is considered important. Same as with Figure \ref{fig:ig_ensemble}, the most (least) important features appear on top (bottom) of the figure. Again, Panel (\subref{fig:pr_blues}) shows the values of the measure, while Panel (\subref{fig:pr_order}) shows the order of the features from 1 to 30 (1 for most important). 
+		Figure \ref{fig:pr_ensemble} shows importance of all features, for all models as measured by Portfolio Reliance. The measure shows how important a feature is for performance of the long-short portfolios (see \ref{chap:backtest}). Specifically, values represent the decrease in return on the long-short portfolio resulting from corrupting the feature (rendering it completely uninformative by permutation of its values; the methodology behind is discussed in Chapter \ref{chap:met}. Intuitively, if the mean return on the long-short portfolio decreases a lot when the feature is corrupted, the value of Portfolio Reliance is high and the feature is considered important. Same as with Figure \ref{fig:ig_ensemble}, the most (least) important features appear on top (bottom) of the figure. Again, Panel (\subref{fig:pr_blues}) shows the values of the measure, while Panel (\subref{fig:pr_order}) shows the order of the features from 1 to 30 (1 for most important). 
 			
 		Panel (\subref{fig:pr_blues}) shows the values of Portfolio Reliance for all features (the exact numerical values are given in Appendix \ref{chap:numerical_results}). \textit{Whited-Wu Index} is again the most important feature. Its Portfolio Reliance value (mean across the networks) is 0.23, which means that the mean return on long-short portfolio decreases by 0.23 percentage points when \textit{Whited-Wu Index} is corrupted. Considering that the mean monthly return is around 1 percentge point (1.4 for NN1, 0.9 for NN3, other in between), it means distorting the feature takes away almost quarter of the performance. Two other features follow closely: \textit{ Earnings Forecast-to-Price} (0.215) and \textit{Volume to Market Value of Equity} (0.199). Next are four features with values between 0.138 and 0.1: \textit{52-Week High}, \textit{Seasonality 6-10 A}, \textit{Idiosyncratic Risk} and \textit{Short-Term Reversal}. Six other features have Portfolio Reliance above 0.05: \textit{Coefficient of Variation of Share Turnover}, \textit{Momentum-Reversal}, \textit{RD to Market Equity} and three seasonality measures. The rest of the variables have values close to 0 (or even slightly negative), which means they are unimportant or slighlty detrimental to the performance of the portfolios. 
 		
-		In terms of the economic motivation of the features (Table \ref{tab:characteristics_motivation}), the most important groups appear to be financial constraints (Whited-Wu Index), limited attention and behavioral biases of investors (\textit{Earnings Forecast-to-Price}, \textit{52-Week High}, \textit{Short-Term Reversal}, their attitude to risk (\textit{Idiosyncratic Risk}) and illiquidity (\textit{Volume to Market Value of Equity}).  
+		In terms of the economic motivation of the features (Table \ref{tab:characteristics_motivation}), the most important groups appear to be financial constraints (\textit{Whited-Wu Index}), limited attention and behavioral biases of investors (\textit{Earnings Forecast-to-Price}, \textit{52-Week High}, \textit{Short-Term Reversal}, their attitude to risk (\textit{Idiosyncratic Risk}) and illiquidity (\textit{Volume to Market Value of Equity}).  
 		
-		Again, the networks quite agree on the importance of individual features (albeit to a somewhat lesser extent than in Integrated Gradients, \ref{fig:ig_ensemble}). Same as with Integrated Gradients, linear regression (column LR) disagrees on the importance of \textit{Whited-Wu Index} and \textit{Short-Term Reversal}, and additionally, \textit{52-Week-High}. Again, the reasons for this are likely the same as discussed with the Integrated Gradient: these features likely have non-linear or interaction-intensive effect that the linear regression fails to capture.    
+		Again, the networks quite agree on the importance of individual features (albeit to a somewhat lesser extent than in Integrated Gradients, \ref{fig:ig_ensemble}). Same as with Integrated Gradients, linear regression (column \textit{LR}) disagrees on the importance of \textit{Whited-Wu Index} and \textit{Short-Term Reversal}, and additionally, \textit{52-Week-High}. Again, the reasons for this are likely the same as discussed with the Integrated Gradient: these features likely have non-linear (e.g., U-shaped) or interaction-intensive effect that the linear regression fails to capture.    
 		
 	\subsection{Comparison of Feature Importance Measures} 	
 
 	Figure \ref{fig:ig_pr_comparison} compares the results of the previous two subsections, namely, feature importance as measured by Integrated Gradient and by Portfolio Reliance. There is a crucial semantical difference between the two measures. The former captures the importane of the features across the entire universe of stocks, while the latter focuses only on the long-short portfolios constructed using the networks, i.e., on prediction of the very high and very low returns. Both approaches have a merit: the former closer to the academician's interest in explaining the cross-section of stock returns, the latter answers the practicioner's question of which features the networks rely on to predict winners and loosers correctly and thus outperform the market. As shown in \ref{chap:predictive_ability}, the networks are not particularly good at explaining the entire cross-section of returns (negative $R^2$ in the medium deciles), so Portfolio Reliance may be more insightful than Integrated Gradients in terms of answering the question of what contributes to the neural networks outstanding performance.
-
-	The figure shows that the two measures seem to agree on important features to a large extent. This is quite reassuring, since the measures are constructed completely differently, and yet their results support each other. \textit{Whited-Wu Index}, \textit{52-Week High}, \textit{Earnings Forecast-to-Price}, \textit{Seasonality 6-10 A}, and \textit{Short-Term Reversal} are among the most important features for both measures. 
 	
-	However, there are two features that are quite important in Integrated Gradients and unimportant in Portfolio Reliance: \textit{Liquidity Beta 5} and \textit{Lagged Momentum}. Considering the just-discussed semantical differences between the two measures, these two variables seem more important for predicting the cross-section rather than the tails of the return. Vice versa, two features are very important in Portfolio Reliance byt quite mediocre in Integrated Gradients: \textit{Volume to Market Value of Equity} and \textit{Idiosyncratic Risk}. These two variables apprear to be more important for predicting the tails of returns rather then the entire cross-section. 
-	
-	\begin{figure}
+	\begin{figure}[!htb]
 		\centering
-		\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/ig_pr_comparison.pdf}
+		\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{Figures/pdfa/ig_pr_comparison.pdf}
 		\caption{Comparison of Feature Importance Measured with Integrated Gradients and with Portfolio Reliance}
 		\label{fig:ig_pr_comparison}
 		\medskip
 		\small 
-		Column LR shows linear regression and columns NN1 to NN4 the neural networks of respective depths. The values of Integrated Gradients are the same as in Panel (\subref{fig:ig_blues}) of Figure \ref{fig:ig_ensemble}, the values of Portfolio Reliance are the same as in Panel (\subref{fig:pr_blues}) of Figure \ref{fig:pr_ensemble}. The only difference is that all columns are divided by their maximum value so as to unify the scale across the different measures. Values 1 correspond to the most important feature in given column, values of 0 to the least important feature. 
+		Column \textit{LR} shows linear regression and columns \textit{NN1} to \textit{NN4} the neural networks of respective depths. The values of Integrated Gradients are the same as in Panel (\subref{fig:ig_blues}) of Figure \ref{fig:ig_ensemble}, the values of Portfolio Reliance are the same as in Panel (\subref{fig:pr_blues}) of Figure \ref{fig:pr_ensemble}. The only difference is that all columns are divided by their maximum value so as to unify the scale across the different measures. Values 1 correspond to the most important feature in given column, values of 0 to the least important feature. 
 	\end{figure}
-	
-	 
 
+	The figure shows that the two measures seem to agree on important features to a large extent. This is quite reassuring, since the measures are constructed completely differently, and yet their results support each other. \textit{Whited-Wu Index}, \textit{52-Week High}, \textit{Earnings Forecast-to-Price}, \textit{Seasonality 6-10 A}, and \textit{Short-Term Reversal} are among the most important features for both measures. 
 	
+	However, there are two features that are quite important in Integrated Gradients and unimportant in Portfolio Reliance: \textit{Liquidity Beta 5} and \textit{Lagged Momentum}. Considering the just-discussed semantical differences between the two measures, these two variables seem more important for predicting the cross-section rather than the tails of the return. Vice versa, two features are very important in Portfolio Reliance byt quite mediocre in Integrated Gradients: \textit{Volume to Market Value of Equity} and \textit{Idiosyncratic Risk}. These two variables apprear to be more important for predicting the tails of returns rather then the entire cross-section. 
+
 	\subsection{Feature Importance In Time}
 	
-		This section decomposes the main results (Figures \ref{fig:ig_ensemble} \ref{fig:pr_ensemble}) into different time periods. Recall from Section \ref{chap:train_regularize_tune} that any model (e.g., NN1) is completely re-trained every year, as new data arrives and the training set thus expands (and validation and testing set rolls forward accordingly). The main results are average across all these independent instances of models in time. This section offers a decomposition. Technically, there are two reasons why feature importance may change in time. Either, the true data-generating process changed (i.e., the relationship between returns and firm characteristics changed), or the model converged to a different solution. [TODO any ideas how to comment on this if we can distinguish the two or at least have a hunch on which should be more important? Kelly shows that the results are quite stable in time, but he does not show the \textit{simulations} in time, only the actual results. The simulations could help, but I worry that I will have too little time to make them work.] 
+		This section decomposes the main results (Figures \ref{fig:ig_ensemble} and \ref{fig:pr_ensemble}) into different time periods. Recall from Section \ref{chap:train_regularize_tune} that any model (e.g., NN1) is completely re-trained every year, as new data arrives and the training set expands (and validation and testing set rolls forward accordingly). The main results are average across all these independent instances of models in time. This section offers a decomposition. Decomposing the results in time is interesting as it offers some insight to whether the relationship between returns and firm characteristics is stable in time. 
 		
-		Figures \ref{fig:ig_time} and \ref{fig:pr_time} show a decomposition of Integrated Gradient and Portfolio Reliance measures in time for all models, while Figure \ref{fig:time_mean} shows the same, but averaged across the four models. Integrated Gradient seems very stable across time: it seems that the cross-sectional relationships learned by the neural networks are rather stable in time. On the other hand, Portfolio Reliance is quite unstable in time, meaning that the ability of the models to predict future winners and loosers depends on different variables year after year. [TODO find out a satisfactory reconciliation of the two, comment more on this. Again, simulations would greatly help. ]
+		Figures \ref{fig:ig_time} and \ref{fig:pr_time} show a decomposition of Integrated Gradient and Portfolio Reliance measures in time for all models, while Figure \ref{fig:time_mean} shows the same, but averaged across the four models. Integrated Gradient seems very stable across time: it seems that the cross-sectional relationships learned by the neural networks are rather stable in time. On the other hand, Portfolio Reliance is quite unstable in time, meaning that the ability of the models to predict future winners and loosers depends on different variables year after year. 
 	
-		\begin{figure}	
+		\begin{figure}[!htb]	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/ig_relative_without_lr.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/ig_relative_without_lr.pdf}
 				\caption{Main Result}
 				\label{fig:ig_time_main}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
 				\centering
-				\includegraphics[width=\textwidth]{Figures/ig_time_relative.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/ig_time_relative.pdf}
 				\caption{Time Decomposition}
 				\label{fig:ig_time_relative}
 			\end{subfigure}
@@ -279,20 +282,20 @@
 			\label{fig:ig_time}
 			\medskip
 			\small
-			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Global Integrated Gradient: all values are divided by the value for the most important feature, so as to unify the scale across the different models and time periods. 
+			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Global Integrated Gradient: all values are divided by the value for the most important feature, so as to unify the scale across the different models and time periods. While Panel (a) shows the same (only rescaled) result as Figure \ref{fig:ig_blues}, Panel (b) offers its decomposition into the 19 testing years, 2000 to 2018, for each model. 
 		\end{figure}
 	
-		\begin{figure}	
+		\begin{figure}[!htb]	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/pr_relative_without_lr.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/pr_relative_without_lr.pdf}
 				\caption{Main Result}
 				\label{fig:pr_time_main}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
 				\centering
-				\includegraphics[width=\textwidth]{Figures/pr_time_relative.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/pr_time_relative.pdf}
 				\caption{Time Decomposition}
 				\label{fig:pr_time_relative}
 			\end{subfigure}
@@ -300,20 +303,20 @@
 			\label{fig:pr_time}
 			\medskip
 			\small
-			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Portfolio Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models and time periods. 
+			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Portfolio Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models and time periods.  While Panel (a) shows the same (only rescaled) result as Figure \ref{fig:pr_blues}, Panel (b) offers its decomposition into the 19 testing years, 2000 to 2018, for each model. 
 		\end{figure}
 	
-		\begin{figure}	
+		\begin{figure}[!htb]	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/ig_time_relative_mean.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/ig_time_relative_mean.pdf}
 				\caption{Integrated Gradients}
 				\label{fig:ig_time_mean}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
 				\centering
-				\includegraphics[width=\textwidth]{Figures/pr_time_relative_mean.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/pr_time_relative_mean.pdf}
 				\caption{Portfolio Reliance}
 				\label{fig:pr_time_mean}
 			\end{subfigure}
@@ -326,21 +329,23 @@
 	
 	\subsection{Feature Importance Across Random Seeds}
 	
-		This section decomposes the main results (Figures \ref{fig:ig_ensemble} \ref{fig:pr_ensemble}) into the component models (random seeds) of the ensemble models. Recall from Section \ref{chap:ensembling} that all the models presented in this thesis are ensemble models: each model is an average of 10 different versions of itself, where the versions (called random seed) differ in the initialization of values of the model's weights at the beginning of the training. (Reasons and methodological details of this procedure, called \textit{ensembling}, are discussed in Section \ref{chap:ensembling}.) Decomposing the results into random seeds is useful for several reasons. From one perspective, it can be perceived as a robustness check to see whether small changes in parameter values at the beginning of the optimization influence the results. From the other perspective, it offers a peek into why ensemble models work well: small errors made by the component models average out and the truth arises in the between. As \cite{fisher2019all} write in the title of their paper: "All models are wrong, but many are useful". From this perspectives, multiple patterns offer equally good explanations of the data (e.g., due to features being correlated), as a result, different random seeds find different relationships in the data and the ensemble model can combine this knowledge, which offers it an edge over any of its sub-components.
+		This section decomposes the main results (Figures \ref{fig:ig_ensemble} \ref{fig:pr_ensemble}) into the component models (random seeds) of the ensemble models. This provides a more nuanced understanding of how the ensemble models produce the predictions under the hood: a single prediction is made by each component model individually and the individual predictions are then averaged. These decompositions thus allow to see if the component models are in agreement about important variables or rather supplement one another. 
 		
-		Figures \ref{fig:ig_seeds} and \ref{fig:pr_seeds} show how the results of the ensemble models are decomposed into the random seeds, for Integrated Gradients and Portfolio Reliance respectively. There is a striking difference between the two: while Integrated Gradient seems quite stable across the random seeds, Portfolio Reliance is considerably less so. [TODO find out why this could be so] 
+		Figure \ref{fig:ig_seeds} shows the decomposition for Global Integrated Gradients, that is, the decision-making of the model overall. It shows that the component models are in agreement about importance of the variables to a large extent: the values of Integrated Gradient for a single variable are similar across the component models. This is true across the four model architectures. There is an interesting implication of this result: recall from Section \ref{chap:ensembling} that the component models are identical to each other, except for small differences in the initial weights at the beginning of the training. From this perspective, the results indicate that these small changes in values at the beginning of the optimization have little influence on the learned parameters. 
+		
+		Figure \ref{fig:pr_seeds} shows the decomposition for Portfolio Reliance measure, and thus offers insights into how variable importance at the tails of returns' distribution differs across component models. The component models still appear to agree, albeit to a lesser extent than in the case of Integrated Gradients, and in some cases, the component models rather appear to supplement each other. It can be speculated that this offers a peek into why ensemble models work well: small errors made by the component models average out and the truth arises in between -- as \cite{fisher2019all} write in the title of their paper: "All models are wrong, but many are useful." From this perspective, multiple patterns may offer equally good explanation of the data. As a result, different random seeds can find different relationships and when the ensemble model combines this knowledge, it gains an edge over any of its sub-components.  
 	
 		\begin{figure}	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/ig_relative_without_lr.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/ig_relative_without_lr.pdf}
 				\caption{Main Result}
 				\label{fig:ig_seeds_main}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
 				\centering
-				\includegraphics[width=\textwidth]{Figures/ig_seeds_relative.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/ig_seeds_relative.pdf}
 				\caption{Decomposition into Random Seeds}
 				\label{fig:ig_seeds_relative}
 			\end{subfigure}
@@ -348,20 +353,20 @@
 			\label{fig:ig_seeds}
 			\medskip
 			\small
-			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Global Integrated Gradient: all values are divided by the value for the most important feature, so as to unify the scale across the different models. 
+			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Global Integrated Gradient: all values are divided by the value for the most important feature, so as to unify the scale across the different models. Panel (a) shows the same (only rescaled) result as Figure \ref{fig:ig_blues} (the ensemble model), while Panel (b) offers its decomposition into the individual components of the ensemble. 
 		\end{figure}
 		
 		\begin{figure}	
 			\centering		
 			\begin{subfigure}[t]{\textwidth}
-				\includegraphics[width=\textwidth]{Figures/pr_relative_without_lr.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/pr_relative_without_lr.pdf}
 				\caption{Main Result}
 				\label{fig:pr_seeds_main}
 			\end{subfigure}
 			
 			\begin{subfigure}[t]{\textwidth}
 				\centering
-				\includegraphics[width=\textwidth]{Figures/pr_seeds_relative.pdf}
+				\includegraphics[width=\textwidth]{Figures/pdfa/pr_seeds_relative.pdf}
 				\caption{Decomposition Into Random Seeds}
 				\label{fig:pr_seeds_relative}
 			\end{subfigure}
@@ -369,7 +374,7 @@
 			\label{fig:pr_seeds}
 			\medskip
 			\small
-			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Portfolio Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models.
+			NN1 to NN4 denote neural networks of respective depths. Both panels show relative values of Portfolio Reliance: all values are divided by the value for the most important feature, so as to unify the scale across the different models. Panel (a) shows the same (only rescaled) result as Figure \ref{fig:pr_blues} (the ensemble model), while Panel (b) offers its decomposition into the individual components of the ensemble.
 		\end{figure}
 	
 	
