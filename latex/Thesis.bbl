@@ -1,4 +1,4 @@
-\begin{thebibliography}{62}
+\begin{thebibliography}{58}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 
@@ -6,13 +6,6 @@
 \textsc{Acharya}, V.~V. \& L.~H. \textsc{Pedersen} (2005): \enquote{Asset
   pricing with liquidity risk.}
 \newblock \emph{Journal of financial Economics} \textbf{77(2)}: pp. 375--410.
-
-\bibitem[{Ahn \emph{et~al.}(2012)Ahn, Horenstein, \& Wang}]{ahn2012determining}
-\textsc{Ahn}, S.~C., A.~R. \textsc{Horenstein}, \& N.~\textsc{Wang} (2012):
-  \enquote{Determining rank of the beta matrix of a linear asset pricing
-  model.}
-\newblock \emph{Technical report}, Working Paper, Arizona State University and
-  Sogang University.
 
 \bibitem[{Amihud(2002)}]{amihud2002illiquidity}
 \textsc{Amihud}, Y. (2002): \enquote{Illiquidity and stock returns:
@@ -24,6 +17,12 @@
   X.~\textsc{Zhang} (2006): \enquote{The cross-section of volatility and
   expected returns.}
 \newblock \emph{The Journal of Finance} \textbf{61(1)}: pp. 259--299.
+
+\bibitem[{Asparouhova \emph{et~al.}(2010)Asparouhova, Bessembinder, \&
+  Kalcheva}]{asparouhova2010liquidity}
+\textsc{Asparouhova}, E., H.~\textsc{Bessembinder}, \& I.~\textsc{Kalcheva}
+  (2010): \enquote{Liquidity biases in asset pricing tests.}
+\newblock \emph{Journal of Financial Economics} \textbf{96(2)}: pp. 215--237.
 
 \bibitem[{Baehrens \emph{et~al.}(2010)Baehrens, Schroeter, Harmeling, Kawanabe,
   Hansen, \& M{\"u}ller}]{baehrens2010explain}
@@ -74,21 +73,11 @@
   expenditures.}
 \newblock \emph{The Journal of Finance} \textbf{56(6)}: pp. 2431--2456.
 
-\bibitem[{Chi \emph{et~al.}(2010)Chi, Liu, \& Lau}]{chi2010network}
-\textsc{Chi}, K.~T., J.~\textsc{Liu}, \& F.~C. \textsc{Lau} (2010): \enquote{A
-  network perspective of the stock market.}
-\newblock \emph{Journal of Empirical Finance} \textbf{17(4)}: pp. 659--667.
-
 \bibitem[{Chordia \emph{et~al.}(2001)Chordia, Subrahmanyam, \&
   Anshuman}]{chordia2001trading}
 \textsc{Chordia}, T., A.~\textsc{Subrahmanyam}, \& V.~R. \textsc{Anshuman}
   (2001): \enquote{Trading activity and expected stock returns.}
 \newblock \emph{Journal of financial Economics} \textbf{59(1)}: pp. 3--32.
-
-\bibitem[{Cochrane(1996)}]{cochrane1996cross}
-\textsc{Cochrane}, J.~H. (1996): \enquote{A cross-sectional test of an
-  investment-based asset pricing model.}
-\newblock \emph{Journal of Political Economy} \textbf{104(3)}: pp. 572--621.
 
 \bibitem[{Cochrane(2009)}]{cochrane2009asset}
 \textsc{Cochrane}, J.~H. (2009): \emph{Asset pricing: Revised edition}.
@@ -254,10 +243,12 @@
   stochastic optimization.}
 \newblock \emph{arXiv preprint arXiv:1412.6980} .
 
-\bibitem[{Liew \& Vassalou(2000)}]{liew2000can}
-\textsc{Liew}, J. \& M.~\textsc{Vassalou} (2000): \enquote{Can book-to-market,
-  size and momentum be risk factors that predict economic growth?}
-\newblock \emph{Journal of Financial Economics} \textbf{57(2)}: pp. 221--245.
+\bibitem[{Li \emph{et~al.}(2020)Li, Turkington, \& Yazdani}]{li2020beyond}
+\textsc{Li}, Y., D.~\textsc{Turkington}, \& A.~\textsc{Yazdani} (2020):
+  \enquote{Beyond the black box: an intuitive approach to investment prediction
+  with machine learning.}
+\newblock \emph{The Journal of Financial Data Science} \textbf{2(1)}: pp.
+  61--75.
 
 \bibitem[{McLean \& Pontiff(2016)}]{mclean2016does}
 \textsc{McLean}, R.~D. \& J.~\textsc{Pontiff} (2016): \enquote{Does academic
@@ -290,16 +281,6 @@
   I.~r. \textsc{Tuna} (2006): \enquote{The implications of accounting
   distortions and growth for accruals and profitability.}
 \newblock \emph{The Accounting Review} \textbf{81(3)}: pp. 713--743.
-
-\bibitem[{Roll(1977)}]{roll1977critique}
-\textsc{Roll}, R. (1977): \enquote{A critique of the asset pricing theory's
-  tests part i: On past and potential testability of the theory.}
-\newblock \emph{Journal of financial economics} \textbf{4(2)}: pp. 129--176.
-
-\bibitem[{Rubinstein(1976)}]{rubinstein1976valuation}
-\textsc{Rubinstein}, M. (1976): \enquote{The valuation of uncertain income
-  streams and the pricing of options.}
-\newblock \emph{The Bell Journal of Economics} pp. 407--425.
 
 \bibitem[{Shapley \& Shubik(1971)}]{shapley1971assignment}
 \textsc{Shapley}, L.~S. \& M.~\textsc{Shubik} (1971): \enquote{The assignment

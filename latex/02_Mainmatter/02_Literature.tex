@@ -1,214 +1,59 @@
 \chapter{Literature Review}
 \label{chap:lit} 
 		 	
- 	The literature review proceeds as follows. First, I review the theory behind stock returns to explain the economic motivation of predictors used in this thesis. Second, I motivate the use of ML in stock returns prediction and review how ML interpretability has advanced in this field so far. Finally, I review ML interpretability literature with the aim of choosing a suitable feature importance measure.
+ 	The literature review proceeds as follows. First, general approaches to modelling stock returns are reviewed (the factor and characteristics models). Second, the characteristics models are discussed in more detail and show the current literature's answer to which variables predict stock returns. Then, the exposition motivates the use of neural networks in stock returns prediction and reviews the advances of interpretable ML in this domain. Finally, ML interpretability literature is examined with the aim of choosing a suitable feature importance measure.
  	
- 	\section{Modeling Stock Returns -- Which Predictors Should Matter?}
+ 	\section {Approaches to Modeling Stock Returns}
+ 	
+ 	There are two major approaches in literature to modeling stock returns: factor models and characteristics models. Factor models explain the returns as  
+ 	
+ 	\begin{equation}
+ 		E_t(R^i_{t+1}) = R^f_{t+1} + \beta_{1,i,t} \lambda_{1,t} + \beta_{2,i,t} \lambda_{2,t} + \ldots +  \beta_{K,i,t} \lambda_{K,t}. 
+ 	\end{equation}
+ 
+ 	In words, the expected return of stock $i$ at time $t$ is a function of the risk-free return at time $t$ and priced exposures to $K$ \textit{risk factors}. $\beta_{1, i, t}$ to $\beta_{K, i, t}$, called \textit{factor loadings},  are exposures of stock $i$ to the corresponding risk factor and represent the amount of risk inherent in asset $i$ due to its correlation to the risk factor. $\lambda_{1,t}$ to $\lambda_{K,t}$ are the prices of the $K$ risk factors at time $t$, common to all stocks \citep{kelly2019characteristics}. A well-known example of factor model is Capital Asset Pricing Model, where there is a single risk factor -- the return on market portfolio \citep{cochrane2009asset}. In the view of the Capital Asset Pricing Model, an investor is rewarded for holding risk inherent to stock $i$ that she cannot diversify away: the market risk. The assets that have negative correlation with the market are precious, because they provide wealth when the economy (the market, or other sources of wealth in general) performs poorly. In case of more factors (classical examples are \cite{fama1996multifactor, fama2015five}), the investor is similarly rewarded for holding stocks that covary with other sources of undiversifiable risk. 
+
+ 	The main issue with factor models is that the risk factors are unobserved and so are the risk prices, so we have no directly observed variables at the right hand side of the estimated equation. Typically, the factors must be constructed by the researchers themselves, before the risk exposures and finally risk prices can be estimated. Examples of this pre-specification include the market portfolio in the case of Capital Asset Pricing Model or portfolios organized based on a firm-specific variables, such as firm size in the Small-Minus-Big factor in  \cite{fama1993common}. Recently, \cite{bryzgalova2019forest} provide an interesting alternative to constructing portfolios using ML, particularly, random forests. In their study, the factors are not pre-specified by the researcher, but constructed using a data-driven decision tree. This has the advantage of not having to specify the factors \textit{ex ante}, but letting the data speak instead. 
+ 	
+ 	The other approach to modeling stock returns is using firm-specific variables, called \textit{characteristics}, such as firm size or past return, as explanatory variables: 
+ 	
+ 	\begin{equation}
+ 		E_t(r^i_{t+1}) = f(x_{1,i,t}, x_{2,i,t}, \ldots, x_{K,i,t}).
+ 		\label{eq:expected_return}
+ 	\end{equation}
+ 
+ 	In words, the expected return of stock $i$ in the next period ($t+1$) is a function ($f$) of the $K$ characteristics of stock $i$ at time $t$ ($\vec{x}_{i,t}$). Empirical examples include e.g.,  \cite{gu2020empirical, tobek2020does, bryzgalova2019forest}. This is also the approach taken by this thesis. The key advantage over factor models is that all explanatory variables are directly observed.
+ 	
+ 	Characteristics models and factor models are related: the motivation of using characteristics is that they proxy for the firm's exposure to sources of risk \citep{bryzgalova2019forest, kelly2019characteristics}. This is instructively seen in \cite{kelly2019characteristics}, who use characteristics as proxies for risk exposure quite explicitly: 
+ 	
+ 	\begin{align*}
+ 		E_t(R^i_{t+1}) & = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t} \\
+ 		R^i_{t+1} & = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \\
+ 		\vec{\beta}'_{i,t} &= g(x_{1,i,t}, x_{2,i,t}, \ldots, x_{K,i,t}), 
+ 	\end{align*}
+ 	
+ 	where the first two rows are the typical factor model and the third row shows how the exposures $\vec{\beta}_{i,t}$ are instrumented using $K$ characteristics $\vec{x}_{i,t}$. Under this approach, the risk exposures are first instrumented using characteristics and then the factor model is estimated. However, in case that uncovering the underlying factor structure is not the main focus, the simpler approach of using characteristics directly as per equation \ref{eq:expected_return} is common \citep{gu2020empirical, tobek2020does, bryzgalova2019forest}. This approach is now discussed in detail. 
+ 	
+ 	
+ 	\section{Modeling Stock Returns With Characteristics}
 	 	
 	 	\setlength{\epigraphwidth}{0.8\textwidth}
-	 	\epigraph{We have a lot of questions to answer: First, which characteristics really provide 	independent information about average returns?}{\cite{cochrane2011presidential}}
- 	
-	 	Valuing a stock amounts to putting a price tag on a stream of future payoffs. The field concerned with doing just that is called asset pricing. Consider the following basic asset-pricing equation \citep{cochrane2009asset}:
-	 	
-	 	\begin{equation}
-	 		p_t^i = E_t(m_{t+1} x_{t+1}^i ) \label{eq:pEmx}
-	 	\end{equation}
-	 	
-	 	In words, the price of an asset $i$ at time $t$ ($p_t^i$) is proportional to the expected asset's payoff at time $t+1$ ($x_{t+1}^i$). However, since the payoff does not come now ($t$), but in future ($t+1$), we discount it to present by the factor $m_{t+1}$, called the \textit{stochastic discount factor}. The term stochastic stands to express the idea that $m_{t+1}$ is not known with certainty at time $t$. There is only one assumption made in order to write the equation: it can be shown that $m_{t+1}$ exists if and only if the \textit{law of one price} holds, that is, if two assets generate the exact same payoff in all possible states of nature have the same price. If this is the case, there is a discount factor such that the equation holds for all assets $i$ \citep{cochrane2009asset}.
-	 	
-	 	In the stock market, equation \ref{eq:pEmx} translates to:
-	 	
-	 	\begin{equation}
-	 		1 = E_t(m_{t+1} R_{t+1}^i ) \label{eq:1EmR}
-	 	\end{equation} 
-	 	
-	 	In words, an investor pays 1 dollar now to collect $R_{t+1}^i$ dollars in the future. The payoff is called gross return and is the sum of future price and dividend $R_{t+1}^i = p_{t+1}^i+ d_{t+1}^i$. 
-	 	Using the definition of covariance, we can rearrange \ref{eq:1EmR} \citep{cochrane2009asset}:
-	 	
-	 	\begin{equation}
-	 		1 = E_t(m_{t+1}) E_t(R_{t+1}^i) + Cov_t(m_{t+1},R_{t+1}^i) 
-	 	\end{equation} 
- 	
- 		Defining the \textit{risk-free gross return} as $R_{t+1}^f=\frac{1}{E_t(m_{t+1})}$ and using it to further rearrange \citep{cochrane2009asset}:
- 		
- 		\begin{equation}
- 			E_t(R_{t+1}^i) = \underbrace{R_{t+1}^f}_\text{risk-free return}  -  \underbrace{R_{t+1}^f Cov_t(m_{t+1},R_{t+1}^i)}_\text{risk adjustment} \label{eq:risk_adjustment}
- 		\end{equation} 
- 		
- 		This important result shows that expected return if stock $i$ can be decomposed into risk-free return and risk adjustment. Note that the risk adjustment occurs if and only if returns are correlated to the discount factor, so \textit{idiosyncratic} risk, that is, uncorrelated with the discount factor, is uncompensated. Returns positively correlated to the discount factor should be low, and vice versa. So to explain average returns, we "only" need to explain the returns' correlation to the discount factor $m_{t+1}$. 
- 		
- 		Further rearranging \ref{eq:risk_adjustment} provides one more insight \citep{cochrane2009asset}. Multiply both sides by $Var_t(m_{t+1})/Var_t(m_{t+1})$ to obtain:
- 		
- 		\begin{align}
-	 		E_t(R_{t+1}^i) 
-	 		& = {R_{t+1}^f} + 
-	 		\underbrace{
-	 			\frac{Cov_t(m_{t+1},R_{t+1}^i)}{Var_t(m_{t+1})}
-	 			}_\text{denote $\beta_{i,t}$} 
- 			\cdot 
- 			\underbrace{
- 				\left(-\frac{Var_t(m_{t+1})}{E_t(m_{t+1})}\right)
- 				}_\text{denote $\lambda_{t}$} \label{eq:factor_model} \\
- 			& = \underbrace{{R_{t+1}^f}
- 				}_\text{risk-free return} 
- 				+ 
- 				\underbrace{\beta_{i,t} \cdot \lambda_{t}
- 				}_\text{risk adjustment} \label{eq:beta_reprezentation}
- 		\end{align} 
- 		
- 		This equation is so-called \textit{beta-representation} of \ref{eq:1EmR}. It shows that the risk-adjustment, the premium a stock pays for being correlated with the discount factor, can be decomposed into $\beta_{i,t}$ and $\lambda_t$. $\lambda_t$ is the volatility of the discount factor and it is unrelated to properties of asset $i$. It can be interpreted as the price of risk. $\beta_{i,t}$ can be interpreted as the amount of the risk inherent in asset $i$. Empirically, it can be obtained as the coefficient from regressing asset $i$'s returns on the discount factor: 
- 		
- 		\begin{equation}
- 		R_{t+1}^i = a_i + \beta_{i}m_{t+1} + \epsilon_{i,t+1}
- 		\end{equation} 
- 		
- 		Equations \ref{eq:risk_adjustment} and \ref{eq:beta_reprezentation} show that the discount factor is the key to explaining stock returns, as the latter is nothing but compensation for correlation with the former. The following special cases (consumption-based models, Capital Asset Pricing Model, multi-factor and characteristics-based models) offer further insights about the drivers of the stock returns.    
- 			 	
-	 	\subsection{Consumption-Based Model}
-	 	
-		 	The consumption-based model takes the additional assumption that the investor's preferences can be captured by her utility from consumption. The investor needs to decide how much to consume today and how much to save for tomorrow. First order conditions for this problem lead to the following specification of the discount factor \cite{cochrane2009asset}: 
-		 	
-		 	\begin{equation}
-		 		m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \label{consumtion_based_model}
-		 	\end{equation}
-		 	
-		 	where $u'(c_{t+1})$ denotes marginal utility from consumption. That is, the discount factor is the consumer's  marginal rate of substitution between consumption at time $t$ and $t+1$ and captures the willingness to trade consumption today for consumption tomorrow, where parameter $\kappa$ is the weight placed on future utility.  This means that such an investor would demand a high return for stock that perform badly at times when she is unwilling to give up today's consumption, and a low return for stock that performs badly at times she is willing to give up today's consumption. 
-		 	
-		 	There are many variables that can affect the rate at which the consumer is willing to swap current for future consumption: for instance, the current state of the economy, such as GDP growth, interest rate and current asset returns, as well as news of the \textit{future} states of the economy. 
-		 	
-		 	For simplification, one can assume constant relative risk aversion:
-		 	
-		 	\begin{equation}
-		 		u(c_t) = \frac{c^{1-\gamma}-1}{1-\gamma}
-		 	\end{equation}
-		 	
-		 	where $\gamma$ is a parameter positive for risk-averse individuals, and plug in to \ref{consumtion_based_model}: 
-		 	
-		 	\begin{equation}
-		 	m_{t+1} = \kappa \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma} 
-		 	\end{equation}
-		 	
-		 	That is, the discount factor is inversely proportionate to consumption growth. \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should have lower returns, so it follows that assets highly correlated with consumption growth should earn high returns. This makes sense: the investor is assumed to care only about her marginal utility from consumption. Therefore, she demands a higher return for holding a stock that performs badly at times when her consumption decreases, and only a low return on insurance-like stocks that perform well during bad times.
-		 	 
-		 	However, this model does not perform very well empirically \cite{cochrane1996cross}. There are two possible reasons, either, the aggregate consumption data are imperfectly measured, or the assumption that the investor's decision making can be described by maximization of utility from consumption is off. The two criticisms are addressed respectively by Capital Asset Pricing Model (or multifactor models) and  
-	 	
-	 	\subsection{Capital Asset Pricing Model}
-	 	
-	 		The Capital Asset Pricing Model (CAPM) is a special case of the consumption-based model, making the additional assumption that the utility from consumption is logarithmic \citep{rubinstein1976valuation}:
-	 		
-	 		\begin{equation}
-	 			u(c_t) = ln(c_t)
-	 		\end{equation}
-	 		
-	 		Plugging this to \ref{consumtion_based_model}, one obtains 
-	 		
-	 		\begin{equation}
-	 			m_{t+1} = \kappa \frac{c_t}{c_{t+j}}
-	 		\end{equation}
-	 		
-	 		The CAPM operates with the concept of wealth portfolio, which comprises all world's wealth, including real estate, metals, machinery or art. The price of this portfolio is (by \ref{eq:pEmx} and plugging in for the discount factor):  
-	 		
-	 		\begin{equation}
-	 		p_t^W  = E_t \sum_{j=1}^{\infty} m_{t+j}c_{t+1} = \frac{\kappa}{1-\kappa}c_t
-	 		\end{equation}
-	 		
-	 		and the return on wealth portfolio is therefore 
-	 		
-	 		\begin{equation}
-	 		R_{t+1}^W  = \frac{p_{t+1}^W + c_{t+1}}{p_t^W} = \frac{1}{\kappa} \frac{c_{t+1}}{c_t} = \frac{1}{m_{t+1}}
-	 		\end{equation}
-	 		
-	 		Thus, according to CAPM, the discount factor is the inverse of the return on the wealth portfolio. As \ref{eq:risk_adjustment} says that assets with positive correlation with the discount factor should earn low returns, if follows that assets positively correlated with the wealth portfolio should earn higher returns. Again, this makes sense: an investor who only cares about consumption demands a higher return for stocks that perform badly when other sources of wealth perform badly, and vice versa, she is willing to forgo some average return in exchange for good performance at times when all else fails. Since the return on wealth portfolio is unobservable, it is empirically often replaced by return on market portfolio of stocks. This may be problematic, as wealth comprises many more assets than just stocks, so the approximation is likely too crude \citep{roll1977critique}.  
-	 		
-	 		
-	 	\subsection{Multi-factor Models}
-	 		
-	 		Multi-factor models are motivated by the notions that consumption growth and return on wealth portfolio do not proxy the discount factor empirically very well (in the consumption-based model and CAPM respectively), and they try to find other proxies for the discount factor $m_{t+1}$, factors $\vec{f}_{t+1}$. 
-	 		
-	 		\begin{equation*}
-	 		m_{t+1} = \approx a+\vec{b}'\vec{f}_{t+1}
-	 		\end{equation*}
-	 		
-	 		
-	 		If we retain the idea that investor maximizes her utility from consumption, then the factors  should proxy the rate at which investors are willing to swap current for future consumption \citep{cochrane2009asset}:  
-	 		
-	 		\begin{equation*}
-	 			m_{t+1} = \kappa \frac{u'(c_{t+1})}{u'(c_t)} \approx a+\vec{b}'\vec{f}_{t+1}
-	 		\end{equation*}
-	 		
-	 		Multi-factor models explain returns as	 
-	 	
-			 	\begin{align}
-			 		& E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t} \\
-			 		& R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \label{multifactor model}
-			 	\end{align}
-			 
-			 The \textit{factor loadings} $\vec{\beta}'_{i,t}$ of size $1\times K$ are exposures to risk factors $\vec{f}_{t+1}$ of size $K \times 1$, where $K$ is the number of risk factors. They represent the amount of risk inherent in asset $i$ due to its correlation to the corresponding risk factor. The $\vec{\lambda}_{t}$ of size $K \times 1$ are interpretable as the risk prices at time $t$ \citep{kelly2019characteristics}. (Note that the CAPM and consumption-based models are special cases of the multiple-factor models, where $K$, the number of factors, is 1.) 			
-			 
-			 First multi-factor model is \cite{fama1996multifactor}:
-			 
-			 \begin{align}
-			 	& E(R^i) = R^f + \vec{\beta}'_{i} \vec{\lambda} \\
-			 	& R^i_{t+1} = \alpha_{i} + \vec{\beta}'_{i} \vec{f}_{t+1} + \epsilon_{i,t+1}
-			 \end{align}
-		 
-		 	with factors  
-			  		
-				\begin{equation}
-					\vec{f}_{t+1} = 
-						\begin{pmatrix}
-							R^M_{t+1}-R^f_{t+1} \\
-							SMB_{t+1} \\
-							HML_{t+1}				
-						\end{pmatrix}
-				\end{equation}
+	 	\epigraph{We have a lot of questions to answer: First, which characteristics really provide	independent information about average returns?}{\cite{cochrane2011presidential}}
 			
-			and with factor prices 
-			
-			\begin{equation}
-			  \vec{\lambda} =
-				\begin{pmatrix}
-					E(R^M)-R^f \\
-					E(SMB) \\
-					E(HML)				
-				\end{pmatrix} 
-			\end{equation}
-			 
-			The $R^M_{t+1}-R^f_{t+1}$ is the return on market portfolio above risk-free rate (as in CAPM), $SMB_{t+1}$ is the return on small-cap portfolio minus the return on big-cap portfolio, and $HML_{t+1}$ is the return on portfolio of stocks with small market values relative to book value, minus the return on portfolio of stocks with high market values relative to book value. A possible explanation why $SMB$ and $HML$ should be correlated to the discount factor is that they forecast the future state of the economy \citep{liew2000can}.		
-			\cite{fama2015five} augment this three-factor model to five factors. 
-			
-			
-		\subsection{Modeling Stock Returns with Characteristics}
-			
-			It is difficult to empirically estimate a multifactor model. The main challenge is that both $\vec{f}_{t+1}$ and $\vec{\beta}'_{i,t}$ are unobserved, so we have no directly observed variables at the right hand side of the estimated equation. Some researchers tackle the issue by using prior empirical knowledge to pre-specify the factors  \citep{fama1993common, fama2015five}, others use instrumental variable approach \citep{kelly2019characteristics} to uncover the unobserved factor loadings using firm-level variables, commonly called \textit{characteristics}, which serve as proxies for exposure to systematic risks \cite{kelly2019characteristics}:  
-			
-			\begin{align}
-				E_t(R^i_{t+1}) = R^f_{t+1} + \vec{\beta}'_{i,t} \vec{\lambda}_{t}  \label{eq:ER_betalambda} \\
-				R^i_{t+1} = \alpha_{i,t} + \vec{\beta}'_{i,t} \vec{f}_{t+1} + \epsilon_{i,t+1} \\
-				\vec{\beta}'_{i,t} = g(\vec{z}'_{i,t}) \label{eq:instrumented_betas}
-			\end{align}
-			 
-						
-			An important distinction between characteristics and factors is that characteristics are firm-specific variables, such as firm size, returns momentum or book-to-market ratio, while factors are common to all firms, such as the market return. Additionally, while characteristics proxy a firm's \textit{exposure} to risk (equation \ref{eq:instrumented_betas}), factors are the risk sources themselves. 
-			
-			Often, characteristics alone are used to model returns (e.g., \cite{gu2020empirical, bryzgalova2019forest, tobek2020does}). This is typically done when the focus of the research is returns prediction rather than the factor structure:
-			
-			\begin{equation}
-				E_t(R^i_{t+1}) = f(\vec{z}'_{i,t})
-			\end{equation}
-			
-			
-			There are hundreds of published factors and characteristics suggested as explanation of average stock returns. \cite{harvey2016and} count 313 variables, considering the top journals only and calling the count "surely too low". Indeed, \cite{cochrane2011presidential} refers to the state of asset pricing as a "zoo of factors". At the same time, the number of factors should be low in theory \citep{cochrane2011presidential} and empirically \citep{ahn2012determining}. Actually, many of these published return predictors are spurious. As \cite[p.~5]{harvey2016and} put it rather famously: "most claimed research findings in financial economics are likely false". Main reasons for this include publication bias and data-snooping bias (multiple-hypothesis testing bias, in-sample overfitting) and lack of replication studies in finance \citep{harvey2016and, mclean2016does}. 12\% of variables cannot be replicated even in-sample, the rest is biased by about 10\% \citep{mclean2016does}. \cite{harvey2016and} show that out of 296 published significant factors 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used.
-			
-			\citeauthor{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in stock returns prediction in his "multidimensional challenge" \citep[p.~1060]{cochrane2011presidential}: "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns?" In response to this challenge, studies emerged that study all the published characteristics in a single model, which allows to their effects to crows each other out in a 'survival of the fittest', such as \cite{gu2020empirical} and \cite{tobek2020does}. 
+		As just described, a common approach to model stock returns is to use firm-specific variables, called characteristics, as predictors of the return, as per the equation \ref{eq:expected_return}. The equation also shows that the task of the researcher is to determine which characteristics ($\vec{x}$) to use, and the general functional form $f$ in which they should interact to produce the prediction. The parameters which pin down the particular manifestation of the functional form are then estimated empirically using data, which completes the model. The choice of the characteristics and of the functional form is now discussed in turn using existing literature. 
 		
-			\cite{gu2020empirical} and \cite{tobek2020does} study 94 (153) characteristics proposed by prior literature and use them in various return-prediction models (linear regression, gradient-boosting regression trees, random forests and neural networks). Their results suggest that some categories of characteristics are consistently more important than others across time and model specifications. This finding presents a crucial stepping stone for this thesis, for two reasons. First it narrows down the search for return predictors to a set that is more feasible to work with: this thesis selects 30 most important variables from \cite{tobek2020does} as stock return predictors. \footnote{There are three advantages of \cite{tobek2020does} over \cite{gu2020empirical} for this purpose: First, like this thesis,  \cite{tobek2020does} use a liquid universe of stocks, which means that their results are less likely to be driven by transactions costs. Second, their data are global, rather than US only, which allows to uncover more generally applicable findings. Finally, they use larger set of characteristics (153 rather than 93), which makes it less likely that important information is omitted.} Second, the different models (gradient-boosting regression trees, random forests, and neural networks) agree on important variables, which allows this thesis to focus on neural networks (and its comparison to linear regression) without loss of generality. 
-		
-		\subsection {Economic Motivation of Predictors Used in This Thesis}
+		\subsection{Choosing the Characteristics}	
+			
+			Literature has accumulated hundreds of variables that purportedly predict stock returns. \cite{harvey2016and} count 313 variables, considering the top journals only and calling the count "surely too low". Indeed, \cite{cochrane2011presidential} refers to the state of asset pricing as a "zoo". Actually, many of these published predictors are spurious. As \cite[p.~5]{harvey2016and} put it rather famously: "most claimed research findings in financial economics are likely false". Main reasons for this include publication bias and data-snooping bias (multiple-hypothesis testing bias, in-sample overfitting) and lack of replication studies in finance \citep{harvey2016and, mclean2016does}. 12\% of variables cannot be replicated even in-sample, the rest is biased by about 10\% \citep{mclean2016does}. \cite{harvey2016and} show that out of 296 published significant factors 158, 142, 132 and 80 are false discoveries, the precise number depending on statistical framework used.
+			
+			\citeauthor{cochrane2011presidential} formulates the problem of separating the wheat from the chaff in stock returns prediction in his "multidimensional challenge" \citep[p.~1060]{cochrane2011presidential}: "We have a lot of questions to answer: First, which characteristics really provide independent information about average returns?" In response to this challenge, studies emerged that consider all the published characteristics in a single model, which allows to their effects to crowd each other out in a 'survival of the fittest', such as \cite{gu2020empirical} and \cite{tobek2020does}. 
+			
+			\cite{gu2020empirical} and \cite{tobek2020does} study 94 (153) characteristics proposed by prior literature and use them in various return-prediction models. Their results suggest that some categories of characteristics are consistently more important than others across time and model specifications. This finding presents a crucial stepping stone for this thesis, allowing it to select 30 most important variables from \cite{tobek2020does} as stock return predictors, which can be considered a distillation of the current literature's answer to the Cochrane's multidimensional challenge.\footnote{There are three advantages of \cite{tobek2020does} over \cite{gu2020empirical} for this purpose: First, like this thesis,  \cite{tobek2020does} use a liquid universe of stocks, which means that their results are less likely to be driven by transactions costs. Second, their data are global, rather than US only, which allows to uncover more generally applicable findings. Finally, they use larger set of characteristics (153 rather than 93), which makes it less likely that important information is omitted.} 
+			
+		\subsection{Economic Motivation of the Characteristics Used in This Thesis}
 			\label{chap:economic_motivation_of_predictors}
-			The predictors used in this thesis fall into several categories by their economic motivation. These categories come up very consistently across literature as important for predicting stock returns \cite{gu2020empirical, tobek2020does, harvey2016and, mclean2016does} and can be considered the current answer to Cochrane's multidimensional challenge of which characteristics provide information about stock returns. This section presents these categories and their economic rationale and at the same time introduces the particular characteristics used in this thesis as members of these broader categories. (The term characteristics, predictors, and features is used interchangeably throughout the thesis.)
 			
-			The content of the section is summarized in Table \ref{tab:characteristics_motivation}. It shows all the predictors used in this thesis (column Features), together with their authors and publishing journal, categorized by their economic motivation (column Category). Each category is discussed in detail its own paragraph below. 
+			All characteristics have economic motivation that suggests a particular mechanism of why they should predict stock returns. When we inspect this economic rationale, several broader categories emerge consistently. This section reviews these economic mechanisms and at the same time presents the 30 variables used in this thesis as members of these broader categories. This is summarized in Table \ref{tab:characteristics_motivation}, which shows all characteristics used in this thesis (column \textit{Features}), together with their authors and publishing journal, categorized by their economic motivation (column \textit{Category}). Each category is discussed in detail its own paragraph below. 
 			
 			\begin{table}
 				\resizebox{\textwidth}{!}{\input{Tables/characteristics_motivation.tex}}
@@ -216,37 +61,38 @@
 				\label{tab:characteristics_motivation}
 				\medskip
 				\small 
-				The table shows all the characteristics (features) used in this thesis grouped by their underlying economic motivation as predictors of stock returns. Column Category gives the main economic motivation of the variable and is discussed in detail in the text of this section (\ref{chap:economic_motivation_of_predictors}). 
+				The table shows all the characteristics (features) used in this thesis grouped by their underlying economic motivation as predictors of stock returns. Column \textit{Category} gives the main economic motivation of the variable and is discussed in detail in the text of this section. Columns \textit{Author} and \textit{Journal} specify the first academic publication of each characteristic. Column \textit{Sign} shows the direction of the relationship between the characteristic and returns, as found by the original paper. The \textit{Journal} shortcuts stand for, in alphabetic order: The Accounting Review (AR), Journal of Accounting and Economics (JAE), Journal of Accounting Research (JAR), Journal of Finance (JF), Journal of Financial Economics (JFE), Journal of Financial Markets (JFM), Review of Accounting Studies (RAS), and Review of Financial Studies (RFS).  
 			\end{table}
 			
-			A first group of characteristics relates to how investors approach volatility. Traditional asset pricing theory assumes investor's approach to risk is symmetrical in gains and losses \citep{cochrane2009asset}. However, psychology suggests that people are at the same time risk-averse (case of insurance) and risk-loving (case of lottery) and have asymmetrical utility in gains and in losses \citep{kahneman2013prospect}. This is in contrast to the standard utility maximization assumption of the Consumption-Based model and Capital Asset Pricing Model discussed above. This has direct implications for stock returns: it seems that lottery-like stocks, stocks with right skew and stocks with low correlation with market volatility can afford to pay lower average returns in exchange for their appealing risk profile (predictors \textit{Maximum Return} \citep{bali2011maxing}, \textit{Coskewness} \citep{harvey2000conditional} and \textit{Idiosyncratic Risk} \citep{ang2006cross}, respectively).
+			A first group of characteristics relates to how investors approach volatility. Traditional asset pricing theory assumes investor's approach to risk is symmetrical in gains and losses \citep{cochrane2009asset}. However, psychology suggests that people are at the same time risk-averse (case of insurance) and risk-loving (case of lottery) and have asymmetrical utility in gains and in losses \citep{kahneman2013prospect}. (This is in contrast to the standard utility maximization assumption of the traditional asset-pricing models, such as Consumption-Based model and Capital Asset Pricing Model.) This has direct implications for stock returns: it seems that lottery-like stocks, stocks with right skew and stocks with low correlation with market volatility can afford to pay lower average returns in exchange for their appealing risk profile (predictors \textit{Maximum Return} \citep{bali2011maxing}, \textit{Coskewness} \citep{harvey2000conditional} and \textit{Idiosyncratic Risk} \citep{ang2006cross}, respectively).
 			
 			A second group of characteristics also relates to the behavioral science. It seems that investors are slow to revise their existing beliefs upon arrival of new information, which shows in stock returns as momentum (predictors \textit{52-Week High} \citep{george200452} and \textit{Lagged Momentum} \citep{novy2012momentum}), and when they \textit{do} revise their beliefs, they over-react, which shows as reversal -- periods of high returns followed by periods of low returns (predictors \textit{Short-Term Reversal} \citep{jegadeesh1990evidence} and \textit{Momentum-Reversal} \citep{jegadeesh1993returns}). 
 			
 			A third and fourth group of characteristics relate to liquidity. It appears that illiquid stocks (typically small stocks with low trading volume and large bid-ask spread) must offer a higher return to compensate for their higher trading costs (predictors \textit{Amihud's Measure} \citep{amihud2002illiquidity}, \textit{Liquidity Shocks} \citep{bali2013liquidity} and \textit{Volume over Market Value of Equity}  \citep{haugen1996commonality}). It seems that investors avoid illiquidity to the degree a that mere higher chance of a stock becoming illiquid commands a higher return (predictors \textit{Coefficient of Variation of Share Turnover} \citep{chordia2001trading} and \textit{Liquidity Beta 3} and \textit{Liquidity Beta 5}  \citep{acharya2005asset}).  
 			
-			A fifth group of characteristics focuses is due to limited attention of investors, which can result in mis-pricing. First, it seems that investors tend to overlook artificially bloated (manipulated or "dressed") balance sheets, and tend to over-price firms with high accruals (predictors \textit{Accruals} \citep{sloan1996create}, \textit{Net Operating Assets} \citep{hirshleifer2004investors}, \textit{Operating Profits to Assets} \citep{ball2016accruals}, and \textit{Change in Common Equity} \cite{richardson2006implications}). Similarly, they tend to under-value firms with high research and development costs (which are not present on the balance sheets) (predictor \textit{ RD Over Market Equity} \cite{chan2001stock}). Finally, limited attention of investors manifests in overlooking important decompositions of profit margin (predictor \textit{Profit Margin} \cite{soliman2008use}).
+			A fifth group of characteristics focuses is due to limited attention of investors, which can result in mis-pricing. First, it seems that investors tend to overlook artificially bloated (manipulated or "dressed") balance sheets, and tend to over-price firms with high accruals (predictors \textit{Accruals} \citep{sloan1996create}, \textit{Net Operating Assets} \citep{hirshleifer2004investors}, \textit{Operating Profits to Assets} \citep{ball2016accruals}, and \textit{Change in Common Equity} \citep{richardson2006implications}). Similarly, they tend to under-value firms with high research and development costs, as these are typically not present on the balance sheets (predictor \textit{ RD Over Market Equity} \citep{chan2001stock}). Finally, limited attention of investors manifests in overlooking important decompositions of profit margin (predictor \textit{Profit Margin} \citep{soliman2008use}).
 			
 			A sixth group of characteristics reflects the empirically observed seasonal patterns in stock returns. While the theoretical underpinning of these characteristics is still a matter of academic debate, the phenomenon is very strong and robust empirically (\textit{Seasonality} predictors from \cite{heston2008seasonality}). 
- 			
- 			A seventh group of characteristics are proxies for the well-known value effect \cite{fama1993common}, which shows that empirically, firms with high Book to Market ratio tend to have higher returns. The predictors used here are \textit{ Duration of Equity }\citep{dechow2004implied}) and \textit{Leverage Component of Book to Price} \citep{penman2007book}, and their original papers discuss also the theoretical underpinnings of the phenomenon.
- 			
- 			Finally, financially constrained firms tend to co-move, and since financial constraints are typically market-wide during economic crises, this risk is not diversified, and therefore priced. The predictor \textit{Whited-Wu Index} \citep{whited2006financial} measures the extent to which a stock is impacted by financial constraints.  
 			
-		\section{Machine Learning and Stock Returns}		
+			A seventh group of characteristics are proxies for the well-known value effect \cite{fama1993common}, which shows that empirically, firms with high Book to Market ratio tend to have higher returns. The predictors used here are \textit{ Duration of Equity }\citep{dechow2004implied}) and \textit{Leverage Component of Book to Price} \citep{penman2007book}, and their original papers discuss also the theoretical underpinnings of the phenomenon.
+			
+			Finally, financially constrained firms tend to co-move, and since financial constraints are typically market-wide during economic crises, this risk is not diversified, and therefore priced. The predictor \textit{Whited-Wu Index} \citep{whited2006financial} measures the extent to which a stock is impacted by financial constraints.  		
+	 	
+	 	\subsection{Choosing the Functional Form: Why Neural Networks?}
+	 	
+		 	A crucial modeling decision to be made is choosing the general functional form $f$ in which the characteristics should interact in equation \ref{eq:expected_return}. While classical asset-pricing models are linear \citep[e.g.][]{fama1993common,fama1996multifactor}, the function $f$ can be any model: \cite{bryzgalova2019forest} use random forests and \cite{gu2020empirical, tobek2020does} employ the whole spectrum of methods, both linear (linear regression with and without regularization, principal components regression, elastic net) and nonlinear (generalized linear models, random forest, gradient-boosted regression trees and neural networks). There are two arguments why use neural networks for the stock return prediction: their superior performance and their ability to find non-linear relationships from data.  
+		 	
+		 	The first argument to using networks to predict stock returns is their superior performance. Prior research indicates that neural networks can predict stock returns better than any other model. \cite{gu2020empirical} make a horse race of several ML and traditional methods. They show that neural networks out-perform all other models, both in explained variance and in profitability of their returns' forecasts. They are far better than linear models (linear regression with and without regularization, principal components regression, elastic net), and also beat other nonlinear models (generalized linear models, random forest, and gradient-boosted regression trees). \cite{tobek2020does} confirm these findings on international (as opposed to U.S.) data and liquid universe of stocks. \cite{gu2020empirical} statistically reject linear models in favor of the non-linear ones as those with better performance.
+		 	
+		 	The second argument for using neural networks is their ability to find important non-linear relationships in the data. Recent ML literature suggests that non-linearity is vital for explaining stock returns \citep{gu2020empirical, bryzgalova2019forest} and that the linear models miss important information, particularly non-linearities and variable interactions. If a variable has a non-linear relationship with returns, the linear models can conclude there is no association, while in reality there is an important non-linear relationship. For example, in \cite{gu2020empirical}, linear models deem size and volatility unimportant predictors, while non-linear models find the contrary. A similar problem may arise if predictors have zero association with return themselves, but not in interaction with other predictors. The nonlinearity seems to be a curcial aspect of stock return prediction: \cite{bryzgalova2019forest} and \cite{gu2020empirical} agree that the ability to uncover non-linearities and interactions is the crucial driving force of the superior ML performance.  	
+		 	In fact, neural networks are theoretically motivated as Universal Approximators: no matter the functional form $f$, a neural network already with one hidden layer can approximate any "well-behaved" function arbitrarily well. As there are so many possible forms in which the predictors can interact, it is unfeasible to search for the correct specification manually by pre-specifying the functional form. Thanks to their flexibility, neural networks thus allow for fitting the correct functional form in a data-driven manner.
+		 	
+		 	A final advantage is not specific to neural networks, but applies to ML literature in general. Unlike in the traditional asset-pricing literature, which focuses on in-sample fit, model selection in ML is based on validation data, as opposed to in-sample (training) data. Similarly, model evaluation is done solely on held-out (testing) data. In the traditional approach to stock returns, model is tuned by the researcher based on in-sample fit, which results in unreplicable spurious findings \citep{mclean2016does}. On the other hand, ML puts an emphasis on out-of-sample performance, which allows to select a robust model that generalizes well to previously unseen data.   
+		 		
+			
+		\section{Interpretable ML and Stock Returns: What Has Been Done?}		
 		
-		\subsection{Why use Neural Networks for Stock Returns Prediction?}
-			
-			One of the reasons behind popularity of neural networks in stock returns prediction is that they offer superior performance. \cite{gu2020empirical} make a horse race of several ML and traditional methods. They show that neural networks predict stock returns better than any other model, both in explained variance and in profitability. They are far superior to linear models (linear regression with and without regularization, principal components regression, elastic net), and also beat other nonlinear models (generalized linear models, random forest, and gradient-boosted regression trees). \cite{tobek2020does} confirm these findings on international (as opposed to U.S.) data and liquid universe of stocks. \cite{gu2020empirical} statistically reject linear models in favor of the non-linear ones as those with better performance.
-			
-			Second, there is strong theoretical appeal to using neural networks as well. Prior research shows that linear models miss important information about stock returns by ignoring the interactions of the predictors. If a variable has a non-linear relationship with returns, the linear models can conclude there is no association, while in reality there is an important non-linear relationship. For example, in \cite{gu2020empirical}, linear models deem size and volatility unimportant predictors, while non-linear models find the contrary. A similar problem may arise if predictors are have zero association with return themselves, but not in interaction with other predictors. The nonlinearity seems to be a curcial aspect of stock return prediction: \cite{bryzgalova2019forest} and \cite{gu2020empirical} agree that the ability to uncover non-linearities and interactions is the crucial driving force of the superior ML performance.  As there are so many possible forms in which the predictors can interact, it is unfeasible to search for the correct specification manually. Neural Networks are universal approximators, and thus allow for systematic search in the space of non-linearities and interactions.  	
-			
-			Finally, the model selection is ML is based on validation data, as opposed to in-sample (training) data, and model evaluation done solely on held-out (testing) data. In traditional econometrics approach to stock returns, model is tuned by researcher based on in-sample fit, which results in unreplicable spurious findings \citep{mclean2016does}. On the other hand, ML puts an emphasis on out-of-sample performance, which allows to select a robust model that generalizes well to previously unseen data.  	
-			
-	
-		\subsection{Interpretable ML and Stock Returns: What Has Been Done?}
-		
-			To explain how the methods employed in this thesis fit into the broader context of ML interpretability literature, it is useful to first categorize them following \cite{molnar2020interpretable}. A first dictinction can be made between \textit{intrinsically} interpretable models, which are intrepretable per se (linear and logistic regression, random trees), and \textit{post-hoc methods}, that can be applied to extract interpretable knowledge from more complex models, such as neural networks, which is the case of this thesis. A further distinction can be made as to the applicability of the interpretability methods: some methods are \textit{model-specific}, that is, can only be applied to some ML models, while others are \textit{model-agnostic}, applicable to all models from linear regressions to random trees and neural networks. For purposes of generality, the methods selected in this thesis are model-agnostic --- while they are well-suited to neural networks, they can also be used on any other model, such as linear regression. Yet other distinction can be made between \textit{global} and \textit{local} ML interpretability methods: while the former study how a model decides overall (across all observations), the latter can be used to interpret the drivers behind a single observation. Both approaches are taken in this thesis, as both global and local perspectives are important for model interpretability. 
+			To explain how the methods employed in this thesis fit into the broader context of ML interpretability literature, it is useful to first categorize them following \cite{molnar2020interpretable}. A first distinction can be made between intrinsically interpretable models, which are explainable \textit{per se} (linear and logistic regression, random trees), and post-hoc methods, which can be applied to extract interpretable knowledge from more complex models, such as neural networks, which is the case of this thesis. A further distinction can be made as to the applicability of the interpretability methods: some methods are \textit{model-specific}, that is, can only be applied to some ML models, while others are \textit{model-agnostic}, applicable to all models from linear regressions to random trees and neural networks. For purposes of generality, the methods selected in this thesis are model-agnostic --- while they are well-suited to neural networks, they can also be used on any other model, such as linear regression. Yet other distinction can be made between \textit{global} and \textit{local} ML interpretability methods: while the former study how a model decides overall (across all observations), the latter can be used to interpret the drivers behind a single observation. Both approaches are taken in this thesis, as both global and local perspectives are important for model interpretability. 
 			
 			Further, there are several aspects of interpreting a neural network in particular. First, it is possible to study which input variables are important for the prediction (known as feature importance). Second, it is possible to see how the prediction changes in response to the input variables (marginal relationships). Finally, interaction effects and non-linearities can be uncovered from the hidden layers. This thesis takes the first two approaches, as it considers them natural starting points, and leaves the third for follow-up research. The three are now discussed in turn, in reverse order.  
 
@@ -256,28 +102,28 @@
 			
 			Second, it can be studied how the prediction changes in response to the input variables. To the best of my knowledge, there is a single attempt at this in the financial domain: \cite{gu2020empirical} plot the predicted return for different values of 4 selected predictors, each time holding the remaining 92 predictors at 0. In addition to the limited scope (only 4 variables out of 93 are studied), this has the obvious limitation of unrealistic datapoints: in reality, there are no observations with values of 0 for all but one feature; the correlation of data is also ignored. This thesis offers the marginal relationships of all features, calculated with theoretically well-grounded methodology. This allows to see the typical sign and magnitude of all the predictors in the network.
 			
-			Third, it can be studied which input variables are more important than others (global feature importance). Two papers are the closest to this thesis in this respect: \cite{gu2020empirical} and \cite{tobek2020does}. Both study the very same prediction task as this thesis: to predict the return of a stock in the next month, given the characteristics of the stock as of the current month. Also like this thesis, both use neural networks to model the relationship between characteristics and stock returns. And, like this thesis, both calculate the global importance. However, both focus on performance of the networks and admit that their "goal in interpreting machine learning models is modest" \cite[p.~2247]{gu2020empirical}. Specifically, the interpretation in both papers is reduced to a single global feature importance figure. This thesis builds on \cite{gu2020empirical} and \cite{tobek2020does} by diving fully into the global feature importance, while meeting their high performance. (The thesis uses the very same architecture of the networks as in \cite{gu2020empirical}, and dataset from \cite{tobek2020does}, so the high performance is to be credited wholly to their work.) The contributions in analysis of global feature importance over and above these two papers are several. First, this thesis chooses a feature importance metric that is well-grounded in theory and prior literature (\ref{chap:feature_importance_lit}). Second, it suggests and uses another, novel metric which is particularly suited for uncovering why neural networks are good at predicting winners and losers in the stock market. Third, it always compares the interpretation to linear regression, which points to the most important non-linearities. Fourth, it compares the interpretation across networks with different depth, which allows to see of the added complexity changes the model interpretation. Fourth, it interprets not only the ensembles, but their constituent models as well, which further unveils why the ensembles perform so well.     		
+			Third, it can be studied which input variables are more important than others (global feature importance). Two papers are the closest to this thesis in this respect: \cite{gu2020empirical} and \cite{tobek2020does}. Both study the very same prediction task as this thesis: to predict the return of a stock in the next month, given the characteristics of the stock as of the current month. Also like this thesis, both use neural networks to model the relationship between characteristics and stock returns. And, like this thesis, both calculate the global importance. However, both focus on performance of the networks and admit that their "goal in interpreting machine learning models is modest" \cite[p.~2247]{gu2020empirical}. Specifically, the interpretation in both papers is reduced to a single global feature importance figure. This thesis builds on \cite{gu2020empirical} and \cite{tobek2020does} by diving fully into the global feature importance, while meeting their high performance. (The thesis uses the very same architecture of the networks as in \cite{gu2020empirical}, and dataset from \cite{tobek2020does}, so the high performance is to be credited wholly to their work.) The contributions in analysis of global feature importance over and above these two papers are several. First, this thesis chooses a feature importance metric that is well-grounded in theory and prior literature (\ref{chap:local_measures}). Second, it suggests and uses another, novel metric which is particularly suited for uncovering why neural networks are good at predicting winners and losers in the stock market. Third, it always compares the interpretation to linear regression, which points to the most important non-linearities. Fourth, it compares the interpretation across networks with different depth, which allows to see of the added complexity changes the model interpretation. Fourth, it interprets not only the ensembles, but their constituent models as well, which further unveils why the ensembles perform so well.     		
 			
 				
-		\subsection{Choosing Feature Importance Measure}
-			\label{chap:feature_importance_lit}
-			Local feature importance measures aim to answer the question of why the model gives a particular prediction for a particular observation. For example, why does the model predict Apple's return in the following month to be 15\%? In particular, how do the individual features contribute in magnitude and sign to the prediction? In other words, how can the prediction be decomposed into (\textit{attributed to}) individual features? For this reason, the task is also called \textit{feature attribution}.  
+		\section{Choosing Feature Importance Measure}
+			\label{chap:local_measures}
+			A crucial aspect of interpreting a model is answering the question of why the model gives a particular prediction for a particular observation (this is called \textit{local feature importance}). For example, why does the model predict Apple's return in the following month to be 15\%? How do the individual features contribute to this prediction? In other words, how can the prediction be decomposed into (\textit{attributed to}) individual features? For this reason, ML literature also calls this task \textit{feature attribution}.  
 			
 			There are several properties that are naturally desirable for any attribution measure to have. First, we would like the measure to give a complete account of the prediction: if we sum the individual feature attributions, we would like to obtain the final prediction (called Completeness or Efficiency axiom in \cite{sundararajan2017axiomatic} and \cite{molnar2020interpretable} respectively). Second, the measure should give zero attribution score to any feature that is mathematically independent of the predicted variable (called Sensitivity(b) or Dummy axiom in \cite{sundararajan2017axiomatic} and \cite{molnar2020interpretable} respectively). A related desirable property is that if two observations differ in one feature and have different prediction, the attribution to the differing feature should be non-zero (called Sensitivity(a) axiom in \cite{sundararajan2017axiomatic}). Third, the measure should be additive: if a model is a linear combination of other models (such as an ensemble model), the attributions of the model should be the same linear combination of the attributions of the individual models (called Linearity or Additivity axiom in \cite{sundararajan2017axiomatic} and \cite{molnar2020interpretable} respectively). Fourth, if two models with different architectures produce the same predictions for the same set of inputs, the attributions of the two models should be identical (called Implementation Invariance axiom in \cite{sundararajan2017axiomatic}). As pointed out by \cite{sundararajan2017axiomatic}, it is particularly important in the case of neural networks that Implementation Invariance be upheld: a single functional form of the model can be attained using more than one set of weights due to many degrees of freedom. The training of the network can converge to any of these sets, depending, for instance, on random initialization of weights. However, if the function arrived at is effectively the same, it is desirable that the feature attribution be the same as well. Finally, symmetric features (i.e., such that $f(x,y) = f(y,x) \forall x, y$) should receive the same attributions if $x=y$ for a particular observation (called Symmetry axiom in \cite{shrikumar2017learning} and  \cite{molnar2020interpretable}. 
 			
-			Several local feature importance measures are put forward in the literature. \textbf{Simple Gradient Method} \citep{baehrens2010explain} applies a first order linear approximation of the model to find the sensitivity of the prediction to small changes in values of a given feature. It is a natural starting point for computing feature attribution, as it is very intuitive: if a small change in predictor's value has large effect on prediction, the gradient is large. Other approaches involve back-propagating the final prediction through all the layers down to the input layer. These include  \textbf{Guided Back-Propagation} \citep{springenberg2014striving}, \textbf{Layer-Wise Relevance Propagation} \citep{binder2016layer} and \textbf{DeepLift} \citep{shrikumar2017learning}. However, all these methods violate the most fundamental axioms, rendering the usage of the methods very problematic. Simple Gradient Method and Guided back-propagation violates Sensitivity(a) and Completeness and DeepLift and Layer-Wise Relevance violate Implementation Invariance \citep{shrikumar2017learning, sundararajan2017axiomatic}. The only measures used so far in the domain of stock-returns prediction (in \cite{gu2020empirical}, \cite{tobek2020does}) are variants of Simple Gradient Method, and thus suffer the same issues. 
+			Several local feature importance measures are put forward in the literature. \textbf{Simple Gradient Method} \citep{baehrens2010explain} applies a first order linear approximation of the model to find the sensitivity of the prediction to small changes in values of a given feature. It is a natural starting point for computing feature attribution, as it is very intuitive: if a small change in predictor's value has large effect on prediction, the gradient is large. Other approaches involve back-propagating the final prediction through all the layers down to the input layer. These include  \textbf{Guided Back-Propagation} \citep{springenberg2014striving}, \textbf{Layer-Wise Relevance Propagation} \citep{binder2016layer} and \textbf{DeepLift} \citep{shrikumar2017learning}. However, all these methods violate the most fundamental axioms, rendering the usage of the methods very problematic. Simple Gradient Method and Guided back-propagation violates Sensitivity(a) and Completeness, while DeepLift and Layer-Wise Relevance Propagation violate Implementation Invariance \citep{shrikumar2017learning, sundararajan2017axiomatic}. The only measures used so far in the domain of stock-returns prediction (in \cite{gu2020empirical}, \cite{tobek2020does}) are variants of Simple Gradient Method, and thus suffer the same issues. 
 			
-			There are only two methods that satisfy the above axioms: Integrated Gradients \citep{sundararajan2017axiomatic} and Shapley (Shapley-Shubik) Values \citep{shapley1971assignment}. 	
+			There are only two methods that satisfy the above axioms: Integrated Gradients \citep{sundararajan2017axiomatic} and Shapley Values \citep{shapley1971assignment}. 	
 			
 			\textbf{ Integrated Gradients} \citep{sundararajan2017axiomatic} is a method similar to Simple Gradient Method in that it considers the gradient of the prediction with respect to the feature values. The gradient captures how the prediction changes for small changes in given feature. (Using the gradient is advantageous as it must be already calculated (with respect to weights) during network training.) The measure alters the Simple Gradient Method by considering the gradient not only exactly at the observation, but also at all points on the path from a baseline (usually $0$) to the observation at hand. This adjustment is already enough to achieve Completeness and Sensitivity(a) axioms that Simple Gradient Method breaks. 
 			
-			\textbf{Shapley Values} originate in game theory and their use in ML is intuitively explained in \cite{molnar2020interpretable}: for a single observation, imagine that the feature values enter a room in random order. At each point, all feature values present in the room make a prediction. Shapley value for feature $j$ is the average change in prediction that happens when feature $j$ enters the room. The average here can be taken either across all possible random orders as in \cite{shapley1971assignment} (there are $K!$ of them for $K$ features) or approximated using several samples as in \cite{vstrumbelj2014explaining}. 
+			\textbf{Shapley Values} \citep{shapley1971assignment} originate in game theory and their use in ML is intuitively explained in \cite{molnar2020interpretable}: for a single observation, imagine that the feature values enter a room in random order. At each point, all feature values present in the room make a prediction. Shapley value for feature $j$ is the average change in prediction that happens when feature $j$ enters the room. The average here can be taken either across all possible random orders as in \cite{shapley1971assignment} (there are $K!$ of them for $K$ features) or approximated using several samples as in \cite{vstrumbelj2014explaining}. 
 			
 			Actually, it can be shown \citep{sundararajan2017axiomatic} that the axioms of Completeness, Implementation Invariance, Sensitivity and Linearity are satisfied \textit{only} by a particular group of methods, called \textit{path methods}, which are all very much like Integrated Gradients, but may take other than straight-line path between the baseline and the observation at hand. Within path methods, Integrated Gradients can be shown \citep{sundararajan2017axiomatic} to be the only one that is symmetry preserving. Shapley Values are related to the path methods in that they average over \textit{multiple} paths, instead of just considering a single path. This is unfortunately the reason behind their computational intensity, as discussed below.  
 			
 			Integrated Gradients have one crucial practical advantage over Shapley Values. Even the approximate version of Shapley Value \citep{vstrumbelj2014explaining} is very computationally intensive: sampling a single random order of features then takes $K$ calls to the network --- a prediction is made \textit{each time} a feature "enters the room". So to calculate even the approximate Shapley Value for a single observation, the network must be called $K\cdot M$ times, where $M < K!$ is the number of steps in the approximation. On the other hand, the Integrated Gradients only take $M$ calls to the network. In case of many features and (or) many observations for which we wish to calculate local feature importance, and (or) long prediction times (note that all three are often the case in ML), the difference in computation times is crucial. Even though the number of features is only 30 in this thesis, the difference in computation times is already substantial. Moreover, much more features are to be expected in practice, so using a scalable measure seems vital. Therefore, this thesis uses Integrated Gradients as the feature importance measure. The technical aspects of calculating Integrated Gradients are described in the Data and Methodology. 
 			
-			The methods discussed so far are based on local interpretation, i.e., they allow to decompose the prediction into individual features. In addition to these local measures, there are \textit{global} feature importance measures, which do not allow for such decomposition, but can nonetheless offer insight into the overall workings of the model. In the domain of stock returns prediction, \cite{gu2020empirical} use \textbf{Decrease of R Square} ($R^2$, variance in the target variable explained by the model) that results from setting a particular feature's values to 0. This measure is problematic from two reasons. First, $R^2$ is notoriously unstable in returns prediction task: the metric fluctuates greatly due to the high ratio of noise to signal, which makes it even less informative than usual. Second, setting feature values to 0 completely denounces the marginal distribution of the feature and makes it flat, which is less realistic than the available alternatives \citep{fisher2019all}. \textbf{Model Reliance} proposed by \citep{fisher2019all} solves both these disadvantages. It measures how much of model's loss (here, it is the Mean Squared Error) is lost when a feature is permuted. This has the advantage of preserving the marginal distribution of the feature, while making it independent of the prediction. If the particular feature is important, permuting it will increase the model's loss. Model Reliance of the networks used in this thesis is given in the Appendix. Unfortunately, the Mean Squared Error of networks in the domain of stock return prediction is quite large and noisy, again due to the high ratio of noise to signal, which makes Model Reliance less useful than in other applications (see \cite{fisher2019all} and \cite{molnar2020interpretable}). This thesis uses instead a variant of Model Reliance: it replaces the Mean Squared Error by the decrease in return of the implied long-short portfolios (see \ref{chap:met}). This has the advantage of using a measure that is stable in the domain of predicting stock returns and of 		focusing on what the stock-predicting returns do best: predict winners and losers in the stock market. Using a corresponding metric allows to identify the sources of this out-performance. The metric, along with Model Reliance, is further described in Data and Methodology. 		
+			The methods discussed so far are based on local interpretation, i.e., they allow to decompose the prediction into individual features. In addition to these local measures, there are \textit{global} feature importance measures, which do not allow for such decomposition, but can nonetheless offer insight into the overall workings of the model. In the domain of stock returns prediction, \cite{gu2020empirical} use \textbf{Decrease of R Square} ($R^2$, variance in the target variable explained by the model) that results from setting a particular feature's values to 0. This measure is problematic from two reasons. First, $R^2$ is notoriously unstable in returns prediction task: the metric fluctuates greatly due to the high ratio of noise to signal, which makes it even less informative than usual. Second, setting feature values to 0 completely denounces the marginal distribution of the feature and makes it flat, which is less realistic than the available alternatives \citep{fisher2019all}. \textbf{Model Reliance} proposed by \citep{fisher2019all} solves both these disadvantages. It measures how much of model's loss (here, it is the Mean Squared Error) is lost when a feature is permuted. This has the advantage of preserving the marginal distribution of the feature, while making it independent of the prediction. If the particular feature is important, permuting it will increase the model's loss. Model Reliance of the networks used in this thesis is given in the Appendix. Unfortunately, the Mean Squared Error of networks in the domain of stock return prediction is quite large and noisy, again due to the high ratio of noise to signal, which makes Model Reliance less useful than in other applications (see \cite{fisher2019all} and \cite{molnar2020interpretable}). This thesis uses instead a variant of Model Reliance: it replaces the Mean Squared Error by the decrease in return of the implied long-short portfolios (see \ref{chap:met}). This has the advantage of using a measure that is stable in the domain of predicting stock returns and of focusing on what the stock-predicting returns do best: predict winners and losers in the stock market. Using a corresponding metric allows to identify the sources of this out-performance. The metric, along with Model Reliance, is further described in Data and Methodology. 		
 
 			
 			

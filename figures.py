@@ -189,7 +189,7 @@ def tabulate_meta(SORTING_LATEX=SORTING_LATEX, p=None):
     return df
 
 def tabulate_characteristics_motivation(SORTING_LATEX = SORTING_LATEX, p=None):
-    df = meta.signals[["name_tex", "tex_cite", "class2", "journal"]]
+    df = meta.signals[["name_tex", "tex_cite", "class2", "journal", "sign"]]
     tex_cite_dict = {old: "\cite{" + old + "}" for old in list(df.tex_cite.values)}
     df.replace({"tex_cite":tex_cite_dict}, inplace=True)
     df = df[df["name_tex"].isin(SORTING_LATEX)]
@@ -198,7 +198,8 @@ def tabulate_characteristics_motivation(SORTING_LATEX = SORTING_LATEX, p=None):
         'name_tex':"Feature", 
         "tex_cite":"Author", 
         "class2":"Category",
-        "journal":"Journal"}
+        "journal":"Journal", 
+        "sign":"Sign"}
     df = df.rename(columns = cdict)
     df.set_index(["Category", "Feature"],inplace=True)
     df.sort_index(inplace=True)
@@ -355,13 +356,14 @@ def plot_backtest_cumreturns_ls(path_to_backtests, hidden_layers, p=None):
     df = pd.DataFrame(l, columns=["Long"])
     df["Short"] = - s 
     df["Long-Short"] = ls 
-    df["All Stocks"] = al
+    df["Market"] = al
     axis = df.plot()
-    axis.set_ylabel("Gross Cumulative Return")
+    axis.set_ylabel("Cumulative Return")
     axis.set_xlabel("")
     fig = LatexFigure(plt.gcf())
     fig.fit()
     fig.save(p)
+    return fig
 
 
 def plot_backtest_histogram(path_to_backtests, hidden_layers, p=None):
