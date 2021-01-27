@@ -20,7 +20,3 @@ __pycache__/
 *.pdf
 *.doc
 *.ipynb
-
-!figures_data.ipynb
-!figures_results.ipynb
-!figures.ipynb
