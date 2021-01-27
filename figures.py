@@ -161,9 +161,7 @@ class LatexFigure():
             }
         mpl.rcParams.update(pgf_with_latex)
 
-#==========================================================================================
-#                                     On metadata
-#==========================================================================================
+
 def tabulate_meta(SORTING_LATEX=SORTING_LATEX, p=None):
     df = meta.signals
     df = df[["name_tex", "class", "class2", "tex_cite", "freq"]]
@@ -208,11 +206,6 @@ def tabulate_characteristics_motivation(SORTING_LATEX = SORTING_LATEX, p=None):
     tab.save(p)
     return df
 
-
-
-#==========================================================================================
-#                                     On not cleaned features
-#==========================================================================================
 def plot_missing_observations(df, p=None):
     nas = (df.isna().sum()/df.isna().count())*100
     fig, axis = plt.subplots(figsize=(8,8))
@@ -230,13 +223,9 @@ def plot_missing_observations(df, p=None):
     fig.fit(square=True)
     fig.save(p)
 
-#==========================================================================================
-#                                     On cleaned features 
-#==========================================================================================
 def _numfmt(x, pos): # your custom formatter function: divide by 100.0
     s = '{}'.format(x / 1000.0)
     return s
-
 
 def plot_histograms(df, p=None):
     df.columns = [meta.sc_to_latex.get(s) for s in df.columns.tolist()]
@@ -326,24 +315,58 @@ def tabulate_descriptives(df, p=None):
     tab.save(p)
     return df
 
+def plot_returns_descriptives(r, p=None):
+    # Create subplot of 3 figures
+    fig, axes = plt.subplots(nrows=3,ncols=1, sharex=True, figsize=(20,15))
+    fontsize = 25
 
-#==========================================================================================
-#                                     On cleaned returns
-#==========================================================================================
+    # Histogram 
+    r.plot.hist(grid=True, bins=100, rwidth=0.9, ax=axes[0])
+    axes[0].set_ylabel('Number of Observations', fontsize = fontsize)
 
-def plot_returns_histogram(r, p=None):
-    r_without_outliers = r[np.abs((r - r.mean())/r.std(ddof=0)<8)] # zscore more than 8 is considered outlier
-    r_without_outliers.plot.hist(grid=True, bins=100, rwidth=0.9)
-    plt.xlabel('Monthly Return')
-    plt.ylabel('Number of Observations')
-    fig = LatexFigure(plt.gcf())
-    fig.fit()
+    # Boxplot
+    sns.boxplot(x=r, ax=axes[1], showfliers=False)
+
+    # Deciles 
+    out, percentiles = pd.qcut(r,100, retbins=True)
+    percentiles = pd.DataFrame(percentiles, index = list(range(0,101,1)),columns=["r"])
+    percentiles.reset_index(inplace=True)
+    percentiles.plot(x="r",y="index", ax = axes[2], legend=False)
+    axes[2].set_ylabel('Return Percentile', fontsize = fontsize)
+
+    # Common x label 
+    plt.xlabel("Monthly Return", fontsize = fontsize)
+
+    # Increase font size of ticks
+    for ax in axes:
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(fontsize)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(fontsize)
+
+    # Convert to LatexFigure
+    fig = LatexFigure(fig)
     fig.save(p)
+    return fig
 
+def tabulate_return_descriptives(r, p=None):
+    df = pd.DataFrame(r.describe()[1:]).round(3).transpose()
+    df.columns = ["Mean", "Std", "Min", "25%", "50%", "75%", "Max"]
+    df.index = ["Return"]
+    tab = LatexTable(df)
+    tab.save(p)
+    return df
 
-#==========================================================================================
-#                                     On backtest predictions
-#==========================================================================================
+def tabulate_return_deciles(r, p=None):
+    out, bins = pd.qcut(r,10,retbins=True)
+    bins = bins[1:-1]
+    deciles = pd.DataFrame(bins,index=["{}%".format(i) for i in list(range(10,100,10))])
+    df = deciles.round(3).transpose()
+    df.index = ["Return"]
+    tab = LatexTable(df)
+    tab.save(p)
+    return df 
+
 def tabulate_backtest_descriptives_ls(path_to_backtests, hidden_layers, p=None):
     df = backtest.get_metrics_multiple_longshort(path_to_backtests, hidden_layers=hidden_layers)
     df = df.round(3)
@@ -364,7 +387,6 @@ def plot_backtest_cumreturns_ls(path_to_backtests, hidden_layers, p=None):
     fig.fit()
     fig.save(p)
     return fig
-
 
 def plot_backtest_histogram(path_to_backtests, hidden_layers, p=None):
     """
@@ -391,28 +413,63 @@ def plot_backtest_histogram(path_to_backtests, hidden_layers, p=None):
     fig.fit()
     fig.save(p)
 
-
-def tabulate_backtest_descriptives_models(path_to_backtests, HIDDEN_LAYERS, NN_DICT, p=None):
-    df = backtest.get_metrics_all_models(path_to_backtests = path_to_backtests, 
-                                    HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT).round(3)
+def tabulate_backtest_descriptive_models(paths_to_backtests, hl_dict, p=None):
+    metrics = dict()
+    for p in paths_to_backtests:
+        _, _, ret, market  = backtest.get_returns(p, hl_dict.get(p), percent_long=10, percent_short=10)
+        m = backtest.get_metrics_single_model(ret)
+        m_market = backtest.get_metrics_single_model(market)
+        metrics["Market"] = m_market
+        metrics[NN_DICT.get(hl_dict.get(p))] = m
+    df = pd.DataFrame(metrics)
+    df = df.round(3)
     tab = LatexTable(df)
     tab.save(p)
     return df
 
+def plot_backtest_cumreturns_models(path_to_backtests, hl_dict, p=None):
+    returns = dict() 
+    for  p in paths_to_backtests:
+        _, _, ret, market  = backtest.get_cumulative_returns(p, hl_dict.get(p), 10, 10)
+        returns["Market"] = market
+        returns[NN_DICT.get(hl_dict.get(p))] = ret
+    df = pd.DataFrame(returns)
 
-def plot_backtest_cumreturns_models(path_to_backtests, HIDDEN_LAYERS, NN_DICT, p=None):
-    df = backtest.get_cumulative_returns_all_models(path_to_backtests = path_to_backtests,
-                                            HIDDEN_LAYERS=HIDDEN_LAYERS, NN_DICT=NN_DICT)
     axis = df.plot()
-    axis.set_ylabel("Gross Cumulative Return")
+    axis.set_ylabel("Cumulative Return")
     axis.set_xlabel("")
     fig = LatexFigure(plt.gcf())
     fig.fit()
     fig.save(p)
+    return fig
 
-#==========================================================================================
-#                                     On results
-#==========================================================================================
+def tabulate_performance(dp, p=None):
+    dp["decile"] = [s.split("_")[0] for s in dp.index.values.tolist()]
+    dp["measure"] = ["_".join(s.split("_")[1:]) for s in dp.index.values.tolist()]
+    dp = dp.groupby('measure').mean()
+    dp = dp.loc[["mae", "mse", "rmse","r2"]]
+    dp.index=["Mean Absolute Error", "Mean Squared Error", "Root Mean Squared Error", "R Square"]
+    dp = dp[["NN1","NN2", "NN3", "NN4"]]
+    dp.columns = ["NN1","NN2", "NN3", "NN4"]
+    dp.loc["R Square"] = dp.loc["R Square"] * 100
+    dp = dp.round(3)
+    tab = LatexTable(dp)
+    tab.save(p)
+    return dp
+
+def plot_r2(dp, p=None):
+    dp["decile"] = [s.split("_")[0] for s in dp.index.values.tolist()]
+    dp["measure"] = ["_".join(s.split("_")[1:]) for s in dp.index.values.tolist()]
+    dp = dp[dp['measure']=="r2"]
+    dp.set_index(["decile"],inplace=True)
+    dp = dp[["NN1","NN2", "NN3", "NN4"]]
+    dp.columns = ["NN1","NN2", "NN3", "NN4"]
+    dp = dp*100
+    dp.plot(xlabel="Return Decile", ylabel="R Square (Percentage Points)")
+    fig = LatexFigure(plt.gcf())
+    fig.save(p)
+    return dp
+
 
 class Results():
     def __init__(self, path, SORTING=SORTING, NN_DICT=NN_DICT, NN_NAMES=NN_NAMES):
@@ -464,8 +521,7 @@ class Results():
         if sort_features: 
             self.ig = self.ig[self.SORTING]
             self.mr = self.mr[self.SORTING]
-            if self.pr is not None: 
-                self.pr = self.pr[self.SORTING]
+            self.pr = self.pr[self.SORTING]
     
     def subset(self, key_name, value):
         if not isinstance(value, list):
@@ -494,169 +550,7 @@ class Results():
         self.mr.index = new_names
         self.ig.index = new_names
         if self.pr is not None: 
-            self.pr.index = new_names
-    
-    
-    def tabulate_performance_single_model(self, p=None):
-        df = self.pe.groupby([self.ar.ytrain])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].apply(np.median)
-        return df
-
-    def tabulate_decile_performance(self, p=None):
-        dp = pd.DataFrame(self.dp.median())
-        dp["decile"] = [s.split("_")[0] for s in dp.index.values.tolist()]
-        dp["measure"] = ["_".join(s.split("_")[1:]) for s in dp.index.values.tolist()]
-        dp.set_index(["decile", "measure"],inplace=True)
-        dp = dp.unstack(level=1)
-        dp.columns = dp.columns.droplevel(0)
-        dp.index = [int(s) for s in dp.index.values.tolist()]
-        dp.sort_index(inplace=True)
-        dp["r2"] = dp["r2"]*100
-        dp.round(3).transpose()
-        return dp
-    
-    def tabulate_performance(self, p=None):
-        df = self.pe.groupby([self.ar.hidden_layers])[["test_r_square", "test_mse", "test_mean_absolute_error", "test_root_mean_squared_error"]].mean()
-        df.columns = ["R Square", "Mean Squared Error", "Mean Absolute Error", "Root Mean Squared Error"]
-        df.index = [self.NN_DICT.get(s) for s in list(df.index.values)]
-        df = df.transpose()
-        df = df*100
-        df = df.round(2)
-        tab = LatexTable(df)
-        tab.save(p)
-        return df        
-
-    def plot_pr_ensemble(self, p=None, head=None, styling="blues", add_simulated=False):
-        if styling == "blues":
-            vmin = 0
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.pr.transpose().head(head), styling=styling, mode='ensemble', NN_NAMES=self.NN_NAMES, vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-    
-    def plot_ig_ensemble(self, p=None, head=None, styling="blues", add_simulated=False):
-        if styling == "relative":
-            vmin = 0
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.ig.transpose().head(head), styling=styling, mode='ensemble', NN_NAMES=self.NN_NAMES, vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-    
-    def plot_mr_ensemble(self, p=None, head=None, styling="blues", add_simulated=False):
-        if styling == "relative":
-            vmin = None
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.mr.transpose().head(head), styling=styling, mode='ensemble', NN_NAMES=self.NN_NAMES, vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-    
-    def plot_ig_time(self, p=None, styling="order", add_simulated=False):
-        if styling == "relative":
-            vmin = 0
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.ig.transpose(), styling=styling, mode='ensemble_time', NN_NAMES=self.NN_NAMES,vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-    
-    def plot_mr_time(self, p=None, styling="order", add_simulated=False):
-        if styling == "relative":
-            vmin = None
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.mr.transpose(), styling=styling, mode='ensemble_time', NN_NAMES=self.NN_NAMES,vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-    
-    def plot_pr_time(self, p=None, styling="order", add_simulated=False):
-        if styling == "relative":
-            vmin = 0
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.pr.transpose(), styling=styling, mode='ensemble_time', NN_NAMES=self.NN_NAMES,vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-    
-    def plot_ig_seeds(self, p=None, styling="order", add_simulated=False):
-        if styling == "relative":
-            vmin = 0
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.ig.transpose(), styling=styling, mode='seeds', NN_NAMES=self.NN_NAMES,vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-        print("Failed to plot ig seeds, styling={}".format(styling))
-    
-    def plot_pr_seeds(self, p=None, styling="order", add_simulated=False):
-        if styling == "relative":
-            vmin = 0
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.pr.transpose(), styling=styling, mode='seeds', NN_NAMES=self.NN_NAMES,vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-            
-    def plot_mr_seeds(self, p=None, styling="order", add_simulated=False):
-        if styling == "relative":
-            vmin = None
-        else: 
-            vmin = None
-        fig = self.style_plot_df(self.mr.transpose(), styling=styling, mode='seeds', NN_NAMES=self.NN_NAMES,vmin=vmin, add_simulated=add_simulated)
-        fig.save(p)
-        print("Failed to plot mr seeds, styling={}".format(styling))
-
-    @staticmethod
-    def plot_df_simple(df, scale=2, vmin=0, vmax=None, cmap=plt.cm.Blues, flip_cbar=False, show_cbar=True):
-        fig, axis = plt.subplots() 
-        heatmap = axis.pcolor(df, cmap=cmap, vmin=vmin, vmax=vmax)
-        labels = [meta.sc_to_latex.get(label) for label in df.index.values.tolist()]
-        plt.yticks(np.arange(0.5, len(df.index), 1), labels)
-        plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
-        axis.invert_yaxis()
-        axis.xaxis.tick_top()
-        if show_cbar:
-            cbar = plt.colorbar(heatmap)
-            if flip_cbar:
-                cbar.ax.invert_yaxis() 
-        fig = LatexFigure(plt.gcf())
-        fig.fit(scale=scale)
-
-    @staticmethod
-    def style_plot_df(df, styling, mode, vmin=None, NN_NAMES=NN_NAMES, add_simulated=False):
-        stylings = {
-            'heatmap':Styling("heatmap", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
-            'relative':Styling("relative", plt.cm.Greens, show_cbar=True, flip_cbar=False),
-            'order':Styling("order", plt.cm.inferno_r, show_cbar=True, flip_cbar=True),
-            'top':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-            'bottom':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-            'top10':Styling("top10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-            'bottom10':Styling("bottom10", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-            'top5':Styling("top5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-            'bottom5':Styling("bottom5", plt.cm.Blues, show_cbar=False, flip_cbar=False),
-            'blues':Styling("identity", plt.cm.Blues, show_cbar=True, flip_cbar=False)
-        }
-        modes = {
-            'ensemble': Mode([["LR"],NN_NAMES[1:]], False),
-            'seeds': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,SEED_NAMES)],N_SEEDS)),True),
-            'ensemble_time': Mode(list(chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES,YTRAIN_NAMES)],N_YTRAIN)),True),
-            'single_model_time':Mode(list(YTRAIN_NAMES),False)
-        }
-        if type(styling) == str: 
-            styling = stylings.get(styling)
-        if type(mode) == str: 
-            mode = modes.get(mode)
-        
-        df = styling.transform(df)
-        if add_simulated: 
-            df["True"] = [1]*3 + [0]*27 # First three features are important, rest are unimportant
-            column_groups = [["True"]] + mode.column_groups
-            convert_labels = False
-        else: 
-            column_groups = mode.column_groups
-            convert_labels = True
-        return _plot_df(
-            df, column_groups=column_groups, group_xticks=mode.group_xticks, 
-            cmap=styling.cmap, flip_cbar=styling.flip_cbar, show_cbar=styling.show_cbar, 
-            vmin=vmin, convert_labels=convert_labels)
-
-
-#==========================================================================================
-#                                     On local integrated gradients
-#==========================================================================================
+            self.pr.index = new_names  
 
 class LocalIG():
     def __init__(self, path_to_models, hidden_layers):
@@ -700,29 +594,13 @@ class LocalIG():
         fig.save(p)
 
 
+
 #==========================================================================================
 #                                    Auxiliary 
 #==========================================================================================
 
 
 class Styling(): 
-    def __init__(self, transform, cmap, show_cbar, flip_cbar): 
-        self.cmap = cmap
-        self.show_cbar = show_cbar 
-        self.flip_cbar = flip_cbar
-
-        transforms = {
-            'heatmap': self.heatmap,
-            'order':self.order,
-            'relative':self.relative,
-            'top10': self.top10,
-            'bottom10': self.bottom10,
-            'top5': self.top5,
-            'bottom5': self.bottom5, 
-            'identity': self.identity  
-        }
-        self.transform = transforms.get(transform)
-     
     @staticmethod
     def heatmap(df):
         return df.apply(lambda x: get_parts(x,6), axis=0)
@@ -736,29 +614,8 @@ class Styling():
         return len(df) - df.apply(lambda x: get_orders(x), axis=0)
     
     @staticmethod
-    def top10(df):
-        return (df.apply(lambda x: get_orders(x), axis=0)>=20)
-    
-    @staticmethod
-    def bottom10(df):
-        return (df.apply(lambda x: get_orders(x), axis=0)<=10)
-    
-    @staticmethod
-    def top5(df):
-        return (df.apply(lambda x: get_orders(x), axis=0)>=25)
-    
-    @staticmethod
-    def bottom5(df):
-        return (df.apply(lambda x: get_orders(x), axis=0)<=5)
-    
-    @staticmethod
     def identity(df):
         return df 
-
-class Mode():
-    def __init__(self, column_groups, group_xticks):
-        self.column_groups = column_groups 
-        self.group_xticks = group_xticks 
 
 
 def _corrplot(data, size_scale=500, marker='s', legend=True):
@@ -971,170 +828,426 @@ if __name__ == "__main__":
 
     plot_dummy(p=os.path.join(args.path_figures,"dummy.pdf"))
 
-    """
     #==========================================================================================
-    #                                     On Meta data
+    #                                  Meta Information about Predictors 
     #==========================================================================================
+    # Table 3.1 Predictors 
     tabulate_meta(p=os.path.join(args.path_tables,"meta.tex"),SORTING_LATEX=SORTING_LATEX)
+
+    # Table 2.1 Economic Motivation of Predictors Used in This Thesis
     tabulate_characteristics_motivation(p=os.path.join(args.path_tables,"characteristics_motivation.tex"),SORTING_LATEX=SORTING_LATEX)
     
     #==========================================================================================
-    #                                     On not cleaned data 
+    #                                Descriptive Statistics On Not Cleaned Data
     #==========================================================================================
+    # Load Data
     dt = Subset()
     dt.load()
     df = dt.features[SORTING]
+
+    # Figure 3.1 Amount of Missing Observations in Individual Features
     plot_missing_observations(df, p=os.path.join(args.path_figures,"missing_observations.pdf"))
     
-    
+
     #==========================================================================================
-    #                                     On cleaned data 
+    #                                 Descriptive Statistics On Cleaned Data
     #==========================================================================================
+    # Load data 
     dt = MinMaxed()
     dt.load()
     df = dt.features[SORTING]
-    r = dt.targets["r"]
+    r = dt.targets["r"]*100
+    r_without_outliers = r[np.abs((r - r.mean())/r.std(ddof=0)<8)] 
     
-    # Figures
-    plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
-    plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
-    plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
+    # Figure 3.2 Standard Deviation of the Features 
     plot_standard_deviation(df,p=os.path.join(args.path_figures,"standard_deviation.pdf"))
-    
-    # Tables
-    tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
+
+    # Figure 3.3 Features Correlation Matrix 
+    plot_correlation_matrix(df, p=os.path.join(args.path_figures,"correlation_matrix.pdf"))
+
+    # Figure 3.4 10 Most Correlated Pairs of Features
+    # Panel (a)
+    plot_correlation_matrix_highest(df, p=os.path.join(args.path_figures,"correlation_matrix_highest.pdf"))
+    # Panel (b)
     tabulate_most_correlated_pairs(df, p=os.path.join(args.path_tables,"most_correlated_pairs.tex"))
+
+    # Figure A.1 Histograms of All Features 
+    plot_histograms(df, p=os.path.join(args.path_figures,"histograms.pdf"))
+
+    # Figure 3.5 Descriptive Statistics of Monthly Returns
+    # Panel (a) 
+    plot_returns_descriptives(r_without_outliers, p=os.path.join(args.path_figures, "returns_descriptives.pdf"))
+    # Panel (b) Return Descriptives
+    tabulate_return_deciles(r_without_outliers,  p=os.path.join(args.path_tables,"return_descriptives.tex")))
+    # Panel (c) Return Deciles
+    tabulate_return_deciles(r_without_outliers, p=os.path.join(args.path_tables,"return_deciles.tex")))
+
+    # Table A.1 Descpriptive Statistics of All Features
     tabulate_descriptives(df, p=os.path.join(args.path_tables,"descriptives.tex"))
-
-    # Figures of Returns 
-    plot_returns_histogram(r, p=os.path.join(args.path_figures,"returns_histogram.pdf"))
     
-    """
-    #==========================================================================================
-    #                                     On alfa
-    #==========================================================================================
-    path_to_backtests = os.path.join("models", "alfa", "ensembles")
+    # Table A.2 Features Correlation Matrix
+    tabulate_correlation_matrix(df, p=os.path.join(args.path_tables,"correlation_matrix.tex"))
     
-    # Single model tables
-    tabulate_backtest_descriptives_ls(path_to_backtests,'32',
-        p=os.path.join(args.path_tables,"backtest_descriptives_ls.tex"))
-    # Single model figures 
-    plot_backtest_cumreturns_ls(path_to_backtests,"32",
-        p=os.path.join(args.path_figures,"backtest_cumreturns_ls.pdf"))
-    plot_backtest_histogram(path_to_backtests,"32",
-        p=os.path.join(args.path_figures,"backtest_histogram.pdf"))
+    #==========================================================================================
+    #                                      Predictive Performance
+    #==========================================================================================
+    r_all = Results('results/all/ensembles')
+    r_all.load(adjust_index=False)
+    dp = r_all.dp.groupby(r_all.ar.nn_name).median().transpose()
 
-
-    res = Results(os.path.join("results", "alfa", "ensembles"), SORTING=SORTING, NN_DICT={"32":"NN1"}, NN_NAMES=["NN1"])
-    res.load()
-    res.rename(['nn_name', "ytrain"])
-    res.plot_ig_time(styling="relative", p=os.path.join(args.path_figures,"ig_time_relative.pdf"))
-    res.plot_mr_time(styling="relative", p=os.path.join(args.path_figures,"mr_time_relative.pdf"))
-    res.plot_pr_time(styling="relative", p=os.path.join(args.path_figures,"pr_time_relative.pdf"))
-
-    res.plot_ig_time(styling="order",p=os.path.join(args.path_figures,"ig_time_order.pdf"))
-    res.plot_mr_time(styling="order", p=os.path.join(args.path_figures,"mr_time_order.pdf"))
-    res.plot_pr_time(styling="order", p=os.path.join(args.path_figures,"pr_time_order.pdf"))
-
-    res.plot_ig_time(styling="blues",p=os.path.join(args.path_figures,"ig_time_blues.pdf"))
-    res.plot_mr_time(styling="blues", p=os.path.join(args.path_figures,"mr_time_blues.pdf"))
-    res.plot_pr_time(styling="blues", p=os.path.join(args.path_figures,"pr_time_blues.pdf"))
+    # Figure 4.1 Out-of-Sample Predictive Ability of the Networks
+    # Panel (a) 
+    tabulate_performance(dp, p=os.path.join(args.path_tables,"performance.tex"))
+    # Panel (b)
+    plot_r2(dp, p=os.path.join(args.path_figures,"r2.pdf"))
 
     #==========================================================================================
-    #                                     On beta results
-    #==========================================================================================    
-    #res.load()
-    #res.tabulate_performance(p=os.path.join(args.path_tables,"performance.tex"))
+    #                                      Backtest
+    #==========================================================================================
+    paths_to_backtests = ['models/nn1/ensembles','models/nn2/ensembles','models/nn3/ensembles','models/nn4/ensembles']
+    hl_dict = {
+        'models/nn1/ensembles':'32',
+        'models/nn2/ensembles':'32,16',
+        'models/nn3/ensembles':'32,16,8',
+        'models/nn4/ensembles':'32,16,8,4', 
+        'models/lr/ensembles':'-1'}
     
-    res = Results(os.path.join("results", "beta", "ensembles"))
-    res.load()
-    res.rename(['nn_name'])
+    tabulate_backtest_descriptive_models(paths_to_backtests, hl_dict, p=os.path.join(args.path_tables,"backtest_descriptive_models.tex"))
     
-    res.plot_ig_ensemble(styling="relative", p=os.path.join(args.path_figures,"ig_relative.pdf"))
-    res.plot_mr_ensemble(styling="relative", p=os.path.join(args.path_figures,"mr_relative.pdf"))
-    res.plot_pr_ensemble(styling="relative", p=os.path.join(args.path_figures,"pr_relative.pdf"))
+    # Figure 4.2 Cumulative Returns on the Long-Short Portfolio
+    # Panel (a)
+    plot_backtest_cumreturns_models(paths_to_backtests, hl_dict, p=os.path.join(args.path_figures,"backtest_cumreturns_models.pdf"))
+    # Panel (b)
+    plot_backtest_cumreturns_ls(path_to_backtests='models/nn1/ensembles', hidden_layers='32', 
+                                          p=os.path.join(args.path_figures,"backtest_cumreturns_ls.pdf"))
+    
+    # Figure 4.3 Descriptive Statistics of the Returns on Long-Short Portfolios
+    # Panel (a)
+    tabulate_backtest_descriptives_ls('models/nn1/ensembles', "32",p=os.path.join(args.path_tables,"backtest_descriptives_ls.tex"))
+    # Panel (b)
+    plot_backtest_histogram('models/nn1/ensembles', "32", p=os.path.join(args.path_figures,"backtest_histogram.pdf"))
+    
 
-    res.plot_ig_ensemble(styling="blues", p=os.path.join(args.path_figures,"ig_blues.pdf"))
-    res.plot_mr_ensemble(styling="blues", p=os.path.join(args.path_figures,"mr_blues.pdf"))
-    res.plot_pr_ensemble(styling="blues", p=os.path.join(args.path_figures,"pr_blues.pdf"))
+    
+    
+    #==========================================================================================
+    #                                    Global Interpretation Plots
+    #==========================================================================================
 
-    res.plot_ig_ensemble(styling="order",p=os.path.join(args.path_figures,"ig_order.pdf"))
-    res.plot_mr_ensemble(styling="order",p=os.path.join(args.path_figures,"mr_order.pdf"))
-    res.plot_pr_ensemble(styling="order",p=os.path.join(args.path_figures,"pr_order.pdf"))
+    # -----------------------------------------------------------------------------------------
+    # AGGREGATE ENSEMBLE RESULTS 
+    # -----------------------------------------------------------------------------------------
+    r_nn1 = Results('results/nn1/ensembles')  
+    r_nn2 = Results('results/nn2/ensembles')  
+    r_nn3 = Results('results/nn3/ensembles')  
+    r_nn4 = Results('results/nn4/ensembles')
+    r_lr = Results('results/lr/ensembles')  
 
-    res.plot_ig_ensemble(styling="relative", head=10, p=os.path.join(args.path_figures,"ig_relative_head.pdf"))
-    res.plot_ig_ensemble(styling="blues", head=10, p=os.path.join(args.path_figures,"ig_blues_head.pdf"))
+    for r in [r_lr, r_nn1, r_nn2, r_nn3, r_nn4]: 
+        r.load()
+
+    ar = pd.concat([r_lr.ar, r_nn1.ar, r_nn2.ar, r_nn3.ar, r_nn4.ar])
+    pe = pd.concat([r_lr.pe, r_nn1.pe, r_nn2.pe, r_nn3.pe, r_nn4.pe])
+    ig = pd.concat([r_lr.ig, r_nn1.ig, r_nn2.ig, r_nn3.ig, r_nn4.ig])
+    mr = pd.concat([r_lr.mr, r_nn1.mr, r_nn2.mr, r_nn3.mr, r_nn4.mr])
+    pr = pd.concat([r_lr.pr, r_nn1.pr, r_nn2.pr, r_nn3.pr, r_nn4.pr])
+    dp =  pd.concat([r_lr.dp, r_nn1.dp, r_nn2.dp, r_nn3.dp, r_nn4.dp])
+
+    ar.to_csv('results/all/ensembles/args.csv')
+    pe.to_csv('results/all/ensembles/performance.csv')
+    ig.to_csv('results/all/ensembles/integrated_gradients_global_test.csv')
+    mr.to_csv('results/all/ensembles/model_reliance_test.csv')
+    pr.to_csv('results/all/ensembles/portfolio_reliance.csv')
+    dp.to_csv('results/all/ensembles/decile_performance.csv')
+
+    # -----------------------------------------------------------------------------------------
+    # AGGREGATE SEED RESULTS
+    # -----------------------------------------------------------------------------------------
+    r_nn1 = Results('results/nn1/seeds')  
+    r_nn2 = Results('results/nn2/seeds')  
+    r_nn3 = Results('results/nn3/seeds')  
+    r_nn4 = Results('results/nn4/seeds')  
+
+    for r in [r_nn1, r_nn2, r_nn3, r_nn4]: 
+        r.load()
+
+    ar = pd.concat([r_nn1.ar, r_nn2.ar, r_nn3.ar, r_nn4.ar])
+    pe = pd.concat([r_nn1.pe, r_nn2.pe, r_nn3.pe, r_nn4.pe])
+    ig = pd.concat([r_nn1.ig, r_nn2.ig, r_nn3.ig, r_nn4.ig])
+    mr = pd.concat([r_nn1.mr, r_nn2.mr, r_nn3.mr, r_nn4.mr])
+    pr = pd.concat([r_nn1.pr, r_nn2.pr, r_nn3.pr, r_nn4.pr])
+
+    ar.to_csv('results/all/seeds/args.csv')
+    pe.to_csv('results/all/seeds/performance.csv')
+    ig.to_csv('results/all/seeds/integrated_gradients_global_test.csv')
+    mr.to_csv('results/all/seeds/model_reliance_test.csv')
+    pr.to_csv('results/all/seeds/portfolio_reliance.csv')
+
+    # -----------------------------------------------------------------------------------------
+    # PLOT MAIN INTERPRETABILITY RESULTS
+    # ----------------------------------------------------------------------------------------- 
+    r = Results('results/all/ensembles')
+    r.load(adjust_index=False)
+    r.rename(['nn_name'])
+
+    dfs_to_plot = {
+        'ig':r.ig.groupby(r.ar.nn_name).mean().transpose()*100,
+        'mr':r.mr.groupby(r.ar.nn_name).mean().transpose(),
+        'pr':r.pr.groupby(r.ar.nn_name).mean().transpose()*100}
+
+    vmins = {
+        'ig':0,
+        'mr':1,
+        'pr':0
+    }
+
+    SORTINGS = {
+        'ig': dfs_to_plot.get('ig')[["NN1","NN2","NN3","NN4"]].mean(axis=1).sort_values(ascending=False).index,
+        'mr': dfs_to_plot.get('mr')[["NN1","NN2","NN3","NN4"]].mean(axis=1).sort_values(ascending=False).index,
+        'pr': dfs_to_plot.get('pr')[["NN1","NN2","NN3","NN4"]].mean(axis=1).sort_values(ascending=False).index,
+    }
+
+    for name, df in dfs_to_plot.items(): 
+        df["Mean"] = df[["NN1","NN2","NN3","NN4"]].mean(axis=1)
+
+
+    # blues (with vmin)
+    for name, df in dfs_to_plot.items(): 
+        fig = _plot_df(
+                    df.loc[SORTINGS.get(name)], column_groups=[["LR"],["NN1", "NN2", "NN3", "NN4"], ["Mean"]], group_xticks=False, 
+                    cmap=plt.cm.Blues, flip_cbar=False, show_cbar=True, 
+                    vmin=vmins.get(name), convert_labels=True)
+        fig.save('latex/Figures/{}_blues.pdf'.format(name))
+
+    for name, df in dfs_to_plot.items(): 
+        df = df.loc[SORTINGS.get(name)]
+        df.index = [meta.sc_to_latex.get(s) for s in df.index.values.tolist()]
+        df.columns = ["LR", "NN1", "NN2", "NN3", "NN4", "Mean"]
+        df = df.round(3)
+        tab = LatexTable(df)
+        tab.save('latex/Tables/{}_blues.tex'.format(name))
+
+
+    # order
+    for name, df in dfs_to_plot.items():
+        df = Styling.order(df)
+        fig = _plot_df(
+                    df.loc[SORTINGS.get(name)], column_groups=[["LR"],["NN1", "NN2", "NN3", "NN4"], ["Mean"]], group_xticks=False, 
+                    cmap=plt.cm.inferno_r, flip_cbar=True, show_cbar=True, 
+                    vmin=None, convert_labels=True)
+        fig.save('latex/Figures/{}_order.pdf'.format(name))
+
+
+    # relative
+    for name, df in dfs_to_plot.items(): 
+        df = Styling.relative(df)
+        fig = _plot_df(
+                    df.loc[SORTINGS.get(name)], column_groups=[["LR"],["NN1", "NN2", "NN3", "NN4"], ["Mean"]], group_xticks=False, 
+                    cmap=plt.cm.Greens, flip_cbar=False, show_cbar=True, 
+                    vmin=vmins.get(name), convert_labels=True)
+        fig.save('latex/Figures/{}_relative.pdf'.format(name))
+
+
+    # relative without LR
+    for name, df in dfs_to_plot.items(): 
+        df = Styling.relative(df)
+        fig = _plot_df(
+                    df.loc[SORTINGS.get(name)], column_groups=[["NN1", "NN2", "NN3", "NN4"]], group_xticks=False, 
+                    cmap=plt.cm.Greens, flip_cbar=False, show_cbar=True, 
+                    vmin=vmins.get(name), convert_labels=True)
+        fig.save('latex/Figures/{}_relative_without_lr.pdf'.format(name))
+
+        lig = LocalIG('models/nn1/ensembles', hidden_layers="32")
+
+    # ----------------------------------------------------------------------------------------- 
+    # PLOT COMPARISON OF INTEGRATED GRADIENTS AND PORTFOLIO RELIANCE
+    # -----------------------------------------------------------------------------------------
+
+    r = Results('results/all/ensembles')
+    r.load(adjust_index=False)
+    r.rename(['nn_name'])
+
+    ig = r.ig.groupby(r.ar.nn_name).mean().transpose()*100
+    pr = r.pr.groupby(r.ar.nn_name).mean().transpose()*100
+    ig = ig[["NN1","NN2","NN3","NN4"]]
+    ig["Mean"] = ig.mean(axis=1)
+    ig.columns = ["NN1-IG","NN2-IG","NN3-IG","NN4-IG", "Mean-IG"]
+    pr = pr[["NN1","NN2","NN3","NN4"]]
+    pr["Mean"] = pr.mean(axis=1)
+    pr.columns = ["NN1-PR","NN2-PR","NN3-PR","NN4-PR", "Mean-PR"]
+
+    df = pd.concat([ig,pr],axis=1)
+    df = df.loc[SORTINGS.get('ig')]
+
+    df = Styling.relative(df)
+    fig = _plot_df(
+                df, column_groups=[["NN1-IG", "NN1-PR"], ["NN2-IG","NN2-PR"], ["NN3-IG","NN3-PR"], ["NN4-IG","NN4-PR"],["Mean-IG","Mean-PR"]], group_xticks=False, 
+                cmap=plt.cm.Greens, flip_cbar=False, show_cbar=True, 
+                vmin=0, convert_labels=True)
+    fig.save('latex/Figures/ig_pr_comparison.pdf')
+
+
+    # ----------------------------------------------------------------------------------------- 
+    # PLOT TIME DECOMPOSITIONS
+    # ----------------------------------------------------------------------------------------- 
+    r = Results('results/all/ensembles')
+    r.load(adjust_index=False)
+    r.rename(['nn_name', 'ytrain'])
+    r.subset("hidden_layers",["32","32,16","32,16,8","32,16,8,4"])
+
+    dfs_to_plot = {
+        'ig': r.ig.transpose(),
+        'mr': r.mr.transpose(),
+        'pr': r.pr.transpose()
+    }
+
+    for name, df in dfs_to_plot.items(): 
+        df = Styling.relative(df)
+        column_groups = list(
+            utils.chunks(["{}-{}".format(n,s) for n,s in itertools.product(
+                NN_NAMES[1:],YTRAIN_NAMES)],N_YTRAIN))
+        fig = _plot_df(
+                    df.loc[SORTINGS.get(name)], column_groups=column_groups, group_xticks=True, 
+                    cmap=plt.cm.Greens, flip_cbar=False, show_cbar=True, 
+                    vmin=vmins.get(name), convert_labels=True)
+        fig.save('latex/Figures/{}_time_relative.pdf'.format(name))
+
+    dfs_to_plot = {
+        'ig': r.ig.groupby(r.ar["ytrain"]).mean().transpose(),
+        'mr': r.mr.groupby(r.ar["ytrain"]).mean().transpose(),
+        'pr': r.pr.groupby(r.ar["ytrain"]).mean().transpose()
+    }
+
+    for name, df in dfs_to_plot.items(): 
+        df = Styling.relative(df)
+        df.columns = [str(i) for i in dfs_to_plot.get("ig").columns.tolist()]
+        df.rename(columns=YTRAIN_NAMES_TO_TEST_YEAR, inplace=True)
+        fig = _plot_df(
+                    df.loc[SORTINGS.get(name)], column_groups=None, group_xticks=False, 
+                    cmap=plt.cm.Greens, flip_cbar=False, show_cbar=True, 
+                    vmin=vmins.get(name), convert_labels=True)
+        fig.save('latex/Figures/{}_time_relative_mean.pdf'.format(name))
+
+    # ----------------------------------------------------------------------------------------- 
+    # PLOT SEED DECOMPOSITIONS
+    # ----------------------------------------------------------------------------------------- 
+    r = Results('results/all/seeds')
+    r.load(adjust_index=False)
+    r.rename(['nn_name', 'ytrain', 'seed'])
+
+    ig = r.ig.groupby([r.ar.nn_name, r.ar.seed]).mean()
+    ig.index = ["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES[1:],SEED_NAMES)]
+    ig = ig.transpose()
+
+    mr = r.mr.groupby([r.ar.nn_name, r.ar.seed]).mean()
+    mr.index = ["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES[1:],SEED_NAMES)]
+    mr = mr.transpose()
+
+    pr = r.pr.groupby([r.ar.nn_name, r.ar.seed]).mean()
+    pr.index = ["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES[1:],SEED_NAMES)]
+    pr = pr.transpose()
+
+    dfs_to_plot = {
+        'ig': ig,
+        'mr': mr,
+        'pr': pr
+    }
+
+    for name, df in dfs_to_plot.items(): 
+        df = Styling.relative(df)
+        column_groups = list(
+            utils.chunks(["{}-{}".format(n,s) for n,s in itertools.product(NN_NAMES[1:],SEED_NAMES)],N_SEEDS))
+        fig = _plot_df(
+                    df.loc[SORTINGS.get(name)], column_groups=column_groups, group_xticks=True, 
+                    cmap=plt.cm.Greens, flip_cbar=False, show_cbar=True, 
+                    vmin=vmins.get(name), convert_labels=True)
+        fig.save('latex/Figures/{}_seeds_relative.pdf'.format(name))
 
 
     #==========================================================================================
-    #                                     On seeds results
+    #                                    Local Interpretation Plots
     #==========================================================================================
-    res = Results(os.path.join("results", "beta", "seeds"), SORTING=SORTING, NN_DICT=NN_DICT, NN_NAMES=NN_NAMES)
-    
-    res.load(suffix="_test")
-    res.rename(['nn_name', "seed"])
-    res.plot_ig_seeds(styling="relative", p=os.path.join(args.path_figures,"ig_seeds_relative.pdf"))
-    res.plot_pr_seeds(styling="relative", p=os.path.join(args.path_figures,"pr_seeds_relative.pdf"))
-    res.plot_mr_seeds(styling="relative", p=os.path.join(args.path_figures,"mr_seeds_relative.pdf"))
 
-    res.plot_ig_seeds(styling="blues", p=os.path.join(args.path_figures,"ig_seeds_blues.pdf"))
-    res.plot_pr_seeds(styling="blues", p=os.path.join(args.path_figures,"pr_seeds_blues.pdf"))
-    res.plot_mr_seeds(styling="blues", p=os.path.join(args.path_figures,"mr_seeds_blues.pdf"))
+    # ----------------------------------------------------------------------------------------- 
+    # CALCULATE INTEGRATED GRADIENT COEFFICIENTS
+    # -----------------------------------------------------------------------------------------
+    lig = figures.LocalIG('models/nn1/ensembles', hidden_layers="32")
 
-    res.plot_ig_seeds(styling="order", p=os.path.join(args.path_figures,"ig_seeds_order.pdf"))
-    res.plot_pr_seeds(styling="order", p=os.path.join(args.path_figures,"pr_seeds_order.pdf"))
-    res.plot_mr_seeds(styling="order", p=os.path.join(args.path_figures,"mr_seeds_order.pdf"))
-    
-    """
-    #==========================================================================================
-    #                                     On ensemble simulation results
-    #==========================================================================================
-    res = Results(os.path.join("results", "simulated", "ensembles"), SORTING=SORTING, NN_DICT=NN_DICT, NN_NAMES=NN_NAMES)
-    
-    res.load(suffix="_test", sort_features=False)
-    res.tabulate_performance(p=os.path.join(args.path_tables,"sim_performance.tex"))
+    lig.load(sorting=SORTINGS.get('ig').values.tolist())
+    lig.df = lig.df*100
 
-    res.load(suffix="_test", sort_features=False)
-    res.subset('ytrain',12)
-    res.rename(['nn_name'])
-    res.plot_ig_ensemble(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_ig_ensemble_relative.pdf"))
-    res.plot_mr_ensemble(styling="relative", add_simulated=True,  p=os.path.join(args.path_figures,"sim_mr_ensemble_relative.pdf"))
-    res.plot_pr_ensemble(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_pr_ensemble_relative.pdf"))
+    from data import MinMaxed
+    dt = MinMaxed()
+    dt.load()
 
+    features = dt.features.loc[lig.df.index]
+    features = features[lig.df.columns.tolist()]
 
-    res.load(suffix="_test", sort_features=False)
-    res.rename(['nn_name', "ytrain"])
-    res.plot_ig_time(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_ig_time_relative.pdf"))
-    res.plot_mr_time(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_mr_time_relative.pdf"))
-    res.plot_pr_time(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_pr_time_relative.pdf"))
-    
+    coefs = lig.df / features
 
-    #==========================================================================================
-    #                                     On simulated seeds results
-    #==========================================================================================
-    # Remove LR (TODO Add)
-    nn_names = NN_NAMES[1:]
-    nn_dict = {k: v for k, v in NN_DICT.items() if k not in {"-1"}}
-    hidden_layers = HIDDEN_LAYERS[1:]
-    
-    res = Results(os.path.join("results", "simulated", "seeds"), SORTING=SORTING, NN_DICT=nn_dict, NN_NAMES=nn_names)
-    
-    res.load(suffix="_test", sort_features=False)
-    res.subset('ytrain',12)
-    res.subset('hidden_layers',hidden_layers)
-    res.rename(['nn_name', "seed"])
-    res.plot_ig_seeds(styling="relative", add_simulated=True,  p=os.path.join(args.path_figures,"sim_ig_seeds_relative.pdf"))
-    res.plot_pr_seeds(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_pr_seeds_relative.pdf"))
-    res.plot_mr_seeds(styling="relative", add_simulated=True, p=os.path.join(args.path_figures,"sim_mr_seeds_relative.pdf"))
-    """
+    # ----------------------------------------------------------------------------------------- 
+    # PLOT INTEGRATED GRADIENT COEFFICIENTS
+    # -----------------------------------------------------------------------------------------
+    fig, axes = plt.subplots(1,1)
+    axis = sns.boxplot(data=coefs, orient="h", showfliers=False)
 
-    #==========================================================================================
-    #                                     On local integrated gradients - 
-    #==========================================================================================
-    locig = LocalIG(os.path.join("models", "minmaxed", "ensembles"))
-    locig.load(model_name='y=16,y=12,y=1,hl=32,nm=9,o=adam')
-    
+    # Axis Labels
+    axis.set_xlabel("Local Integrated Gradient / Feature Value")
+    axis.set_ylabel("")
 
-    
-    print("FINISHED")
-    
+    # Y ticks 
+    labels = [meta.sc_to_latex.get(label) for label in list(coefs.columns)]
+    axis.set_yticklabels(labels)
+
+    # Convert to LatexFigure to change font and figsize
+    fig = figures.LatexFigure(plt.gcf())
+    fig.fit(scale=2)
+    fig.save('latex/Figures/ig_coefs.pdf')
+
+    # ----------------------------------------------------------------------------------------- 
+    # TABULATE INTEGRATED GRADIENT COEFFICIENTS
+    # -----------------------------------------------------------------------------------------
+    coefs = lig.df / features
+    coefs = coefs.describe().transpose()
+    coefs = coefs[["mean", "std"]]
+    coefs["Mean / Std"] = coefs["mean"] / coefs["std"]
+
+    df = meta.signals[meta.signals["important_otmh_global_liquid"]<=30][["sc", "sign"]]
+    df.set_index("sc", inplace=True)
+    coefs = coefs.join(df)
+
+    coefs["Sign (Here)"] = np.sign(coefs["mean"]).astype(int)
+    coefs.rename(columns={"mean":"Mean", "std":"Std", "sign":"Sign (Original)"}, inplace=True)
+
+    coefs.index = [meta.sc_to_latex.get(s) for s in coefs.index]
+    coefs = coefs.round(3)
+
+    tab = LatexTable(coefs)
+    tab.save("latex/Tables/coefs.tex")
+
+    # ----------------------------------------------------------------------------------------- 
+    # PLOT INTEGRATED GRADIENT BOXPLOT
+    # -----------------------------------------------------------------------------------------
+    df = lig.df
+
+    fig, axes = plt.subplots(1,1)
+    axis = sns.boxplot(data=df, orient="h", showfliers=False)
+
+    # Axis Labels
+    axis.set_xlabel("Local Integrated Gradient")
+    axis.set_ylabel("")
+
+    # Y ticks 
+    labels = [meta.sc_to_latex.get(label) for label in list(df.columns)]
+    axis.set_yticklabels(labels)
+
+    # Convert to LatexFigure to change font and figsize
+    fig = LatexFigure(plt.gcf())
+    fig.fit(scale=2)
+    fig.save('latex/Figures/ig_boxplot.pdf')
+
+    # ----------------------------------------------------------------------------------------- 
+    # PLOT INTEGRATED GRADIENT SINGLE OBSERVATION
+    # -----------------------------------------------------------------------------------------
+    lig.plot_all_observations(lig.df[:1],xlabel="Local Integrated Gradient", p ="latex/Figures/local_ig_1.pdf")
+
