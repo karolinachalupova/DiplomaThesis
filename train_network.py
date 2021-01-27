@@ -1,5 +1,5 @@
 """
-Defines and trains model
+Trains a single network.
 
 As of 10/12/2019: One caveat of using TF2.0 is that TF AutoGraph
 functionality does not interact nicely with Ray actors. One way to get around
