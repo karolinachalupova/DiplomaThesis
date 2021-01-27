@@ -1,5 +1,5 @@
 """
-Backtesting out of sample
+Defines utils to obtain returns on portfolios constructed based on out-of-sample predictions.
 """
 import pandas as pd
 import numpy as np
@@ -12,8 +12,6 @@ from scipy.stats import skew, kurtosis
 
 
 from figures import YTRAIN_NAMES, NN_DICT, HIDDEN_LAYERS, NN_NAMES
-
-
 
 
 def get_metrics_single_model(ret): 
