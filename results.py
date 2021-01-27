@@ -1,5 +1,5 @@
 """
-Model performance evaluation
+Calculates all results.
 """
 import re
 import itertools
@@ -68,3 +68,4 @@ if __name__ == "__main__":
     models.model_reliance(on=args.calculate_on).to_csv(os.path.join(path_results, 'model_reliance_{}.csv'.format(args.calculate_on)))
     models.integrated_gradients_global(on=args.calculate_on).to_csv(os.path.join(path_results, 'integrated_gradients_global_{}.csv'.format(args.calculate_on)))
     models.portfolio_reliance(percent_long=10,percent_short=10).to_csv(os.path.join(path_results, 'portfolio_reliance.csv'))
+    models.decile_performance().to_csv(os.path.join(p, 'decile_performance.csv'))
