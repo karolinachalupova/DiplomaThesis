@@ -1,5 +1,5 @@
 """
-Utils for exploratory data analysis.
+Generates all figures and tables in the thesis.
 """
 
 import numpy as np 
