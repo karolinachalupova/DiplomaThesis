@@ -1,3 +1,7 @@
+"""
+Extracts models out of tensorboard logs and saves them. 
+"""
+
 import re
 import itertools
 import json
