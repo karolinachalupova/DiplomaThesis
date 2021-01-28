@@ -1,5 +1,5 @@
 """
-Trained nets
+Defines calculations that can be performed on trained networks. 
 """
 import re
 import itertools

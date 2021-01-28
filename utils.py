@@ -1,5 +1,5 @@
 """
-Small miscalaneous tools.
+Defines small miscalaneous tools.
 """
 
 import os
